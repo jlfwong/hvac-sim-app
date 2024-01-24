@@ -187,15 +187,12 @@ export function estimatePerformanceRating({
       right.minCapacity,
       deltaTempF
     );
-    console.log("min1", minCapacity.coefficientOfPerformance);
     minCapacity = derateCapacityPerformanceRating(
       minCapacity,
       outsideAirTempF,
       elevationInFeet,
       "min"
     );
-    console.log("min2", minCapacity.coefficientOfPerformance);
-
     let maxCapacity = interpolatePerformanceRatings(
       deltaTempLeft,
       left.maxCapacity,
@@ -203,14 +200,12 @@ export function estimatePerformanceRating({
       right.maxCapacity,
       deltaTempF
     );
-    console.log("max1", maxCapacity.coefficientOfPerformance);
     maxCapacity = derateCapacityPerformanceRating(
       maxCapacity,
       outsideAirTempF,
       elevationInFeet,
       "max"
     );
-    console.log("max2", maxCapacity.coefficientOfPerformance);
 
     if (btusPerHourNeeded > maxCapacity.btusPerHour) {
       // Can't supply more than max capacity
