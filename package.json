@@ -1,0 +1,31 @@
+{
+  "name": "hvac-math",
+  "version": "0.0.1",
+  "description": "A library for modeling loads and costs for heat pumps, furnaces, air conditioners etc.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.ts?$": "ts-jest"
+    },
+    "testRegex": "\\.test\\.ts?$",
+    "collectCoverageFrom": [
+      "**/*.{ts}",
+      "!**/*.d.{ts}"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ]
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "jest": "29.7.0",
+    "ts-jest": "29.1.2"
+  }
+}

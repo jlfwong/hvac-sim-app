@@ -1,0 +1,7 @@
+- How do heat pumps know what % of the variable speed compressor capacity to apply? The optimization system here assumes thats we'll get the maximum COP possible by selecting this value exactly correctly for a given hour, but this seems hard to do correctly.
+- Where do the constants for defrost-cycle derating come from?
+- Is interpolating coefficient of performance between min & max capacity for a given outside temperature linearly accurate?
+- It seems like the simulation assumes that maximum capacity doesn't degrade when subject to temperatures much lower than the ones specified in the performance specs. This seems like it would lead to especially misleading results in freezing cold environments for heat pumps that only having ratings down to 5F (defrost de-rating makes this less true, but the same concept when calculating cooling capacity for extremely hot temperatures still applies)
+- Why is COP de-rated by altitude in a similar way to capacity?
+- Why doesn't the laboratory testing COP values already accomodate for defrost cycles?
+- Is it intentional that the COPs never report below 1.0? This seems possibly not physically accurate.
