@@ -1,3 +1,6 @@
+import { interpolate, clamp, interpolateClamped } from "./math";
+import { ThermalLoad } from "./types";
+
 export interface PerformanceRating {
   btusPerHour: number;
   coefficientOfPerformance: number;
@@ -12,37 +15,8 @@ export interface NEEPccASHPRatingInfo {
   maxCapacity: PerformanceRating;
 }
 
-export type ThermalLoad = { type: "heating" | "cooling"; btusPerHour: number };
-
 function absDeltaT(r: NEEPccASHPRatingInfo): number {
   return Math.abs(r.indoorDryBulbFahrenheit - r.outdoorDryBulbFahrenheit);
-}
-
-export function interpolate(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  x: number
-): number {
-  return y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);
-}
-
-export function interpolateClamped(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  x: number
-): number {
-  const min = Math.min(y1, y2);
-  const max = Math.max(y1, y2);
-  const interpolated = interpolate(x1, y1, x2, y2, x);
-  return clamp(interpolated, min, max);
-}
-
-export function clamp(a: number, min: number, max: number) {
-  return Math.min(max, Math.max(a, min));
 }
 
 function interpolateCOP(
@@ -287,7 +261,6 @@ function getAltitudeCorrectionFactor(elevationInFeet: number): number {
   );
 }
 
-// TODO(jlfwong): Filter out un-realistic values
 export class AirSourceHeatPump {
   private sortedHeatingRatings: NEEPccASHPRatingInfo[];
   private sortedCoolingRatings: NEEPccASHPRatingInfo[];
