@@ -9,5 +9,3 @@ export interface EnvironmentalConditions {
     wattsPerSquareMeter: number;
   };
 }
-
-export type ThermalLoad = { type: "heating" | "cooling"; btuPerHour: number };

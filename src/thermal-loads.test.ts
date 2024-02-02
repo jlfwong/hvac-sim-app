@@ -29,29 +29,27 @@ const geometry = new HomeGeometry({
 describe("OccupantsLoad", () => {
   test("varies with number of occupants", () => {
     const date = new Date("2024-01-24T20:00:00");
-    let load = new OccupantsLoadSource(1).getThermalLoad(date, env);
-    expect(load.type).toEqual("heating");
-    expect(load.btuPerHour).toEqual(430);
+    let load = new OccupantsLoadSource(1).getBtusPerHour(date, env);
+    expect(load).toEqual(430);
 
-    load = new OccupantsLoadSource(2).getThermalLoad(date, env);
-    expect(load.type).toEqual("heating");
-    expect(load.btuPerHour).toEqual(2 * 430);
+    load = new OccupantsLoadSource(2).getBtusPerHour(date, env);
+    expect(load).toEqual(2 * 430);
   });
 
   test("ignores occupants that are out of the house", () => {
     const date = new Date("2024-01-24T12:00:00");
-    let load = new OccupantsLoadSource(1).getThermalLoad(date, env);
-    expect(load.btuPerHour).toEqual(0);
+    let load = new OccupantsLoadSource(1).getBtusPerHour(date, env);
+    expect(load).toEqual(0);
   });
 
   test("discounts occupants that are sleeping", () => {
     const dateAwake = new Date("2024-01-24T20:00:00");
-    let load = new OccupantsLoadSource(1).getThermalLoad(dateAwake, env);
-    expect(load.btuPerHour).toEqual(430);
+    let load = new OccupantsLoadSource(1).getBtusPerHour(dateAwake, env);
+    expect(load).toEqual(430);
 
     const dateAsleep = new Date("2024-01-24T23:00:00");
-    load = new OccupantsLoadSource(1).getThermalLoad(dateAsleep, env);
-    expect(load.btuPerHour).toBeCloseTo(365.5);
+    load = new OccupantsLoadSource(1).getBtusPerHour(dateAsleep, env);
+    expect(load).toBeCloseTo(365.5);
   });
 });
 
@@ -63,57 +61,52 @@ describe("ConductionConvectionLoadSource", () => {
     let load = new ConductionConvectionLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: -22,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("cooling");
-    expect(load.btuPerHour).toBeCloseTo(58046, 0);
+    expect(load).toBeCloseTo(-58046, 0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 31,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("cooling");
-    expect(load.btuPerHour).toBeCloseTo(24606, 0);
+    expect(load).toBeCloseTo(-24606, 0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 60,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("cooling");
-    expect(load.btuPerHour).toBeCloseTo(6309, 0);
+    expect(load).toBeCloseTo(-6309, 0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 70,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("cooling");
-    expect(load.btuPerHour).toBe(0);
+    expect(load).toBe(0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 90,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("heating");
-    expect(load.btuPerHour).toBeCloseTo(11990, 0);
+    expect(load).toBeCloseTo(11990, 0);
   });
 });
 
@@ -125,46 +118,42 @@ describe("InfiltrationLoadSource", () => {
     let load = new InfiltrationLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 31,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("cooling");
-    expect(load.btuPerHour).toBeCloseTo(4137, 0);
+    expect(load).toBeCloseTo(-4137, 0);
 
     load = new InfiltrationLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 50,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("cooling");
-    expect(load.btuPerHour).toBeCloseTo(2122, 0);
+    expect(load).toBeCloseTo(-2122, 0);
 
     load = new InfiltrationLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 80,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("heating");
-    expect(load.btuPerHour).toBeCloseTo(1023, 0);
+    expect(load).toBeCloseTo(1023, 0);
 
     load = new InfiltrationLoadSource(
       geometry,
       envelopeModifier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 90,
       insideAirTempF: 70,
     });
-    expect(load.type).toBe("heating");
-    expect(load.btuPerHour).toBeCloseTo(2046, 0);
+    expect(load).toBeCloseTo(2046, 0);
   });
 });
 
@@ -176,17 +165,16 @@ describe("SolarGainLoadSource", () => {
     let load = new SolarGainLoadSource(
       geometry,
       solarMultiplier
-    ).getThermalLoad(date, {
+    ).getBtusPerHour(date, {
       ...env,
       solarIrradiance: {
         altitudeDegrees: 45,
         wattsPerSquareMeter: 200 * Math.sqrt(2),
       },
     });
-    expect(load.type).toBe("heating");
-    expect(load.btuPerHour).toBeCloseTo(1317, 0);
+    expect(load).toBeCloseTo(1317, 0);
 
-    load = new SolarGainLoadSource(geometry, solarMultiplier).getThermalLoad(
+    load = new SolarGainLoadSource(geometry, solarMultiplier).getBtusPerHour(
       date,
       {
         ...env,
@@ -196,10 +184,9 @@ describe("SolarGainLoadSource", () => {
         },
       }
     );
-    expect(load.type).toBe("heating");
-    expect(load.btuPerHour).toBeCloseTo(652, 0);
+    expect(load).toBeCloseTo(652, 0);
 
-    load = new SolarGainLoadSource(geometry, solarMultiplier).getThermalLoad(
+    load = new SolarGainLoadSource(geometry, solarMultiplier).getBtusPerHour(
       date,
       {
         ...env,
@@ -209,8 +196,6 @@ describe("SolarGainLoadSource", () => {
         },
       }
     );
-    expect(load.type).toBe("heating");
-
-    expect(load.btuPerHour).toBeCloseTo(666, 0);
+    expect(load).toBeCloseTo(666, 0);
   });
 });
