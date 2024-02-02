@@ -9,3 +9,22 @@ export interface EnvironmentalConditions {
     wattsPerSquareMeter: number;
   };
 }
+
+export interface FuelUsageRate {
+  electricityKw?: number;
+  naturalGasCcfPerHour?: number;
+  fuelOilGallonsPerHour?: number;
+}
+
+export interface HVACApplianceResponse {
+  btusPerHour: number;
+  fuelUsage: FuelUsageRate;
+}
+
+export interface HVACAppliance {
+  getThermalResponse(options: {
+    btusPerHourNeeded: number;
+    insideAirTempF: number;
+    outsideAirTempF: number;
+  }): HVACApplianceResponse;
+}

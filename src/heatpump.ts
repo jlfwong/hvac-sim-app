@@ -1,4 +1,5 @@
 import { interpolate, clamp, interpolateClamped } from "./math";
+import { HVACAppliance, HVACApplianceResponse } from "./types";
 import { btusToKwh } from "./units";
 
 export interface PerformanceRating {
@@ -269,25 +270,6 @@ function getAltitudeCorrectionFactor(elevationInFeet: number): number {
   );
 }
 
-interface FuelUsageRate {
-  electricityKw?: number;
-  naturalGasCcfPerHour?: number;
-  fuelOilGallonsPerHour?: number;
-}
-
-interface HVACApplianceResponse {
-  btusPerHour: number;
-  fuelUsage: FuelUsageRate;
-}
-
-interface HVACAppliance {
-  getThermalResponse(options: {
-    btusPerHourNeeded: number;
-    insideAirTempF: number;
-    outsideAirTempF: number;
-  }): HVACApplianceResponse;
-}
-
 export class AirSourceHeatPump implements HVACAppliance {
   private elevationFeet: number;
   private sortedHeatingRatings: NEEPccASHPRatingInfo[];
@@ -333,9 +315,8 @@ export class AirSourceHeatPump implements HVACAppliance {
     const rating = this.getEstimatedPerformanceRating(options);
 
     // Convert from BTUs/hr to kW, incorporating coefficient of performance
-    const kWNeeded = btusToKwh(
-      rating.btusPerHour * rating.coefficientOfPerformance
-    );
+    const kWNeeded =
+      btusToKwh(rating.btusPerHour) / rating.coefficientOfPerformance;
 
     return {
       btusPerHour: rating.btusPerHour,
