@@ -1,5 +1,5 @@
-const BTUS_PER_KWH = 0.000293071;
+const KWH_PER_BTU = 0.000293071;
 
 export function btuToKwh(btu: number): number {
-  return btu * BTUS_PER_KWH;
+  return btu * KWH_PER_BTU;
 }

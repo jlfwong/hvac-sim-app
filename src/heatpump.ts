@@ -326,6 +326,7 @@ export class AirSourceHeatPump implements HVACAppliance {
   }): HVACApplianceResponse {
     const rating = this.getEstimatedPerformanceRating(options);
 
+    // Convert from BTUs/hr to kW, incorporating coefficient of performance
     const kWNeeded = btuToKwh(
       rating.btuPerHour * rating.coefficientOfPerformance
     );
