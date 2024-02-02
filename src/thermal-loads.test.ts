@@ -31,27 +31,27 @@ describe("OccupantsLoad", () => {
     const date = new Date("2024-01-24T20:00:00");
     let load = new OccupantsLoadSource(1).getThermalLoad(date, env);
     expect(load.type).toEqual("heating");
-    expect(load.btusPerHour).toEqual(430);
+    expect(load.btuPerHour).toEqual(430);
 
     load = new OccupantsLoadSource(2).getThermalLoad(date, env);
     expect(load.type).toEqual("heating");
-    expect(load.btusPerHour).toEqual(2 * 430);
+    expect(load.btuPerHour).toEqual(2 * 430);
   });
 
   test("ignores occupants that are out of the house", () => {
     const date = new Date("2024-01-24T12:00:00");
     let load = new OccupantsLoadSource(1).getThermalLoad(date, env);
-    expect(load.btusPerHour).toEqual(0);
+    expect(load.btuPerHour).toEqual(0);
   });
 
   test("discounts occupants that are sleeping", () => {
     const dateAwake = new Date("2024-01-24T20:00:00");
     let load = new OccupantsLoadSource(1).getThermalLoad(dateAwake, env);
-    expect(load.btusPerHour).toEqual(430);
+    expect(load.btuPerHour).toEqual(430);
 
     const dateAsleep = new Date("2024-01-24T23:00:00");
     load = new OccupantsLoadSource(1).getThermalLoad(dateAsleep, env);
-    expect(load.btusPerHour).toBeCloseTo(365.5);
+    expect(load.btuPerHour).toBeCloseTo(365.5);
   });
 });
 
@@ -69,7 +69,7 @@ describe("ConductionConvectionLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("cooling");
-    expect(load.btusPerHour).toBeCloseTo(58046, 0);
+    expect(load.btuPerHour).toBeCloseTo(58046, 0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
@@ -80,7 +80,7 @@ describe("ConductionConvectionLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("cooling");
-    expect(load.btusPerHour).toBeCloseTo(24606, 0);
+    expect(load.btuPerHour).toBeCloseTo(24606, 0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
@@ -91,7 +91,7 @@ describe("ConductionConvectionLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("cooling");
-    expect(load.btusPerHour).toBeCloseTo(6309, 0);
+    expect(load.btuPerHour).toBeCloseTo(6309, 0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
@@ -102,7 +102,7 @@ describe("ConductionConvectionLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("cooling");
-    expect(load.btusPerHour).toBe(0);
+    expect(load.btuPerHour).toBe(0);
 
     load = new ConductionConvectionLoadSource(
       geometry,
@@ -113,7 +113,7 @@ describe("ConductionConvectionLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("heating");
-    expect(load.btusPerHour).toBeCloseTo(11990, 0);
+    expect(load.btuPerHour).toBeCloseTo(11990, 0);
   });
 });
 
@@ -131,7 +131,7 @@ describe("InfiltrationLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("cooling");
-    expect(load.btusPerHour).toBeCloseTo(4137, 0);
+    expect(load.btuPerHour).toBeCloseTo(4137, 0);
 
     load = new InfiltrationLoadSource(
       geometry,
@@ -142,7 +142,7 @@ describe("InfiltrationLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("cooling");
-    expect(load.btusPerHour).toBeCloseTo(2122, 0);
+    expect(load.btuPerHour).toBeCloseTo(2122, 0);
 
     load = new InfiltrationLoadSource(
       geometry,
@@ -153,7 +153,7 @@ describe("InfiltrationLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("heating");
-    expect(load.btusPerHour).toBeCloseTo(1023, 0);
+    expect(load.btuPerHour).toBeCloseTo(1023, 0);
 
     load = new InfiltrationLoadSource(
       geometry,
@@ -164,7 +164,7 @@ describe("InfiltrationLoadSource", () => {
       insideAirTempF: 70,
     });
     expect(load.type).toBe("heating");
-    expect(load.btusPerHour).toBeCloseTo(2046, 0);
+    expect(load.btuPerHour).toBeCloseTo(2046, 0);
   });
 });
 
@@ -184,7 +184,7 @@ describe("SolarGainLoadSource", () => {
       },
     });
     expect(load.type).toBe("heating");
-    expect(load.btusPerHour).toBeCloseTo(1317, 0);
+    expect(load.btuPerHour).toBeCloseTo(1317, 0);
 
     load = new SolarGainLoadSource(geometry, solarMultiplier).getThermalLoad(
       date,
@@ -197,7 +197,7 @@ describe("SolarGainLoadSource", () => {
       }
     );
     expect(load.type).toBe("heating");
-    expect(load.btusPerHour).toBeCloseTo(652, 0);
+    expect(load.btuPerHour).toBeCloseTo(652, 0);
 
     load = new SolarGainLoadSource(geometry, solarMultiplier).getThermalLoad(
       date,
@@ -211,9 +211,6 @@ describe("SolarGainLoadSource", () => {
     );
     expect(load.type).toBe("heating");
 
-    // TODO(jlfwong): It's a pretty weird coincidence that for this setup, the
-    // window + walls end up having the same combined solar gain with full
-    // exposure as the ceiling does with full exposure.
-    expect(load.btusPerHour).toBeCloseTo(652, 0);
+    expect(load.btuPerHour).toBeCloseTo(666, 0);
   });
 });

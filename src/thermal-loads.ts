@@ -12,7 +12,7 @@ interface ThermalLoadSource {
 export class OccupantsLoadSource implements ThermalLoadSource {
   constructor(private numOccupants: number) {}
 
-  getBTUsPerHour(localDateTime: Date) {
+  getbtuPerHour(localDateTime: Date) {
     const hour = localDateTime.getHours();
 
     if (9 < hour && hour < 14) {
@@ -46,7 +46,7 @@ export class OccupantsLoadSource implements ThermalLoadSource {
     localDateTime: Date,
     conditions: EnvironmentalConditions
   ): ThermalLoad {
-    return { type: "heating", btusPerHour: this.getBTUsPerHour(localDateTime) };
+    return { type: "heating", btuPerHour: this.getbtuPerHour(localDateTime) };
   }
 }
 
@@ -118,36 +118,36 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
     const floorUFactor = 0.101;
 
     // TODO(jlfwong): Small optimization by factoring out the evenlope multiplier & deltaTempF
-    const wallLoadBtusPerHour =
+    const wallLoadbtuPerHour =
       wallUFactor * wallsSqFt * deltaTempF * this.envelopeMultiplier;
-    const ceilingLoadBtusPerHour =
+    const ceilingLoadbtuPerHour =
       ceilingUFactor * ceilingSqFt * deltaTempF * this.envelopeMultiplier;
-    const floorLoadBtusPerHour =
+    const floorLoadbtuPerHour =
       floorUFactor * floorSqFt * deltaTempF * this.envelopeMultiplier;
 
     // TODO(jlfwong): Ask Baker about window cooling deflator of 0.90
     const windowCoolingDeflating =
       conditions.outsideAirTempF > conditions.insideAirTempF ? 0.9 : 1.0;
 
-    const windowLoadBtusPerHour =
+    const windowLoadbtuPerHour =
       windowUFactor *
       windowsSqFt *
       windowCoolingDeflating *
       deltaTempF *
       this.envelopeMultiplier;
 
-    const totalBtusPerHour =
-      wallLoadBtusPerHour +
-      windowLoadBtusPerHour +
-      ceilingLoadBtusPerHour +
-      floorLoadBtusPerHour;
+    const totalbtuPerHour =
+      wallLoadbtuPerHour +
+      windowLoadbtuPerHour +
+      ceilingLoadbtuPerHour +
+      floorLoadbtuPerHour;
 
     return {
       type:
         conditions.outsideAirTempF > conditions.insideAirTempF
           ? "heating"
           : "cooling",
-      btusPerHour: Math.abs(totalBtusPerHour),
+      btuPerHour: Math.abs(totalbtuPerHour),
     };
   }
 }
@@ -210,19 +210,22 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
     let deltaT = conditions.outsideAirTempF - conditions.insideAirTempF;
 
     // Will be negative if inside air is warmer than outside air.
-    let infiltrationGainBtusPerHour =
+    let infiltrationGainbtuPerHour =
       uFactor * this.geometry.windowsSqFt * deltaT * infiltrationMultiplier;
 
     if (conditions.relativeHumidityPercent > 50) {
       // Regardless of whether we're heating or warming, the effects of added humidity contribute gain,
       // since condensation is exothermic
-      infiltrationGainBtusPerHour +=
+      //
+      // TODO(jlfwong): This formula not being proportional to the actual value
+      // of relative humidity doesn't make any sense to me.
+      infiltrationGainbtuPerHour +=
         (808 / 894) * this.geometry.windowsSqFt * infiltrationMultiplier;
     }
 
     return {
-      type: infiltrationGainBtusPerHour > 0 ? "heating" : "cooling",
-      btusPerHour: Math.abs(infiltrationGainBtusPerHour),
+      type: infiltrationGainbtuPerHour > 0 ? "heating" : "cooling",
+      btuPerHour: Math.abs(infiltrationGainbtuPerHour),
     };
   }
 }
@@ -243,7 +246,7 @@ export class SolarGainLoadSource implements ThermalLoadSource {
     // See: https://github.com/kelvin-hp/analysis/blob/ee5ae72bf07b3588ce589ef57b277da0cff50e4d/costs/weather.ipynb#L20
 
     if (solarIrradiance.altitudeDegrees < 0) {
-      return { type: "heating", btusPerHour: 0 };
+      return { type: "heating", btuPerHour: 0 };
     }
 
     const strengthUnderClouds = 0.15;
@@ -299,7 +302,7 @@ export class SolarGainLoadSource implements ThermalLoadSource {
     // Solar gain is always positive
     return {
       type: "heating",
-      btusPerHour: ceilingGain + windowGain + wallGain,
+      btuPerHour: ceilingGain + windowGain + wallGain,
     };
   }
 }

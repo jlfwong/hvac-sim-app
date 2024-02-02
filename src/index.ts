@@ -146,7 +146,7 @@ interface VariableCapacityHeatPumpPerformanceRating {
 }
 
 interface HeatPumpPerformanceRating {
-  btusPerHour: number;
+  btuPerHour: number;
   coefficientOfPerformance: number;
 }
 
@@ -177,12 +177,12 @@ function interpolatePerformanceRating(
   b: HeatPumpPerformanceRating
 ): HeatPumpPerformanceRating {
   return {
-    btusPerHour: interpolate(
+    btuPerHour: interpolate(
       deltaT,
       aDeltaT,
-      a.btusPerHour,
+      a.btuPerHour,
       bDeltaT,
-      b.btusPerHour
+      b.btuPerHour
     ),
     coefficientOfPerformance: interpolate(
       deltaT,
@@ -280,17 +280,17 @@ class AirSourceHeatPump implements Equipment {
             right
           );
 
-        const btusPerHourNeeded: number = btusPerHour(responseNeeded);
+        const btuPerHourNeeded: number = btuPerHour(responseNeeded);
 
         // TODO(jlfwong): De-rating, clamping, sanity-adjustments
 
-        if (btusPerHourNeeded > maxCapacity.btusPerHour) {
+        if (btuPerHourNeeded > maxCapacity.btuPerHour) {
           // Can't supply more than max capacity
           return maxCapacity;
-        } else if (btusPerHourNeeded < minCapacity.btusPerHour) {
+        } else if (btuPerHourNeeded < minCapacity.btuPerHour) {
           // Can supply less than min capacity by cycle
           return {
-            btusPerHour: btusPerHourNeeded,
+            btuPerHour: btuPerHourNeeded,
             coefficientOfPerformance: minCapacity.coefficientOfPerformance,
           };
         } else {
@@ -299,21 +299,21 @@ class AirSourceHeatPump implements Equipment {
           //
           // TODO(jlfwong): Is this actually a linear function?
           const coefficientOfPerformance = interpolate(
-            btusPerHourNeeded,
-            minCapacity.btusPerHour,
+            btuPerHourNeeded,
+            minCapacity.btuPerHour,
             minCapacity.coefficientOfPerformance,
-            maxCapacity.btusPerHour,
+            maxCapacity.btuPerHour,
             maxCapacity.coefficientOfPerformance
           );
           return {
-            btusPerHour: btusPerHourNeeded,
+            btuPerHour: btuPerHourNeeded,
             coefficientOfPerformance,
           };
         }
 
         return {
           coefficientOfPerformance,
-          btusPerHour: Math.max(btusPerHourNeeded, maxCapacity.btusPerHour),
+          btuPerHour: Math.max(btuPerHourNeeded, maxCapacity.btuPerHour),
         };
       }
     } else if (responseNeeded.type === "cooling") {
@@ -384,6 +384,15 @@ interface EquipmentSimulationResult {
 }
 
 function sumThermalLoads(loads: ThermalLoad[]): ThermalLoad {}
+
+interface Billing {
+  recordElectricityUsageKwh(kWh: number, localTime: Date): void;
+  recordNaturalGasUsageCcf(ccf: number, localTime: Date): void;
+  recordFuelOilUsageGallons(gallons: number, localTime: Date): void;
+  recordPropaneUsageGallons(gallons: Date, localTime: number): void;
+
+  getBills(): Bill[];
+}
 
 function simulateEquipmentUsage(
   localStartTime: Date,

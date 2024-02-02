@@ -10,4 +10,4 @@ export interface EnvironmentalConditions {
   };
 }
 
-export type ThermalLoad = { type: "heating" | "cooling"; btusPerHour: number };
+export type ThermalLoad = { type: "heating" | "cooling"; btuPerHour: number };
