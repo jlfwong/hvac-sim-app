@@ -6,6 +6,7 @@ describe("GasFurnace", () => {
       const furnace = new GasFurnace({
         afuePercent: 96,
         capacityBtusPerHour: 80000,
+        elevationFeet: 0,
       });
 
       const response = furnace.getThermalResponse({
@@ -23,6 +24,7 @@ describe("GasFurnace", () => {
       const furnace = new GasFurnace({
         afuePercent: 80,
         capacityBtusPerHour: 80000,
+        elevationFeet: 0,
       });
 
       const response = furnace.getThermalResponse({
@@ -40,6 +42,7 @@ describe("GasFurnace", () => {
       const furnace = new GasFurnace({
         afuePercent: 80,
         capacityBtusPerHour: 80000,
+        elevationFeet: 0,
       });
 
       const response = furnace.getThermalResponse({
@@ -51,6 +54,24 @@ describe("GasFurnace", () => {
       expect(response.btusPerHour).toBeCloseTo(80000, 0);
       expect(Object.keys(response.fuelUsage)).toEqual(["naturalGasCcfPerHour"]);
       expect(response.fuelUsage.naturalGasCcfPerHour).toBeCloseTo(0.96, 2);
+    });
+
+    test("over max capacity, high elevation", () => {
+      const furnace = new GasFurnace({
+        afuePercent: 80,
+        capacityBtusPerHour: 80000,
+        elevationFeet: 5000,
+      });
+
+      const response = furnace.getThermalResponse({
+        btusPerHourNeeded: 100000,
+        insideAirTempF: 70,
+        outsideAirTempF: 5,
+      });
+
+      expect(response.btusPerHour).toBeCloseTo(80000 * (1 - 5 * 0.04), 0);
+      expect(Object.keys(response.fuelUsage)).toEqual(["naturalGasCcfPerHour"]);
+      expect(response.fuelUsage.naturalGasCcfPerHour).toBeCloseTo(0.77, 2);
     });
   });
 });
