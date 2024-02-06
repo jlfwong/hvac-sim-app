@@ -60,15 +60,28 @@ export function interpolatePerformanceRatings(
   };
 }
 
-function derateForElevation(
+export function derateHeatPumpForElevation(
   rating: PerformanceRating,
-  elevationInFeet: number
+  elevationInFeet: number,
+  speedSettings: "single-speed" | "dual-speed" | "variable-speed"
 ): PerformanceRating {
   const elevationFactor = getAltitudeCorrectionFactor(elevationInFeet);
 
-  // The elevation factor only has 10% the effect on COP as it does on efficiency.
-  // TODO(jlfwong): Source for this? See altitude_efficiency_correction_factor
-  const efficiencyFactor = 1 - (1 - elevationFactor) * 0.1;
+  // Single and two-phase compressors are more aggressively derated for
+  // elevation.
+  //
+  // TODO(jlfwong): Ask Baker & Calvin for source for this
+  let efficiencyDeratingMultiplier = 0.1;
+  if (speedSettings === "single-speed") {
+    efficiencyDeratingMultiplier = 0.5;
+  } else if (speedSettings === "dual-speed") {
+    efficiencyDeratingMultiplier = 0.25;
+  } else if (speedSettings === "variable-speed") {
+    efficiencyDeratingMultiplier = 0.1;
+  }
+
+  const efficiencyFactor =
+    1 - (1 - elevationFactor) * efficiencyDeratingMultiplier;
 
   return {
     btusPerHour: rating.btusPerHour * elevationFactor,
@@ -83,7 +96,12 @@ function derateCapacityPerformanceRating(
   elevationInFeet: number,
   minOrMaxCapacity: "min" | "max"
 ): PerformanceRating {
-  const elevationDerated = derateForElevation(rating, elevationInFeet);
+  // We'll assume all of the heat pumps coming from the NEEP ccAHSP database are variable speed.
+  const elevationDerated = derateHeatPumpForElevation(
+    rating,
+    elevationInFeet,
+    "variable-speed"
+  );
 
   if (outsideAirTempF > 50) {
     // No defrost cycle needed

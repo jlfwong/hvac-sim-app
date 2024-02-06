@@ -22,8 +22,11 @@ export class GasFurnace implements HVACAppliance {
     // feet above sea level.
     //
     // https://www.questargas.com/ForEmployees/qgcOperationsTraining/Furnaces/York_YP9C.pdf
-    let capacityElevationMultiplier =
-      1.0 - Math.floor(this.options.elevationFeet / 1000) * 0.04;
+    let capacityElevationMultiplier = 1;
+    if (this.options.elevationFeet > 2000) {
+      capacityElevationMultiplier =
+        1.0 - Math.floor(this.options.elevationFeet / 1000) * 0.04;
+    }
     this.deratedCapacityBtusPerHour =
       this.options.capacityBtusPerHour * capacityElevationMultiplier;
   }
