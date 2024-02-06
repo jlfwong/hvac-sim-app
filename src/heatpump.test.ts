@@ -320,5 +320,17 @@ describe("AirSourceHeatPump", () => {
       expect(Object.keys(response.fuelUsage)).toEqual(["electricityKw"]);
       expect(response.fuelUsage.electricityKw).toBeCloseTo(6.3, 1);
     });
+
+    test("cooling", () => {
+      const response = panasonicHeatPump.getThermalResponse({
+        btusPerHourNeeded: -30000,
+        insideAirTempF: 70,
+        outsideAirTempF: 90,
+      });
+
+      expect(response.btusPerHour).toBeCloseTo(-30000, 0);
+      expect(Object.keys(response.fuelUsage)).toEqual(["electricityKw"]);
+      expect(response.fuelUsage.electricityKw).toBeCloseTo(3.6, 1);
+    });
   });
 });

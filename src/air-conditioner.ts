@@ -117,7 +117,7 @@ export class AirConditioner implements HVACAppliance {
 
     // Convert from BTUs/hr to kW, incorporating coefficient of performance
     const kWNeeded =
-      btusToKwh(rating.btusPerHour) / rating.coefficientOfPerformance;
+      btusToKwh(Math.abs(rating.btusPerHour)) / rating.coefficientOfPerformance;
 
     return {
       btusPerHour: rating.btusPerHour,

@@ -137,4 +137,32 @@ describe("AirConditioner", () => {
       expect(singleSpeedDerated.coefficientOfPerformance).toBeCloseTo(2.67, 2);
     });
   });
+
+  describe("getThermalResponse", () => {
+    test("uses more energy when temperature differential is bigger", () => {
+      const ac = new AirConditioner({
+        seer: 11,
+        capacityBtusPerHour: 40000,
+        elevationFeet: 0,
+        speedSettings: "single-speed",
+      });
+
+      const response90 = ac.getThermalResponse({
+        btusPerHourNeeded: -30000,
+        insideAirTempF: 80,
+        outsideAirTempF: 90,
+      });
+
+      const response100 = ac.getThermalResponse({
+        btusPerHourNeeded: -30000,
+        insideAirTempF: 80,
+        outsideAirTempF: 100,
+      });
+
+      expect(Object.keys(response90.fuelUsage)).toEqual(["electricityKw"]);
+
+      expect(response90.fuelUsage.electricityKw).toBeCloseTo(2.8, 1);
+      expect(response100.fuelUsage.electricityKw).toBeCloseTo(3.6, 1);
+    });
+  });
 });
