@@ -1,13 +1,10 @@
 import { DateTime } from "luxon";
-import { BuildingGeometry } from "./building-geometry";
 
-type ThermostatAction = "heat" | "cool" | "off";
-
-interface Thermostat {
-  getAction(options: {
+export interface Thermostat {
+  getTargetInsideAirTempF(options: {
     localTime: DateTime;
     insideAirTempF: number;
-  }): ThermostatAction;
+  }): number;
 }
 
 export class SimpleThermostat implements Thermostat {
@@ -18,16 +15,19 @@ export class SimpleThermostat implements Thermostat {
     }
   ) {}
 
-  getAction(options: {
+  getTargetInsideAirTempF(options: {
     localTime: DateTime;
     insideAirTempF: number;
-  }): ThermostatAction {
+  }): number {
     if (options.insideAirTempF < this.options.minimumTempF) {
-      return "heat";
+      // Too cold!
+      return this.options.minimumTempF;
     } else if (options.insideAirTempF > this.options.maximumTempF) {
-      return "cool";
+      // Too hot!
+      return this.options.maximumTempF;
     } else {
-      return "off";
+      // We're good! Don't change a thing
+      return options.insideAirTempF;
     }
   }
 }

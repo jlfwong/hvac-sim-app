@@ -1,12 +1,13 @@
+import { DateTime } from "luxon";
 import { BuildingGeometry } from "./building-geometry";
 import { interpolateClamped } from "./math";
 import { EnvironmentalConditions } from "./types";
 
-interface ThermalLoadSource {
+export interface ThermalLoadSource {
   // Positive values mean warming the contents of the building, negative values
   // mean cooling.
   getBtusPerHour(
-    localDateTime: Date,
+    localDateTime: DateTime,
     conditions: EnvironmentalConditions
   ): number;
 }
@@ -16,10 +17,10 @@ export class OccupantsLoadSource implements ThermalLoadSource {
   constructor(private numOccupants: number) {}
 
   getBtusPerHour(
-    localDateTime: Date,
+    localDateTime: DateTime,
     conditions: EnvironmentalConditions
   ): number {
-    const hour = localDateTime.getHours();
+    const hour = localDateTime.hour;
 
     if (9 < hour && hour < 14) {
       // Assume people are out to work during the day, weighted by how likely
@@ -53,12 +54,14 @@ export class OccupantsLoadSource implements ThermalLoadSource {
 // through the building envelope
 export class ConductionConvectionLoadSource implements ThermalLoadSource {
   constructor(
-    private geometry: BuildingGeometry,
-    private envelopeMultiplier: number // lower value means tighter
+    private options: {
+      geometry: BuildingGeometry;
+      envelopeModifier: number; // lower value means tighter
+    }
   ) {}
 
   getBtusPerHour(
-    localDateTime: Date,
+    localDateTime: DateTime,
     conditions: EnvironmentalConditions
   ): number {
     const deltaTempF = conditions.outsideAirTempF - conditions.insideAirTempF;
@@ -68,7 +71,7 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
       windowsSqFt,
       ceilingSqFt,
       exteriorFloorSqFt: floorSqFt,
-    } = this.geometry;
+    } = this.options.geometry;
 
     // U values BTUs/(hr x ft^2 x °F)
     // TODO(jlfwong): Source these values
@@ -84,11 +87,11 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
 
     // TODO(jlfwong): Small optimization by factoring out the envelope multiplier & deltaTempF
     const wallLoadbtusPerHour =
-      wallUFactor * wallsSqFt * deltaTempF * this.envelopeMultiplier;
+      wallUFactor * wallsSqFt * deltaTempF * this.options.envelopeModifier;
     const ceilingLoadbtusPerHour =
-      ceilingUFactor * ceilingSqFt * deltaTempF * this.envelopeMultiplier;
+      ceilingUFactor * ceilingSqFt * deltaTempF * this.options.envelopeModifier;
     const floorLoadbtusPerHour =
-      floorUFactor * floorSqFt * deltaTempF * this.envelopeMultiplier;
+      floorUFactor * floorSqFt * deltaTempF * this.options.envelopeModifier;
 
     // TODO(jlfwong): Ask Baker about window cooling deflator of 0.90
     const windowCoolingDeflating =
@@ -99,7 +102,7 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
       windowsSqFt *
       windowCoolingDeflating *
       deltaTempF *
-      this.envelopeMultiplier;
+      this.options.envelopeModifier;
 
     const totalBtusPerHour =
       wallLoadbtusPerHour +
@@ -114,12 +117,14 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
 // Load caused by air moving in and out of the building due to imperfect seal
 export class InfiltrationLoadSource implements ThermalLoadSource {
   constructor(
-    private geometry: BuildingGeometry,
-    private envelopeModifier: number // lower value means tighter
+    private options: {
+      geometry: BuildingGeometry;
+      envelopeModifier: number; // lower value means tighter
+    }
   ) {}
 
   getBtusPerHour(
-    localDateTime: Date,
+    localDateTime: DateTime,
     conditions: EnvironmentalConditions
   ): number {
     // BTUs/(hr x ft^2 x °F)
@@ -148,13 +153,13 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
     const isColderOutside =
       conditions.outsideAirTempF < conditions.insideAirTempF;
 
-    if (this.envelopeModifier <= 0.6) {
+    if (this.options.envelopeModifier <= 0.6) {
       infiltrationMultiplier = interpolateClamped(
         0.3,
         1.0,
         0.6,
         isColderOutside ? 2.8 : 2.7,
-        this.envelopeModifier
+        this.options.envelopeModifier
       );
     } else {
       infiltrationMultiplier = interpolateClamped(
@@ -162,7 +167,7 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
         isColderOutside ? 2.8 : 2.7,
         1.05,
         isColderOutside ? 5.8 : 5.6,
-        this.envelopeModifier
+        this.options.envelopeModifier
       );
     }
 
@@ -170,7 +175,10 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
 
     // Will be negative if inside air is warmer than outside air.
     let infiltrationGainbtusPerHour =
-      uFactor * this.geometry.windowsSqFt * deltaT * infiltrationMultiplier;
+      uFactor *
+      this.options.geometry.windowsSqFt *
+      deltaT *
+      infiltrationMultiplier;
 
     if (conditions.relativeHumidityPercent > 50) {
       // Regardless of whether we're heating or warming, the effects of added humidity contribute gain,
@@ -179,7 +187,9 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
       // TODO(jlfwong): This formula not being proportional to the actual value
       // of relative humidity doesn't make any sense to me.
       infiltrationGainbtusPerHour +=
-        (808 / 894) * this.geometry.windowsSqFt * infiltrationMultiplier;
+        (808 / 894) *
+        this.options.geometry.windowsSqFt *
+        infiltrationMultiplier;
     }
 
     return infiltrationGainbtusPerHour;
@@ -189,12 +199,14 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
 // Load from sunlight hitting the house
 export class SolarGainLoadSource implements ThermalLoadSource {
   constructor(
-    private geometry: BuildingGeometry,
-    private solarModifier: number
+    private options: {
+      geometry: BuildingGeometry;
+      solarModifier: number;
+    }
   ) {}
 
   getBtusPerHour(
-    localDateTime: Date,
+    localDateTime: DateTime,
     conditions: EnvironmentalConditions
   ): number {
     const { solarIrradiance } = conditions;
@@ -243,24 +255,24 @@ export class SolarGainLoadSource implements ThermalLoadSource {
       windowsSqFt,
       exteriorWallsSqFt: wallsSqFt,
       ceilingSqFt,
-    } = this.geometry;
+    } = this.options.geometry;
 
     const ceilingGain =
       ceilingSolarGainPerSqFt *
       ceilingSqFt *
-      this.solarModifier *
+      this.options.solarModifier *
       veriticalIrradianceMultiplier;
 
     const windowGain =
       windowSolarGainPerSqFt *
       windowsSqFt *
-      this.solarModifier *
+      this.options.solarModifier *
       horizontalIrradianceMultiplier;
 
     const wallGain =
       wallsSolarGainPerSqft *
       wallsSqFt *
-      this.solarModifier *
+      this.options.solarModifier *
       horizontalIrradianceMultiplier;
 
     return ceilingGain + windowGain + wallGain;

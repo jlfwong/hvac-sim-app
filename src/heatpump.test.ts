@@ -51,7 +51,7 @@ const panasonicRatings: NEEPccASHPRatingInfo[] = [
   {
     mode: "cooling",
     outdoorDryBulbFahrenheit: 95,
-    indoorDryBulbFahrenheit: 80,
+    insideDryBulbFahrenheit: 80,
     minCapacity: {
       btusPerHour: 13000,
       coefficientOfPerformance: 3.7,
@@ -64,7 +64,7 @@ const panasonicRatings: NEEPccASHPRatingInfo[] = [
   {
     mode: "cooling",
     outdoorDryBulbFahrenheit: 82,
-    indoorDryBulbFahrenheit: 80,
+    insideDryBulbFahrenheit: 80,
     minCapacity: {
       btusPerHour: 12000,
       coefficientOfPerformance: 5.58,
@@ -77,7 +77,7 @@ const panasonicRatings: NEEPccASHPRatingInfo[] = [
   {
     mode: "heating",
     outdoorDryBulbFahrenheit: 47,
-    indoorDryBulbFahrenheit: 70,
+    insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 11000,
       coefficientOfPerformance: 4.67,
@@ -90,7 +90,7 @@ const panasonicRatings: NEEPccASHPRatingInfo[] = [
   {
     mode: "heating",
     outdoorDryBulbFahrenheit: 17,
-    indoorDryBulbFahrenheit: 70,
+    insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 15000,
       coefficientOfPerformance: 3.57,
@@ -103,7 +103,7 @@ const panasonicRatings: NEEPccASHPRatingInfo[] = [
   {
     mode: "heating",
     outdoorDryBulbFahrenheit: 5,
-    indoorDryBulbFahrenheit: 70,
+    insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 12500,
       coefficientOfPerformance: 3.05,
@@ -116,7 +116,7 @@ const panasonicRatings: NEEPccASHPRatingInfo[] = [
   {
     mode: "heating",
     outdoorDryBulbFahrenheit: -22,
-    indoorDryBulbFahrenheit: 70,
+    insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 12300,
       coefficientOfPerformance: 3.05,

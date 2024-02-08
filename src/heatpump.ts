@@ -10,14 +10,14 @@ export interface PerformanceRating {
 // A line item from the NEEP cold-climate air-sourced heat pump database
 export interface NEEPccASHPRatingInfo {
   mode: "heating" | "cooling";
-  indoorDryBulbFahrenheit: number;
+  insideDryBulbFahrenheit: number;
   outdoorDryBulbFahrenheit: number;
   minCapacity: PerformanceRating;
   maxCapacity: PerformanceRating;
 }
 
 function absDeltaT(r: NEEPccASHPRatingInfo): number {
-  return Math.abs(r.indoorDryBulbFahrenheit - r.outdoorDryBulbFahrenheit);
+  return Math.abs(r.insideDryBulbFahrenheit - r.outdoorDryBulbFahrenheit);
 }
 
 function interpolateCOP(

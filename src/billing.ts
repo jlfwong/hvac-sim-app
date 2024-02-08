@@ -34,54 +34,6 @@ export interface FuelOilUtilityPlan extends UtilityPlan {
   recordFuelOilUsageGallons(gallons: number, localTime: DateTime): void;
 }
 
-export class FuelBilling {
-  private electricalUtility: ElectricalUtilityPlan | null = null;
-  private naturalGasUtility: NaturalGasUtilityPlan | null = null;
-  private fuelOilUtility: FuelOilUtilityPlan | null = null;
-
-  setElectricalUtility(u: ElectricalUtilityPlan) {
-    this.electricalUtility = u;
-  }
-  setNaturalGasUtility(u: NaturalGasUtilityPlan) {
-    this.naturalGasUtility = u;
-  }
-  setFuelOilUtility(u: FuelOilUtilityPlan) {
-    this.fuelOilUtility = u;
-  }
-
-  recordElectricityUsageKwh(kWh: number, localTime: DateTime): void {
-    if (!this.electricalUtility) {
-      throw new Error(
-        "No electrical utility configured. Use billing.setElectricalUtility"
-      );
-    }
-    this.electricalUtility.recordElectricityUsageKwh(kWh, localTime);
-  }
-
-  recordNaturalGasUsageCcf(ccf: number, localTime: DateTime): void {
-    if (!this.naturalGasUtility) {
-      throw new Error(
-        "No natural gas utility configured. Use billing.setNaturalGasUtility"
-      );
-    }
-    this.naturalGasUtility.recordNaturalGasUsageCcf(ccf, localTime);
-  }
-  recordFuelOilUsageGallons(gallons: number, localTime: DateTime): void {
-    if (!this.fuelOilUtility) {
-      throw new Error(
-        "No fuel oil utility configured. Use billing.setFuelOilUtility"
-      );
-    }
-    this.fuelOilUtility.recordFuelOilUsageGallons(gallons, localTime);
-  }
-
-  getBills(from: DateTime, to: DateTime): EnergyBill[] {
-    return (this.electricalUtility?.getBills(from, to) || [])
-      .concat(this.naturalGasUtility?.getBills(from, to) || [])
-      .concat(this.fuelOilUtility?.getBills(from, to) || []);
-  }
-}
-
 export class SimpleFuelBill implements EnergyBill {
   constructor(
     private readonly options: {

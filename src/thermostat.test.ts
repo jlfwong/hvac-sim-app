@@ -11,31 +11,31 @@ describe("SimpleThermostat", () => {
     const localTime = DateTime.local(2024, 1, 1, 1, 1, 1, 1);
 
     expect(
-      thermostat.getAction({
+      thermostat.getTargetInsideAirTempF({
         localTime,
         insideAirTempF: 85,
       })
-    ).toEqual("cool");
+    ).toEqual(80);
 
     expect(
-      thermostat.getAction({
+      thermostat.getTargetInsideAirTempF({
         localTime,
         insideAirTempF: 80,
       })
-    ).toEqual("off");
+    ).toEqual(80);
 
     expect(
-      thermostat.getAction({
+      thermostat.getTargetInsideAirTempF({
         localTime,
         insideAirTempF: 70,
       })
-    ).toEqual("off");
+    ).toEqual(70);
 
     expect(
-      thermostat.getAction({
+      thermostat.getTargetInsideAirTempF({
         localTime,
         insideAirTempF: 60,
       })
-    ).toEqual("heat");
+    ).toEqual(70);
   });
 });

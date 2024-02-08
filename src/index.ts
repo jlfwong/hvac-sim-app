@@ -1,6 +1,8 @@
 // TODO(jlfwong): Break these up appropriately. For now just trying to establish the interfaces I want.
 // TODO(jlfwong): Set up prettier, tsc, jest
 
+/*
+
 type Quantity<UnitT> = { value: number; units: UnitT };
 
 function assertNever(x: never): never {
@@ -153,7 +155,7 @@ interface HeatPumpPerformanceRating {
 // A line item from the NEEP cold-climate air-sourced heat pump database
 interface NEEPccASHPRatingInfo {
   mode: "heating" | "cooling";
-  indoorDryBulbFahrenheit: number;
+  insideDryBulbFahrenheit: number;
   outdoorDryBulbFahrenheit: number;
   minCapacity: HeatPumpPerformanceRating;
   maxCapacity: HeatPumpPerformanceRating;
@@ -220,7 +222,7 @@ function interpolateVariableCapacityPerformanceRating(
 }
 
 function absDeltaT(r: NEEPccASHPRatingInfo): number {
-  return Math.abs(r.indoorDryBulbFahrenheit - r.outdoorDryBulbFahrenheit);
+  return Math.abs(r.insideDryBulbFahrenheit - r.outdoorDryBulbFahrenheit);
 }
 
 class AirSourceHeatPump implements Equipment {
@@ -501,3 +503,5 @@ function simulateEquipmentUsage(
   }
   return bills;
 }
+
+*/

@@ -6,10 +6,11 @@ import {
   SolarGainLoadSource,
 } from "./thermal-loads";
 import { BuildingGeometry } from "./building-geometry";
+import { DateTime } from "luxon";
 
 const env: EnvironmentalConditions = {
   outsideAirTempF: 70, // Average comfortable outdoor temperature
-  insideAirTempF: 68, // Common indoor temperature setting
+  insideAirTempF: 68, // Common inside temperature setting
   relativeHumidityPercent: 50, // Comfortable humidity level
   windSpeedMph: 5, // Light breeze
   cloudCoverPercent: 20, // Mostly clear skies
@@ -29,7 +30,7 @@ const geometry = new BuildingGeometry({
 
 describe("OccupantsLoad", () => {
   test("varies with number of occupants", () => {
-    const date = new Date("2024-01-24T20:00:00");
+    const date = DateTime.fromISO("2024-01-24T20:00:00");
     let load = new OccupantsLoadSource(1).getBtusPerHour(date, env);
     expect(load).toEqual(430);
 
@@ -38,17 +39,17 @@ describe("OccupantsLoad", () => {
   });
 
   test("ignores occupants that are out of the house", () => {
-    const date = new Date("2024-01-24T12:00:00");
+    const date = DateTime.fromISO("2024-01-24T12:00:00");
     let load = new OccupantsLoadSource(1).getBtusPerHour(date, env);
     expect(load).toEqual(0);
   });
 
   test("discounts occupants that are sleeping", () => {
-    const dateAwake = new Date("2024-01-24T20:00:00");
+    const dateAwake = DateTime.fromISO("2024-01-24T20:00:00");
     let load = new OccupantsLoadSource(1).getBtusPerHour(dateAwake, env);
     expect(load).toEqual(430);
 
-    const dateAsleep = new Date("2024-01-24T23:00:00");
+    const dateAsleep = DateTime.fromISO("2024-01-24T23:00:00");
     load = new OccupantsLoadSource(1).getBtusPerHour(dateAsleep, env);
     expect(load).toBeCloseTo(365.5);
   });
@@ -56,53 +57,53 @@ describe("OccupantsLoad", () => {
 
 describe("ConductionConvectionLoadSource", () => {
   test("heat transfer scales with temperature difference", () => {
-    const date = new Date("2024-01-24T20:00:00");
-    const envelopeModifier = 0.65;
+    const date = DateTime.fromISO("2024-01-24T20:00:00");
+    const envelopeMultiplier = 0.65;
 
-    let load = new ConductionConvectionLoadSource(
+    let load = new ConductionConvectionLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier: envelopeMultiplier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: -22,
       insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-58046, 0);
 
-    load = new ConductionConvectionLoadSource(
+    load = new ConductionConvectionLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier: envelopeMultiplier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 31,
       insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-24606, 0);
 
-    load = new ConductionConvectionLoadSource(
+    load = new ConductionConvectionLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier: envelopeMultiplier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 60,
       insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-6309, 0);
 
-    load = new ConductionConvectionLoadSource(
+    load = new ConductionConvectionLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier: envelopeMultiplier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 70,
       insideAirTempF: 70,
     });
     expect(load).toBe(0);
 
-    load = new ConductionConvectionLoadSource(
+    load = new ConductionConvectionLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier: envelopeMultiplier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 90,
       insideAirTempF: 70,
@@ -113,43 +114,43 @@ describe("ConductionConvectionLoadSource", () => {
 
 describe("InfiltrationLoadSource", () => {
   test("heat transfer scales with temperature difference", () => {
-    const date = new Date("2024-01-24T20:00:00");
+    const date = DateTime.fromISO("2024-01-24T20:00:00");
     const envelopeModifier = 0.65;
 
-    let load = new InfiltrationLoadSource(
+    let load = new InfiltrationLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 31,
       insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-4137, 0);
 
-    load = new InfiltrationLoadSource(
+    load = new InfiltrationLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 50,
       insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-2122, 0);
 
-    load = new InfiltrationLoadSource(
+    load = new InfiltrationLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 80,
       insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(1023, 0);
 
-    load = new InfiltrationLoadSource(
+    load = new InfiltrationLoadSource({
       geometry,
-      envelopeModifier
-    ).getBtusPerHour(date, {
+      envelopeModifier,
+    }).getBtusPerHour(date, {
       ...env,
       outsideAirTempF: 90,
       insideAirTempF: 70,
@@ -160,13 +161,13 @@ describe("InfiltrationLoadSource", () => {
 
 describe("SolarGainLoadSource", () => {
   test("heat transfer scales with irradiance", () => {
-    const date = new Date("2024-01-24T20:00:00");
-    const solarMultiplier = 1.0;
+    const date = DateTime.fromISO("2024-01-24T20:00:00");
+    const solarModifier = 1.0;
 
-    let load = new SolarGainLoadSource(
+    let load = new SolarGainLoadSource({
       geometry,
-      solarMultiplier
-    ).getBtusPerHour(date, {
+      solarModifier,
+    }).getBtusPerHour(date, {
       ...env,
       solarIrradiance: {
         altitudeDegrees: 45,
@@ -175,28 +176,28 @@ describe("SolarGainLoadSource", () => {
     });
     expect(load).toBeCloseTo(1317, 0);
 
-    load = new SolarGainLoadSource(geometry, solarMultiplier).getBtusPerHour(
-      date,
-      {
-        ...env,
-        solarIrradiance: {
-          altitudeDegrees: 90,
-          wattsPerSquareMeter: 200,
-        },
-      }
-    );
+    load = new SolarGainLoadSource({
+      geometry,
+      solarModifier,
+    }).getBtusPerHour(date, {
+      ...env,
+      solarIrradiance: {
+        altitudeDegrees: 90,
+        wattsPerSquareMeter: 200,
+      },
+    });
     expect(load).toBeCloseTo(652, 0);
 
-    load = new SolarGainLoadSource(geometry, solarMultiplier).getBtusPerHour(
-      date,
-      {
-        ...env,
-        solarIrradiance: {
-          altitudeDegrees: 0.001,
-          wattsPerSquareMeter: 200,
-        },
-      }
-    );
+    load = new SolarGainLoadSource({
+      geometry,
+      solarModifier,
+    }).getBtusPerHour(date, {
+      ...env,
+      solarIrradiance: {
+        altitudeDegrees: 0.001,
+        wattsPerSquareMeter: 200,
+      },
+    });
     expect(load).toBeCloseTo(666, 0);
   });
 });
