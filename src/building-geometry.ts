@@ -19,15 +19,34 @@ export class BuildingGeometry {
   readonly btusPerDegreeF: number;
 
   constructor(geometry: {
+    // Total floor space square feet, including the basement
     floorSpaceSqFt: number;
-    ceilingHeightFt: number;
-    numStories: number;
-    lengthToWidthRatio: number;
-  }) {
-    const { floorSpaceSqFt, ceilingHeightFt, numStories, lengthToWidthRatio } =
-      geometry;
 
-    const footPrintSquareFeet = floorSpaceSqFt / numStories;
+    // Ceiling height. If it's variable, use the average.
+    ceilingHeightFt: number;
+
+    // Number of above ground stories. A two story building with a basement (so
+    // 3 floor total) would have numAboveGroundStories = 2.
+    numAboveGroundStories: number;
+
+    // What's the ratio of the house's length to width? A value of 3 would mean
+    // the house is 3 times as long as it is wide.
+    lengthToWidthRatio: number;
+
+    // True if the building has a basement
+    hasConditionedBasement: boolean;
+  }) {
+    const {
+      floorSpaceSqFt,
+      ceilingHeightFt,
+      numAboveGroundStories,
+      lengthToWidthRatio,
+      hasConditionedBasement,
+    } = geometry;
+
+    const numFloors = numAboveGroundStories + (hasConditionedBasement ? 1 : 0);
+
+    const footPrintSquareFeet = floorSpaceSqFt / numFloors;
     const footPrintLengthFeet = Math.sqrt(
       footPrintSquareFeet / lengthToWidthRatio
     );
@@ -35,7 +54,7 @@ export class BuildingGeometry {
     const perimeterFeet = footPrintLengthFeet * 2 + footPrintWidthFeet * 2;
 
     const exteriorWallsAndWindowsSquareFeet =
-      perimeterFeet * ceilingHeightFt * numStories;
+      perimeterFeet * ceilingHeightFt * numAboveGroundStories;
 
     // From Manual J
     // TODO(jlfwong): Find the source for this
@@ -52,7 +71,7 @@ export class BuildingGeometry {
     this.ceilingSqFt = footPrintSquareFeet;
     this.exteriorFloorSqFt = footPrintSquareFeet;
 
-    const airVolumeCubicFt = footPrintSquareFeet * ceilingHeightFt * numStories;
+    const airVolumeCubicFt = footPrintSquareFeet * ceilingHeightFt * numFloors;
 
     // Specific heat capacity of air
     const airBtusPerLbDegreeF = 0.24;

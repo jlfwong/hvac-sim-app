@@ -22,8 +22,9 @@ const env: EnvironmentalConditions = {
 const geometry = new BuildingGeometry({
   floorSpaceSqFt: 3000,
   ceilingHeightFt: 9,
-  numStories: 2,
+  numAboveGroundStories: 2,
   lengthToWidthRatio: 3,
+  hasConditionedBasement: false,
 });
 
 describe("OccupantsLoad", () => {

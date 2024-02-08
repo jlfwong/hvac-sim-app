@@ -259,7 +259,7 @@ function getAltitudeCorrectionFactor(elevationInFeet: number): number {
 
   // This table is annoying close to being linear, but we'll do a lookup
   // instead of simple math anyway.
-  const factorByAltitude = {
+  const factorByAltitude: { [key: number]: number } = {
     0: 1.0,
     1: 0.96,
     2: 0.93,
