@@ -1,11 +1,11 @@
 import { EnvironmentalConditions } from "./types";
 import {
   ConductionConvectionLoadSource,
-  HomeGeometry,
   InfiltrationLoadSource,
   OccupantsLoadSource,
   SolarGainLoadSource,
 } from "./thermal-loads";
+import { BuildingGeometry } from "./building-geometry";
 
 const env: EnvironmentalConditions = {
   outsideAirTempF: 70, // Average comfortable outdoor temperature
@@ -19,7 +19,7 @@ const env: EnvironmentalConditions = {
   },
 };
 
-const geometry = new HomeGeometry({
+const geometry = new BuildingGeometry({
   floorSpaceSqFt: 3000,
   ceilingHeightFt: 9,
   numStories: 2,

@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import { BuildingGeometry } from "./building-geometry";
 
 type ThermostatAction = "heat" | "cool" | "off";
 

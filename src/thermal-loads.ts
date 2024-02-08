@@ -1,3 +1,4 @@
+import { BuildingGeometry } from "./building-geometry";
 import { interpolateClamped } from "./math";
 import { EnvironmentalConditions } from "./types";
 
@@ -48,53 +49,11 @@ export class OccupantsLoadSource implements ThermalLoadSource {
   }
 }
 
-interface HomeGeometryParams {
-  floorSpaceSqFt: number;
-  ceilingHeightFt: number;
-  numStories: number;
-  lengthToWidthRatio: number;
-}
-
-export class HomeGeometry {
-  windowsSqFt: number;
-  wallsSqFt: number;
-  ceilingSqFt: number;
-  floorSqFt: number;
-
-  constructor(private geometry: HomeGeometryParams) {
-    const { floorSpaceSqFt, ceilingHeightFt, numStories, lengthToWidthRatio } =
-      geometry;
-
-    const footPrintSquareFeet = floorSpaceSqFt / numStories;
-    const footPrintLengthFeet = Math.sqrt(
-      footPrintSquareFeet / lengthToWidthRatio
-    );
-    const footPrintWidthFeet = footPrintSquareFeet / footPrintLengthFeet;
-    const perimeterFeet = footPrintLengthFeet * 2 + footPrintWidthFeet * 2;
-
-    const wallsAndWindowsSquareFeet =
-      perimeterFeet * ceilingHeightFt * numStories;
-
-    // From Manual J
-    // TODO(jlfwong): Find the source for this
-    const percentageWallsThatAreWindows = 20;
-
-    const windowsSquareFeet =
-      (percentageWallsThatAreWindows / 100.0) * wallsAndWindowsSquareFeet;
-    const wallsSquareFeeet = wallsAndWindowsSquareFeet - windowsSquareFeet;
-
-    this.wallsSqFt = wallsSquareFeeet;
-    this.windowsSqFt = windowsSquareFeet;
-    this.ceilingSqFt = footPrintSquareFeet;
-    this.floorSqFt = footPrintSquareFeet;
-  }
-}
-
 // Load caused by heat energy equilibriating via conduction and convection
 // through the building envelope
 export class ConductionConvectionLoadSource implements ThermalLoadSource {
   constructor(
-    private geometry: HomeGeometry,
+    private geometry: BuildingGeometry,
     private envelopeMultiplier: number // lower value means tighter
   ) {}
 
@@ -104,16 +63,26 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
   ): number {
     const deltaTempF = conditions.outsideAirTempF - conditions.insideAirTempF;
 
-    const { wallsSqFt, windowsSqFt, ceilingSqFt, floorSqFt } = this.geometry;
+    const {
+      exteriorWallsSqFt: wallsSqFt,
+      windowsSqFt,
+      ceilingSqFt,
+      exteriorFloorSqFt: floorSqFt,
+    } = this.geometry;
 
     // U values BTUs/(hr x ft^2 x °F)
     // TODO(jlfwong): Source these values
     const wallUFactor = 0.086;
     const windowUFactor = 0.751;
+
     const ceilingUFactor = 0.076;
+
+    // TODO(jlfwong): Thinking about floor losses like this is confusing to me
+    // because the ground temperature is totally different than the outside air
+    // temperature.
     const floorUFactor = 0.101;
 
-    // TODO(jlfwong): Small optimization by factoring out the evenlope multiplier & deltaTempF
+    // TODO(jlfwong): Small optimization by factoring out the envelope multiplier & deltaTempF
     const wallLoadbtusPerHour =
       wallUFactor * wallsSqFt * deltaTempF * this.envelopeMultiplier;
     const ceilingLoadbtusPerHour =
@@ -145,7 +114,7 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
 // Load caused by air moving in and out of the building due to imperfect seal
 export class InfiltrationLoadSource implements ThermalLoadSource {
   constructor(
-    private geometry: HomeGeometry,
+    private geometry: BuildingGeometry,
     private envelopeModifier: number // lower value means tighter
   ) {}
 
@@ -219,7 +188,10 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
 
 // Load from sunlight hitting the house
 export class SolarGainLoadSource implements ThermalLoadSource {
-  constructor(private geometry: HomeGeometry, private solarModifier: number) {}
+  constructor(
+    private geometry: BuildingGeometry,
+    private solarModifier: number
+  ) {}
 
   getBtusPerHour(
     localDateTime: Date,
@@ -267,7 +239,11 @@ export class SolarGainLoadSource implements ThermalLoadSource {
     const windowSolarGainPerSqFt = 3.5;
     const wallsSolarGainPerSqft = 0.5;
 
-    const { windowsSqFt, wallsSqFt, ceilingSqFt } = this.geometry;
+    const {
+      windowsSqFt,
+      exteriorWallsSqFt: wallsSqFt,
+      ceilingSqFt,
+    } = this.geometry;
 
     const ceilingGain =
       ceilingSolarGainPerSqFt *
