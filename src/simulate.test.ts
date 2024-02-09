@@ -35,7 +35,7 @@ describe("simulateBuildingHVAC", () => {
 
     // TODO(jlfwong): these are a bit weird to have separately because they have
     // to share geometry & modifiers. Would perhaps be alleviated by having a
-    // function to return standard loads for a buildling?
+    // function to return standard loads for a building?
     new SolarGainLoadSource({ geometry: buildingGeometry, solarModifier: 1.0 }),
     new ConductionConvectionLoadSource({
       geometry: buildingGeometry,
@@ -110,8 +110,8 @@ describe("simulateBuildingHVAC", () => {
       utilityPlans,
     });
 
-    expect(result.bills.length).toBe(2);
-    expect(result.hourlyResults.length).toBe(7 * 24);
+    expect(result.bills.electricity?.length).toBe(1);
+    expect(result.bills.naturalGas?.length).toBe(1);
   });
 
   it("can simulate a year", () => {
@@ -148,7 +148,8 @@ describe("simulateBuildingHVAC", () => {
       utilityPlans,
     });
 
-    expect(result.bills.length).toBe(2 * 12);
+    expect(result.bills.electricity?.length).toBe(12);
+    expect(result.bills.naturalGas?.length).toBe(12);
     expect(result.hourlyResults.length).toBe(364 * 24);
   });
 });

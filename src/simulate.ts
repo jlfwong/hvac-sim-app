@@ -18,15 +18,15 @@ interface HourlySimulationResult {
   fuelUsage: FuelUsageRate;
 }
 
-interface EquipmentSimulationResult {
-  hourlyResults: HourlySimulationResult[];
-  bills: EnergyBill[];
+interface UtilityBills {
+  electricity?: EnergyBill[];
+  naturalGas?: EnergyBill[];
+  fuelOil?: EnergyBill[];
 }
 
-interface Utilities {
-  electricalUtility?: ElectricalUtilityPlan | null;
-  naturalGasUtility?: NaturalGasUtilityPlan | null;
-  fuelOilUtility?: FuelOilUtilityPlan | null;
+interface EquipmentSimulationResult {
+  hourlyResults: HourlySimulationResult[];
+  bills: UtilityBills;
 }
 
 export class FuelBilling {
@@ -80,11 +80,18 @@ export class FuelBilling {
       );
     }
   }
-
-  getBills(from: DateTime, to: DateTime): EnergyBill[] {
-    return (this.electricalUtilityPlan?.getBills(from, to) || [])
-      .concat(this.naturalGasUtilityPlan?.getBills(from, to) || [])
-      .concat(this.fuelOilUtilityPlan?.getBills(from, to) || []);
+  getBills(from: DateTime, to: DateTime): UtilityBills {
+    const bills: UtilityBills = {};
+    if (this.electricalUtilityPlan) {
+      bills.electricity = this.electricalUtilityPlan.getBills(from, to);
+    }
+    if (this.naturalGasUtilityPlan) {
+      bills.naturalGas = this.naturalGasUtilityPlan.getBills(from, to);
+    }
+    if (this.fuelOilUtilityPlan) {
+      bills.fuelOil = this.fuelOilUtilityPlan.getBills(from, to);
+    }
+    return bills;
   }
 }
 

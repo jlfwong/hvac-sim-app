@@ -3,6 +3,7 @@
     "module": "commonjs",
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "target": "ES2015",
     "strict": true
   }
 }
