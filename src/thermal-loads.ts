@@ -1,14 +1,15 @@
 import { DateTime } from "luxon";
 import { BuildingGeometry } from "./building-geometry";
 import { interpolateClamped } from "./math";
-import { EnvironmentalConditions } from "./types";
+import { WeatherSnapshot } from "./types";
 
 export interface ThermalLoadSource {
   // Positive values mean warming the contents of the building, negative values
   // mean cooling.
   getBtusPerHour(
     localDateTime: DateTime,
-    conditions: EnvironmentalConditions
+    insideAirTempF: number,
+    weather: WeatherSnapshot
   ): number;
 }
 
@@ -18,7 +19,8 @@ export class OccupantsLoadSource implements ThermalLoadSource {
 
   getBtusPerHour(
     localDateTime: DateTime,
-    conditions: EnvironmentalConditions
+    insideAirTempF: number,
+    weather: WeatherSnapshot
   ): number {
     const hour = localDateTime.hour;
 
@@ -62,9 +64,10 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
 
   getBtusPerHour(
     localDateTime: DateTime,
-    conditions: EnvironmentalConditions
+    insideAirTempF: number,
+    weather: WeatherSnapshot
   ): number {
-    const deltaTempF = conditions.outsideAirTempF - conditions.insideAirTempF;
+    const deltaTempF = weather.outsideAirTempF - insideAirTempF;
 
     const {
       exteriorWallsSqFt: wallsSqFt,
@@ -95,7 +98,7 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
 
     // TODO(jlfwong): Ask Baker about window cooling deflator of 0.90
     const windowCoolingDeflating =
-      conditions.outsideAirTempF > conditions.insideAirTempF ? 0.9 : 1.0;
+      weather.outsideAirTempF > insideAirTempF ? 0.9 : 1.0;
 
     const windowLoadbtusPerHour =
       windowUFactor *
@@ -125,12 +128,13 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
 
   getBtusPerHour(
     localDateTime: DateTime,
-    conditions: EnvironmentalConditions
+    insideAirTempF: number,
+    weather: WeatherSnapshot
   ): number {
     // BTUs/(hr x ft^2 x °F)
 
     let uFactor: number;
-    if (conditions.windSpeedMph <= 5) {
+    if (weather.windSpeedMph <= 5) {
       // TODO(jlfwong): Find the right section to cite for these figures
       //
       // Also it seems nuts that this is a step-function change rather than
@@ -150,8 +154,7 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
     // average   |              0.60 | 2.7 (or 2.8 when it's cold)
     // loose     |              1.05 | 5.6 (or 5.8 when it's cold)
 
-    const isColderOutside =
-      conditions.outsideAirTempF < conditions.insideAirTempF;
+    const isColderOutside = weather.outsideAirTempF < insideAirTempF;
 
     if (this.options.envelopeModifier <= 0.6) {
       infiltrationMultiplier = interpolateClamped(
@@ -171,7 +174,7 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
       );
     }
 
-    let deltaT = conditions.outsideAirTempF - conditions.insideAirTempF;
+    let deltaT = weather.outsideAirTempF - insideAirTempF;
 
     // Will be negative if inside air is warmer than outside air.
     let infiltrationGainbtusPerHour =
@@ -180,7 +183,7 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
       deltaT *
       infiltrationMultiplier;
 
-    if (conditions.relativeHumidityPercent > 50) {
+    if (weather.relativeHumidityPercent > 50) {
       // Regardless of whether we're heating or warming, the effects of added humidity contribute gain,
       // since condensation is exothermic
       //
@@ -207,7 +210,8 @@ export class SolarGainLoadSource implements ThermalLoadSource {
 
   getBtusPerHour(
     localDateTime: DateTime,
-    conditions: EnvironmentalConditions
+    insideAirTempF: number,
+    conditions: WeatherSnapshot
   ): number {
     const { solarIrradiance } = conditions;
 

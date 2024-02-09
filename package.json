@@ -4,7 +4,8 @@
   "description": "A library for modeling loads and costs for heat pumps, furnaces, air conditioners etc.",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
   },
   "jest": {
     "transform": {

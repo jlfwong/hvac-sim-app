@@ -1,6 +1,5 @@
-export interface EnvironmentalConditions {
+export interface WeatherSnapshot {
   outsideAirTempF: number;
-  insideAirTempF: number;
   relativeHumidityPercent: number;
   windSpeedMph: number;
   cloudCoverPercent: number;

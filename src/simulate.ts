@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { EnvironmentalConditions, FuelUsageRate, HVACAppliance } from "./types";
+import { WeatherSnapshot, FuelUsageRate, HVACAppliance } from "./types";
 import { WeatherSource } from "./weather";
 import { Thermostat } from "./thermostat";
 import {
@@ -14,7 +14,7 @@ import { ThermalLoadSource } from "./thermal-loads";
 interface HourlySimulationResult {
   localTime: DateTime;
   insideAirTempF: number;
-  conditions: EnvironmentalConditions;
+  weather: WeatherSnapshot;
   fuelUsage: FuelUsageRate;
 }
 
@@ -138,14 +138,6 @@ export function simulateBuildingHVAC(options: {
   while (localTime < options.localEndTime) {
     const weather = options.weatherSource.getWeather(localTime);
 
-    // TOOD(jlfwong): This is silly having these two very similar types. It
-    // would be better to just pass inside air temp information separately, I
-    // think.
-    const conditions: EnvironmentalConditions = {
-      insideAirTempF,
-      ...weather,
-    };
-
     // Most thermostats operate by directly actuating heating equipment rather
     // than externally communicating a target temperature. We could do the same
     // thing here, having the thermostat communicate "heat" or "cool" or "off",
@@ -162,7 +154,11 @@ export function simulateBuildingHVAC(options: {
 
     let passiveBtus = 0;
     for (let loadSource of options.loadSources) {
-      passiveBtus += loadSource.getBtusPerHour(localTime, conditions);
+      passiveBtus += loadSource.getBtusPerHour(
+        localTime,
+        insideAirTempF,
+        weather
+      );
     }
 
     const targetDeltaTempF = targetInsideAirTempF - insideAirTempF;
@@ -209,7 +205,7 @@ export function simulateBuildingHVAC(options: {
     results.push({
       localTime,
       insideAirTempF,
-      conditions,
+      weather,
       fuelUsage: hourlyFuelUsage,
     });
 

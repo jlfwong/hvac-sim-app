@@ -1,4 +1,4 @@
-import { EnvironmentalConditions } from "./types";
+import { WeatherSnapshot } from "./types";
 import {
   ConductionConvectionLoadSource,
   InfiltrationLoadSource,
@@ -8,9 +8,10 @@ import {
 import { BuildingGeometry } from "./building-geometry";
 import { DateTime } from "luxon";
 
-const env: EnvironmentalConditions = {
+const indoorAirTempF = 68;
+
+const env: WeatherSnapshot = {
   outsideAirTempF: 70, // Average comfortable outdoor temperature
-  insideAirTempF: 68, // Common inside temperature setting
   relativeHumidityPercent: 50, // Comfortable humidity level
   windSpeedMph: 5, // Light breeze
   cloudCoverPercent: 20, // Mostly clear skies
@@ -31,26 +32,42 @@ const geometry = new BuildingGeometry({
 describe("OccupantsLoad", () => {
   test("varies with number of occupants", () => {
     const date = DateTime.fromISO("2024-01-24T20:00:00");
-    let load = new OccupantsLoadSource(1).getBtusPerHour(date, env);
+    let load = new OccupantsLoadSource(1).getBtusPerHour(
+      date,
+      indoorAirTempF,
+      env
+    );
     expect(load).toEqual(430);
 
-    load = new OccupantsLoadSource(2).getBtusPerHour(date, env);
+    load = new OccupantsLoadSource(2).getBtusPerHour(date, indoorAirTempF, env);
     expect(load).toEqual(2 * 430);
   });
 
   test("ignores occupants that are out of the house", () => {
     const date = DateTime.fromISO("2024-01-24T12:00:00");
-    let load = new OccupantsLoadSource(1).getBtusPerHour(date, env);
+    let load = new OccupantsLoadSource(1).getBtusPerHour(
+      date,
+      indoorAirTempF,
+      env
+    );
     expect(load).toEqual(0);
   });
 
   test("discounts occupants that are sleeping", () => {
     const dateAwake = DateTime.fromISO("2024-01-24T20:00:00");
-    let load = new OccupantsLoadSource(1).getBtusPerHour(dateAwake, env);
+    let load = new OccupantsLoadSource(1).getBtusPerHour(
+      dateAwake,
+      indoorAirTempF,
+      env
+    );
     expect(load).toEqual(430);
 
     const dateAsleep = DateTime.fromISO("2024-01-24T23:00:00");
-    load = new OccupantsLoadSource(1).getBtusPerHour(dateAsleep, env);
+    load = new OccupantsLoadSource(1).getBtusPerHour(
+      dateAsleep,
+      indoorAirTempF,
+      env
+    );
     expect(load).toBeCloseTo(365.5);
   });
 });
@@ -63,50 +80,45 @@ describe("ConductionConvectionLoadSource", () => {
     let load = new ConductionConvectionLoadSource({
       geometry,
       envelopeModifier: envelopeMultiplier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: -22,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-58046, 0);
 
     load = new ConductionConvectionLoadSource({
       geometry,
       envelopeModifier: envelopeMultiplier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 31,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-24606, 0);
 
     load = new ConductionConvectionLoadSource({
       geometry,
       envelopeModifier: envelopeMultiplier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 60,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-6309, 0);
 
     load = new ConductionConvectionLoadSource({
       geometry,
       envelopeModifier: envelopeMultiplier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 70,
-      insideAirTempF: 70,
     });
     expect(load).toBe(0);
 
     load = new ConductionConvectionLoadSource({
       geometry,
       envelopeModifier: envelopeMultiplier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 90,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(11990, 0);
   });
@@ -120,40 +132,36 @@ describe("InfiltrationLoadSource", () => {
     let load = new InfiltrationLoadSource({
       geometry,
       envelopeModifier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 31,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-4137, 0);
 
     load = new InfiltrationLoadSource({
       geometry,
       envelopeModifier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 50,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(-2122, 0);
 
     load = new InfiltrationLoadSource({
       geometry,
       envelopeModifier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 80,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(1023, 0);
 
     load = new InfiltrationLoadSource({
       geometry,
       envelopeModifier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, 70, {
       ...env,
       outsideAirTempF: 90,
-      insideAirTempF: 70,
     });
     expect(load).toBeCloseTo(2046, 0);
   });
@@ -167,7 +175,7 @@ describe("SolarGainLoadSource", () => {
     let load = new SolarGainLoadSource({
       geometry,
       solarModifier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, indoorAirTempF, {
       ...env,
       solarIrradiance: {
         altitudeDegrees: 45,
@@ -179,7 +187,7 @@ describe("SolarGainLoadSource", () => {
     load = new SolarGainLoadSource({
       geometry,
       solarModifier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, indoorAirTempF, {
       ...env,
       solarIrradiance: {
         altitudeDegrees: 90,
@@ -191,7 +199,7 @@ describe("SolarGainLoadSource", () => {
     load = new SolarGainLoadSource({
       geometry,
       solarModifier,
-    }).getBtusPerHour(date, {
+    }).getBtusPerHour(date, indoorAirTempF, {
       ...env,
       solarIrradiance: {
         altitudeDegrees: 0.001,

@@ -1,21 +1,11 @@
 import { DateTime } from "luxon";
-
-interface WeatherEntry {
-  outsideAirTempF: number;
-  relativeHumidityPercent: number;
-  windSpeedMph: number;
-  cloudCoverPercent: number;
-  solarIrradiance: {
-    altitudeDegrees: number;
-    wattsPerSquareMeter: number;
-  };
-}
+import { WeatherSnapshot } from "./types";
 
 export interface WeatherSource {
-  getWeather(localTime: DateTime): WeatherEntry;
+  getWeather(localTime: DateTime): WeatherSnapshot;
 }
 
-interface JSONWeatherEntry extends WeatherEntry {
+interface JSONWeatherEntry extends WeatherSnapshot {
   datetime: string;
 }
 
@@ -34,7 +24,7 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
     return datetime.toUTC().toFormat("yyyy-LL-dd HH");
   }
 
-  getWeather(localTime: DateTime<boolean>): WeatherEntry {
+  getWeather(localTime: DateTime<boolean>): WeatherSnapshot {
     const hourKey = this.hourKey(localTime);
     if (!(hourKey in this.entryByHour)) {
       throw new Error(`No entry for ${hourKey}`);
