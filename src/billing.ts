@@ -115,6 +115,11 @@ class SimpleMonthlyUsageTracker {
   }
 
   recordUsage(amount: number, localTime: DateTime): void {
+    if (amount < 0) {
+      throw new Error(
+        `Cannot record using negative amounts of fuel. Received: ${amount} ${this.options.fuelUnit}`
+      );
+    }
     const key = this.monthKeyFor(localTime);
     this.usageByMonth[key] = (this.usageByMonth[key] || 0) + amount;
   }
@@ -282,6 +287,12 @@ export class TimeOfUseElectricalUtilityPlan implements ElectricalUtilityPlan {
   }
 
   recordElectricityUsageKwh(kWh: number, localTime: DateTime): void {
+    if (kWh < 0) {
+      throw new Error(
+        `Cannot record using negative amounts of electricity. Received: ${kWh} kWh`
+      );
+    }
+
     const key = this.monthKeyFor(localTime);
     const period = this.timeOfUsePeriodFor(localTime);
     if (!(key in this.usageByMonth)) {

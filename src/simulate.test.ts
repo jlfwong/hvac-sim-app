@@ -15,8 +15,6 @@ import { GasFurnace } from "./furnace";
 import {
   SimpleElectricalUtilityPlan,
   SimpleNaturalGasUtilityPlan,
-  TimeOfUseElectricalUtilityPlan,
-  TimeOfUsePeriod,
 } from "./billing";
 import { DateTime } from "luxon";
 import { simulateBuildingHVAC } from "./simulate";
@@ -47,23 +45,22 @@ describe("simulateBuildingHVAC", () => {
     }),
   ];
 
-  const hvacAppliances: HVACAppliance[] = [
-    new AirConditioner({
-      seer: 11,
-      capacityBtusPerHour: 40000,
-      elevationFeet: 0,
-      speedSettings: "single-speed",
-    }),
-    new GasFurnace({
-      afuePercent: 96,
-      capacityBtusPerHour: 80000,
-      elevationFeet: 0,
-    }),
-  ];
+  const ac = new AirConditioner({
+    seer: 11,
+    capacityBtusPerHour: 40000,
+    elevationFeet: 0,
+    speedSettings: "single-speed",
+  });
+
+  const furnace = new GasFurnace({
+    afuePercent: 96,
+    capacityBtusPerHour: 80000,
+    elevationFeet: 0,
+  });
 
   const thermostat = new SimpleThermostat({
-    minimumTempF: 70,
-    maximumTempF: 80,
+    heatingSetPointF: 70,
+    coolingSetPointF: 80,
   });
 
   const weatherSource = new JSONBackedHourlyWeatherSource(ottawaData2023);
@@ -104,7 +101,8 @@ describe("simulateBuildingHVAC", () => {
       initialInsideAirTempF: 75,
       buildingGeometry,
       loadSources,
-      hvacAppliances,
+      coolingAppliance: ac,
+      heatingAppliance: furnace,
       thermostat,
       weatherSource,
       utilityPlans,
@@ -142,14 +140,46 @@ describe("simulateBuildingHVAC", () => {
       initialInsideAirTempF: 75,
       buildingGeometry,
       loadSources,
-      hvacAppliances,
+      coolingAppliance: ac,
+      heatingAppliance: furnace,
       thermostat,
       weatherSource,
       utilityPlans,
     });
 
+    // expect(buildingGeometry.btusPerDegreeF).toBe(0);
+
     expect(result.bills.electricity?.length).toBe(12);
     expect(result.bills.naturalGas?.length).toBe(12);
     expect(result.hourlyResults.length).toBe(364 * 24);
+
+    expect(
+      result.hourlyResults
+        .slice(0, 24)
+        .map((b) => [
+          b.localTime,
+          b.weather.outsideAirTempF,
+          b.insideAirTempF,
+          b.fuelUsage,
+        ])
+    ).toBe([]);
+
+    /*
+    expect(
+      result.bills.naturalGas?.map((b) => [
+        b.getBillingPeriodStart().toISODate(),
+        b.getFuelUsage(),
+      ])
+    ).toBe([]);
+    */
+
+    // TODO(jlfwong): These results are definitely wrong.  These usage values
+    // seem way too low, even if this is purely for air conditioning.
+    expect(
+      result.bills.electricity?.map((b) => [
+        b.getBillingPeriodStart().toISODate(),
+        b.getTotalCost(),
+      ])
+    ).toBe([]);
   });
 });

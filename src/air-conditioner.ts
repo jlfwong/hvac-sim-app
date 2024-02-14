@@ -119,6 +119,12 @@ export class AirConditioner implements HVACAppliance {
     const kWNeeded =
       btusToKwh(Math.abs(rating.btusPerHour)) / rating.coefficientOfPerformance;
 
+    if (kWNeeded < 0) {
+      throw new Error(
+        "Reported a negative power demand from an air conditioner"
+      );
+    }
+
     return {
       btusPerHour: rating.btusPerHour,
       fuelUsage: {

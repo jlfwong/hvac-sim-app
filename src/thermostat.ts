@@ -1,33 +1,48 @@
 import { DateTime } from "luxon";
 
+// Real thermostats also control whether the fan is on or not, but we'll ignore
+// tha for now.
+type ThermostatCommand = "heat" | "cool" | "off";
+
 export interface Thermostat {
-  getTargetInsideAirTempF(options: {
+  getHeatingSetPointTempF(localTime: DateTime): number;
+  getCoolingSetPointTempF(localTime: DateTime): number;
+
+  getCommand(options: {
     localTime: DateTime;
     insideAirTempF: number;
-  }): number;
+  }): ThermostatCommand;
 }
 
 export class SimpleThermostat implements Thermostat {
   constructor(
     private options: {
-      minimumTempF: number;
-      maximumTempF: number;
+      heatingSetPointF: number;
+      coolingSetPointF: number;
     }
   ) {}
 
-  getTargetInsideAirTempF(options: {
+  getHeatingSetPointTempF(localTime: DateTime<boolean>): number {
+    return this.options.heatingSetPointF;
+  }
+
+  getCoolingSetPointTempF(localTime: DateTime<boolean>): number {
+    return this.options.coolingSetPointF;
+  }
+
+  getCommand(options: {
     localTime: DateTime;
     insideAirTempF: number;
-  }): number {
-    if (options.insideAirTempF < this.options.minimumTempF) {
+  }): ThermostatCommand {
+    if (options.insideAirTempF < this.options.heatingSetPointF) {
       // Too cold!
-      return this.options.minimumTempF;
-    } else if (options.insideAirTempF > this.options.maximumTempF) {
+      return "heat";
+    } else if (options.insideAirTempF > this.options.coolingSetPointF) {
       // Too hot!
-      return this.options.maximumTempF;
+      return "cool";
     } else {
       // We're good! Don't change a thing
-      return options.insideAirTempF;
+      return "off";
     }
   }
 }

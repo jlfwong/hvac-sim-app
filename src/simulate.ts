@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 import { WeatherSnapshot, FuelUsageRate, HVACAppliance } from "./types";
 import { WeatherSource } from "./weather";
 import { Thermostat } from "./thermostat";
@@ -27,6 +27,11 @@ interface UtilityBills {
 interface EquipmentSimulationResult {
   hourlyResults: HourlySimulationResult[];
   bills: UtilityBills;
+}
+
+// TODO(jlfwong): Move this to a utils file
+function assertNever(x: never): never {
+  throw new Error("Unexpected object: " + x);
 }
 
 export class FuelBilling {
@@ -110,7 +115,8 @@ export function simulateBuildingHVAC(options: {
   initialInsideAirTempF: number;
   buildingGeometry: BuildingGeometry;
   loadSources: ThermalLoadSource[];
-  hvacAppliances: HVACAppliance[];
+  heatingAppliance: HVACAppliance;
+  coolingAppliance: HVACAppliance;
   thermostat: Thermostat;
   weatherSource: WeatherSource;
   utilityPlans: {
@@ -144,14 +150,25 @@ export function simulateBuildingHVAC(options: {
     // but for that to be remotely realistic, we'd need to simulate at a much
     // more granular time step than once an hour.
     //
+    // The ecobee default minimum cycle times are 5 minutes (there are separate
+    // settings for minimum "on time" and minimum "off time")
+    // https://downloads.ctfassets.net/a3qyhfznts9y/55gpc6jhRTJ7KjXDjxDRzu/ad17b04461596be3b00b9c65d6e3a895/ecobee_Premium_install-setup-user_manual_v1.pdf
+    //
+    // Simulating once every 20 minutes or so is probably reasoanble. This
+    // corresponds to a cycle-count of 3 times per hour, which
+    //
     // So, instead, we cheat by asking for the target temperature, then
     // calculate the number of BTUs that would be needed for the hour to reach
     // or maintain the target temperature.
-    const targetInsideAirTempF = options.thermostat.getTargetInsideAirTempF({
-      localTime,
-      insideAirTempF,
-    });
+    //
+    // This is tricky to balance with the desire to have the system fully off
+    // when the home is already in the desired temperature range.
+    //
+    // TODO(jlfwong): Experiment with increasing simulation frequency by
+    // interpolating weather data
 
+    // Determine the heating load on the building from non-HVAC sources (e.g.
+    // heating moving through the walls, or sun shining on the building).
     let passiveBtus = 0;
     for (let loadSource of options.loadSources) {
       passiveBtus += loadSource.getBtusPerHour(
@@ -161,28 +178,56 @@ export function simulateBuildingHVAC(options: {
       );
     }
 
-    const targetDeltaTempF = targetInsideAirTempF - insideAirTempF;
-
-    // We want enough heating/cooling from our HVAC equipment to counteract the
-    // passive loads on the house and reach the target temperature.
-    //
-    // TODO(jlfwong): There's an edge case here where we don't want to use HVAC
-    // at all if the current inside temperature is within the comfortable range.
-    // At the moment the thermostat interface doesn't expose the information
-    // about what that range is.
-    const btusNeededFromHVAC =
-      -passiveBtus + targetDeltaTempF * options.buildingGeometry.btusPerDegreeF;
-
     const hourlyFuelUsage: FuelUsageRate = {};
-    let btusProvidedByHVAC = 0;
-    for (let appliance of options.hvacAppliances) {
+
+    const thermostatCommand = options.thermostat.getCommand({
+      localTime,
+      insideAirTempF,
+    });
+
+    if (thermostatCommand !== "off") {
+      let targetInsideAirTempF: number;
+      let appliance: HVACAppliance;
+      if (thermostatCommand === "cool") {
+        appliance = options.coolingAppliance;
+        targetInsideAirTempF =
+          options.thermostat.getCoolingSetPointTempF(localTime);
+      } else if (thermostatCommand === "heat") {
+        appliance = options.heatingAppliance;
+        targetInsideAirTempF =
+          options.thermostat.getHeatingSetPointTempF(localTime);
+      } else {
+        assertNever(thermostatCommand);
+      }
+
+      // TODO(jlfwong): Design this to overshoot by some amount, or at least
+      // only trigger heat when it's below some threshold.
+      //
+      // This also indicates that having the thermostat + hvac equipment as
+      // a single unified abstraction in this system probably makes more sense.
+      const targetDeltaTempF = targetInsideAirTempF - insideAirTempF;
+
+      // We want enough heating/cooling from our HVAC equipment to counteract the
+      // passive loads on the house and reach the target temperature.
+      //
+      // TODO(jlfwong): The equipment being away of the incoming passive thermal
+      // loads is totally unrealistic. A real system would only have sensor data
+      // available.
+      const btusNeededFromHVAC =
+        -passiveBtus +
+        targetDeltaTempF * options.buildingGeometry.btusPerDegreeF;
+
       const response = appliance.getThermalResponse({
         btusPerHourNeeded: btusNeededFromHVAC,
         insideAirTempF,
         outsideAirTempF: weather.outsideAirTempF,
       });
 
-      btusProvidedByHVAC += response.btusPerHour;
+      // Apply the temperature change caused by HVAC equipment
+      insideAirTempF +=
+        response.btusPerHour / options.buildingGeometry.btusPerDegreeF;
+
+      // Bill for fuel usage
       for (let key in response.fuelUsage) {
         // These any casts are currently safe because the type of
         // response.fuelUsage and hourlyFuelUsage are the same. If the types
@@ -191,15 +236,11 @@ export function simulateBuildingHVAC(options: {
           ((hourlyFuelUsage as any)[key] || 0) +
           (response as any).fuelUsage[key];
       }
+      billing.recordOneHourUsage(hourlyFuelUsage, localTime);
     }
 
-    // Update the interior temperature based on all the relevant heating loads
-    const netBtus = passiveBtus + btusNeededFromHVAC;
-    const tempChangeF = netBtus / options.buildingGeometry.btusPerDegreeF;
-    insideAirTempF += tempChangeF;
-
-    // Bill for fuel usage
-    billing.recordOneHourUsage(hourlyFuelUsage, localTime);
+    // Apply the temperature change caused by passive loads
+    insideAirTempF += passiveBtus / options.buildingGeometry.btusPerDegreeF;
 
     // Record the results for the hour
     results.push({

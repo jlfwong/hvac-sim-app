@@ -79,7 +79,26 @@ export class BuildingGeometry {
     // TODO(jlfwong): This varies with elevation
     const airLbsPerCubicFoot = 0.075;
 
+    // Data from beestat during while all heating equipment was off. Heating setpoint 20.0C
+    // - Friday, Feb 9 @ 1:00pm EST: inside 20.8C, outside 7.7C
+    // - Friday, Feb 9 @ 9:00pm EST: inside 19.3C, outside 5.5C
+    //
+    // So in 8 hours, there was only a 1.5C heat loss, or 0.34 deg F/hr.
+    //
+    // The BTU loss calculation during that time is around based on infiltration
+    // and convection/conduction is ballpark 5200 BTUs/hr (pluggin in the
+    // temperature differentiatl and assumptions about the building envelope).
+    //
+    // That works out to around 15,000 BTU/deg F.
+    //
+    // The same assumptions about building envelope suggest a thermal mass of
+    // air of 486 BTU/deg F. If that's right, that would assume that the thermal
+    // mass of the house is only 3% air. This is also, of course, making tons of
+    // assumptions about the rate of equilibriation.
+    const fractionOfThermalMassGivenToAir = 0.03;
+
     this.btusPerDegreeF =
-      airVolumeCubicFt * airBtusPerLbDegreeF * airLbsPerCubicFoot;
+      (airVolumeCubicFt * airLbsPerCubicFoot * airBtusPerLbDegreeF) /
+      fractionOfThermalMassGivenToAir;
   }
 }

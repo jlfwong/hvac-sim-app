@@ -4,38 +4,38 @@ import { SimpleThermostat } from "./thermostat";
 describe("SimpleThermostat", () => {
   test("basic operation", () => {
     const thermostat = new SimpleThermostat({
-      minimumTempF: 70,
-      maximumTempF: 80,
+      heatingSetPointF: 70,
+      coolingSetPointF: 80,
     });
 
     const localTime = DateTime.local(2024, 1, 1, 1, 1, 1, 1);
 
     expect(
-      thermostat.getTargetInsideAirTempF({
+      thermostat.getCommand({
         localTime,
         insideAirTempF: 85,
       })
-    ).toEqual(80);
+    ).toEqual("cool");
 
     expect(
-      thermostat.getTargetInsideAirTempF({
+      thermostat.getCommand({
         localTime,
         insideAirTempF: 80,
       })
-    ).toEqual(80);
+    ).toEqual("off");
 
     expect(
-      thermostat.getTargetInsideAirTempF({
+      thermostat.getCommand({
         localTime,
         insideAirTempF: 70,
       })
-    ).toEqual(70);
+    ).toEqual("off");
 
     expect(
-      thermostat.getTargetInsideAirTempF({
+      thermostat.getCommand({
         localTime,
         insideAirTempF: 60,
       })
-    ).toEqual(70);
+    ).toEqual("heat");
   });
 });

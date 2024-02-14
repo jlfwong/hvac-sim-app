@@ -36,6 +36,10 @@ export class GasFurnace implements HVACAppliance {
     insideAirTempF: number;
     outsideAirTempF: number;
   }): HVACApplianceResponse {
+    if (options.btusPerHourNeeded < 0) {
+      // Furnaces can't cool :)
+      return { btusPerHour: 0, fuelUsage: {} };
+    }
     // Gas furnaces' efficiency in converting natural gas to heat is independent
     // of the temperature differential.
 
