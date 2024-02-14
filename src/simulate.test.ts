@@ -1,9 +1,7 @@
 import { BuildingGeometry } from "./building-geometry";
-import { SimpleThermostat } from "./thermostat";
 import ottawaData2023 from "../data/weather/2023-ottawa-era5.json";
 import { JSONBackedHourlyWeatherSource } from "./weather";
 import { AirConditioner } from "./air-conditioner";
-import { HVACAppliance } from "./types";
 import {
   ConductionConvectionLoadSource,
   InfiltrationLoadSource,
@@ -18,6 +16,7 @@ import {
 } from "./billing";
 import { DateTime } from "luxon";
 import { simulateBuildingHVAC } from "./simulate";
+import { SimpleHVACSystem } from "./hvac-system";
 
 describe("simulateBuildingHVAC", () => {
   const buildingGeometry = new BuildingGeometry({
@@ -58,9 +57,12 @@ describe("simulateBuildingHVAC", () => {
     elevationFeet: 0,
   });
 
-  const thermostat = new SimpleThermostat({
-    heatingSetPointF: 70,
+  const hvacSystem = new SimpleHVACSystem({
     coolingSetPointF: 80,
+    coolingAppliance: ac,
+
+    heatingSetPointF: 70,
+    heatingAppliance: furnace,
   });
 
   const weatherSource = new JSONBackedHourlyWeatherSource(ottawaData2023);
@@ -101,9 +103,7 @@ describe("simulateBuildingHVAC", () => {
       initialInsideAirTempF: 75,
       buildingGeometry,
       loadSources,
-      coolingAppliance: ac,
-      heatingAppliance: furnace,
-      thermostat,
+      hvacSystem,
       weatherSource,
       utilityPlans,
     });
@@ -140,9 +140,7 @@ describe("simulateBuildingHVAC", () => {
       initialInsideAirTempF: 75,
       buildingGeometry,
       loadSources,
-      coolingAppliance: ac,
-      heatingAppliance: furnace,
-      thermostat,
+      hvacSystem,
       weatherSource,
       utilityPlans,
     });
@@ -151,16 +149,16 @@ describe("simulateBuildingHVAC", () => {
 
     expect(result.bills.electricity?.length).toBe(12);
     expect(result.bills.naturalGas?.length).toBe(12);
-    expect(result.hourlyResults.length).toBe(364 * 24);
+    expect(result.timeSteps.length).toBe(364 * 24);
 
     expect(
-      result.hourlyResults
+      result.timeSteps
         .slice(0, 24)
         .map((b) => [
           b.localTime,
           b.weather.outsideAirTempF,
           b.insideAirTempF,
-          b.fuelUsage,
+          b.hvacSystemResponse,
         ])
     ).toBe([]);
 

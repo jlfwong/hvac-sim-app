@@ -1,5 +1,10 @@
 import { DateTime, Duration } from "luxon";
-import { WeatherSnapshot, FuelUsageRate, HVACAppliance } from "./types";
+import {
+  WeatherSnapshot,
+  FuelUsageRate,
+  HVACAppliance,
+  HVACApplianceResponse,
+} from "./types";
 import { WeatherSource } from "./weather";
 import { Thermostat } from "./thermostat";
 import {
@@ -10,12 +15,13 @@ import {
 } from "./billing";
 import { BuildingGeometry } from "./building-geometry";
 import { ThermalLoadSource } from "./thermal-loads";
+import { HVACSystem } from "./hvac-system";
 
-interface HourlySimulationResult {
+interface SimulationStep {
   localTime: DateTime;
   insideAirTempF: number;
   weather: WeatherSnapshot;
-  fuelUsage: FuelUsageRate;
+  hvacSystemResponse: HVACApplianceResponse;
 }
 
 interface UtilityBills {
@@ -25,7 +31,7 @@ interface UtilityBills {
 }
 
 interface EquipmentSimulationResult {
-  hourlyResults: HourlySimulationResult[];
+  timeSteps: SimulationStep[];
   bills: UtilityBills;
 }
 
@@ -115,9 +121,7 @@ export function simulateBuildingHVAC(options: {
   initialInsideAirTempF: number;
   buildingGeometry: BuildingGeometry;
   loadSources: ThermalLoadSource[];
-  heatingAppliance: HVACAppliance;
-  coolingAppliance: HVACAppliance;
-  thermostat: Thermostat;
+  hvacSystem: HVACSystem;
   weatherSource: WeatherSource;
   utilityPlans: {
     electrical?: ElectricalUtilityPlan;
@@ -136,7 +140,7 @@ export function simulateBuildingHVAC(options: {
     billing.setFuelOilUtilityPlan(options.utilityPlans.fuelOil);
   }
 
-  let results: HourlySimulationResult[] = [];
+  let results: SimulationStep[] = [];
 
   let localTime: DateTime = options.localStartTime;
   let insideAirTempF = options.initialInsideAirTempF;
@@ -178,66 +182,20 @@ export function simulateBuildingHVAC(options: {
       );
     }
 
-    const hourlyFuelUsage: FuelUsageRate = {};
-
-    const thermostatCommand = options.thermostat.getCommand({
+    const hvacSystemResponse = options.hvacSystem.getThermalResponse({
       localTime,
       insideAirTempF,
+      outsideAirTempF: weather.outsideAirTempF,
     });
 
-    if (thermostatCommand !== "off") {
-      let targetInsideAirTempF: number;
-      let appliance: HVACAppliance;
-      if (thermostatCommand === "cool") {
-        appliance = options.coolingAppliance;
-        targetInsideAirTempF =
-          options.thermostat.getCoolingSetPointTempF(localTime);
-      } else if (thermostatCommand === "heat") {
-        appliance = options.heatingAppliance;
-        targetInsideAirTempF =
-          options.thermostat.getHeatingSetPointTempF(localTime);
-      } else {
-        assertNever(thermostatCommand);
-      }
+    // Apply the temperature change caused by HVAC equipment
+    insideAirTempF +=
+      hvacSystemResponse.btusPerHour / options.buildingGeometry.btusPerDegreeF;
 
-      // TODO(jlfwong): Design this to overshoot by some amount, or at least
-      // only trigger heat when it's below some threshold.
-      //
-      // This also indicates that having the thermostat + hvac equipment as
-      // a single unified abstraction in this system probably makes more sense.
-      const targetDeltaTempF = targetInsideAirTempF - insideAirTempF;
-
-      // We want enough heating/cooling from our HVAC equipment to counteract the
-      // passive loads on the house and reach the target temperature.
-      //
-      // TODO(jlfwong): The equipment being away of the incoming passive thermal
-      // loads is totally unrealistic. A real system would only have sensor data
-      // available.
-      const btusNeededFromHVAC =
-        -passiveBtus +
-        targetDeltaTempF * options.buildingGeometry.btusPerDegreeF;
-
-      const response = appliance.getThermalResponse({
-        btusPerHourNeeded: btusNeededFromHVAC,
-        insideAirTempF,
-        outsideAirTempF: weather.outsideAirTempF,
-      });
-
-      // Apply the temperature change caused by HVAC equipment
-      insideAirTempF +=
-        response.btusPerHour / options.buildingGeometry.btusPerDegreeF;
-
-      // Bill for fuel usage
-      for (let key in response.fuelUsage) {
-        // These any casts are currently safe because the type of
-        // response.fuelUsage and hourlyFuelUsage are the same. If the types
-        // diverged though, this wouldn't give a type error.
-        (hourlyFuelUsage as any)[key] =
-          ((hourlyFuelUsage as any)[key] || 0) +
-          (response as any).fuelUsage[key];
-      }
-      billing.recordOneHourUsage(hourlyFuelUsage, localTime);
-    }
+    // Bill for fuel usage
+    //
+    // TODO(jlfwong): Update this once time step is variable
+    billing.recordOneHourUsage(hvacSystemResponse.fuelUsage, localTime);
 
     // Apply the temperature change caused by passive loads
     insideAirTempF += passiveBtus / options.buildingGeometry.btusPerDegreeF;
@@ -247,7 +205,7 @@ export function simulateBuildingHVAC(options: {
       localTime,
       insideAirTempF,
       weather,
-      fuelUsage: hourlyFuelUsage,
+      hvacSystemResponse,
     });
 
     // Step forward the simulation by 1 hour
@@ -255,7 +213,7 @@ export function simulateBuildingHVAC(options: {
   }
 
   return {
-    hourlyResults: results,
+    timeSteps: results,
     bills: billing.getBills(options.localStartTime, options.localEndTime),
   };
 }
