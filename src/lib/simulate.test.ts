@@ -1,5 +1,5 @@
 import { BuildingGeometry } from "./building-geometry";
-import ottawaData2023 from "../data/weather/2023-ottawa-era5.json";
+import ottawaData2023 from "../../data/weather/2023-ottawa-era5.json";
 import { JSONBackedHourlyWeatherSource } from "./weather";
 import { AirConditioner } from "./air-conditioner";
 import {
@@ -145,28 +145,24 @@ describe("simulateBuildingHVAC", () => {
       utilityPlans,
     });
 
-    // expect(buildingGeometry.btusPerDegreeF).toBe(0);
-
     expect(result.bills.electricity?.length).toBe(12);
     expect(result.bills.naturalGas?.length).toBe(12);
-    expect(result.timeSteps.length).toBe(364 * 24);
+    expect(result.timeSteps.length).toBe(364 * 24 * 6);
 
     expect(
-      result.timeSteps
-        .slice(0, 24)
-        .map((b) => [
-          b.localTime,
-          b.weather.outsideAirTempF,
-          b.insideAirTempF,
-          b.hvacSystemResponse,
-        ])
-    ).toBe([]);
+      result.bills.naturalGas!.reduce((acc, b) => acc + b.getTotalCost(), 0)
+    ).toBeCloseTo(0);
+
+    expect(
+      result.bills.naturalGas!.reduce((acc, b) => acc + b.getTotalCost(), 0)
+    ).toBeCloseTo(0);
 
     /*
     expect(
       result.bills.naturalGas?.map((b) => [
         b.getBillingPeriodStart().toISODate(),
         b.getFuelUsage(),
+        b.getTotalCost(),
       ])
     ).toBe([]);
     */

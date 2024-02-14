@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 import { WeatherSnapshot, FuelUsageRate, HVACApplianceResponse } from "./types";
 import { WeatherSource } from "./weather";
 import {
@@ -54,33 +54,39 @@ export class FuelBilling {
   recordNaturalGasUsageCcf(ccf: number, localTime: DateTime): void {}
   recordFuelOilUsageGallons(gallons: number, localTime: DateTime): void {}
 
-  recordOneHourUsage(usage: FuelUsageRate, localTime: DateTime) {
-    if (usage.electricityKw) {
+  recordUsage(
+    usageRate: FuelUsageRate,
+    duration: Duration,
+    localTime: DateTime
+  ) {
+    const durationInHours = duration.as("hours");
+
+    if (usageRate.electricityKw) {
       if (!this.electricalUtilityPlan) {
         throw new Error("No electrical utility configured");
       }
       this.electricalUtilityPlan.recordElectricityUsageKwh(
-        usage.electricityKw,
+        usageRate.electricityKw * durationInHours,
         localTime
       );
     }
 
-    if (usage.naturalGasCcfPerHour) {
+    if (usageRate.naturalGasCcfPerHour) {
       if (!this.naturalGasUtilityPlan) {
         throw new Error("No natural gas utility configured");
       }
       this.naturalGasUtilityPlan.recordNaturalGasUsageCcf(
-        usage.naturalGasCcfPerHour,
+        usageRate.naturalGasCcfPerHour * durationInHours,
         localTime
       );
     }
 
-    if (usage.fuelOilGallonsPerHour) {
+    if (usageRate.fuelOilGallonsPerHour) {
       if (!this.fuelOilUtilityPlan) {
         throw new Error("No fuel oil utility configured");
       }
       this.fuelOilUtilityPlan.recordFuelOilUsageGallons(
-        usage.fuelOilGallonsPerHour,
+        usageRate.fuelOilGallonsPerHour * durationInHours,
         localTime
       );
     }
@@ -139,42 +145,11 @@ export function simulateBuildingHVAC(options: {
   let localTime: DateTime = options.localStartTime;
   let insideAirTempF = options.initialInsideAirTempF;
 
+  const timeStepDuration = Duration.fromObject({ minutes: 10 });
+  const timeStepInHours = timeStepDuration.as("hours");
+
   while (localTime < options.localEndTime) {
     const weather = options.weatherSource.getWeather(localTime);
-
-    // Most thermostats operate by directly actuating heating equipment rather
-    // than externally communicating a target temperature. We could do the same
-    // thing here, having the thermostat communicate "heat" or "cool" or "off",
-    // but for that to be remotely realistic, we'd need to simulate at a much
-    // more granular time step than once an hour.
-    //
-    // The ecobee default minimum cycle times are 5 minutes (there are separate
-    // settings for minimum "on time" and minimum "off time")
-    // https://downloads.ctfassets.net/a3qyhfznts9y/55gpc6jhRTJ7KjXDjxDRzu/ad17b04461596be3b00b9c65d6e3a895/ecobee_Premium_install-setup-user_manual_v1.pdf
-    //
-    // Simulating once every 20 minutes or so is probably reasoanble. This
-    // corresponds to a cycle-count of 3 times per hour, which
-    //
-    // So, instead, we cheat by asking for the target temperature, then
-    // calculate the number of BTUs that would be needed for the hour to reach
-    // or maintain the target temperature.
-    //
-    // This is tricky to balance with the desire to have the system fully off
-    // when the home is already in the desired temperature range.
-    //
-    // TODO(jlfwong): Experiment with increasing simulation frequency by
-    // interpolating weather data
-
-    // Determine the heating load on the building from non-HVAC sources (e.g.
-    // heating moving through the walls, or sun shining on the building).
-    let passiveBtus = 0;
-    for (let loadSource of options.loadSources) {
-      passiveBtus += loadSource.getBtusPerHour(
-        localTime,
-        insideAirTempF,
-        weather
-      );
-    }
 
     const hvacSystemResponse = options.hvacSystem.getThermalResponse({
       localTime,
@@ -182,17 +157,24 @@ export function simulateBuildingHVAC(options: {
       outsideAirTempF: weather.outsideAirTempF,
     });
 
-    // Apply the temperature change caused by HVAC equipment
-    insideAirTempF +=
-      hvacSystemResponse.btusPerHour / options.buildingGeometry.btusPerDegreeF;
-
     // Bill for fuel usage
-    //
-    // TODO(jlfwong): Update this once time step is variable
-    billing.recordOneHourUsage(hvacSystemResponse.fuelUsage, localTime);
+    billing.recordUsage(
+      hvacSystemResponse.fuelUsage,
+      timeStepDuration,
+      localTime
+    );
 
     // Apply the temperature change caused by passive loads
-    insideAirTempF += passiveBtus / options.buildingGeometry.btusPerDegreeF;
+    // Determine the heating load on the building from non-HVAC sources (e.g.
+    // heating moving through the walls, or sun shining on the building).
+    let passiveBtusPerHour = 0;
+    for (let loadSource of options.loadSources) {
+      passiveBtusPerHour += loadSource.getBtusPerHour(
+        localTime,
+        insideAirTempF,
+        weather
+      );
+    }
 
     // Record the results for the hour
     results.push({
@@ -202,8 +184,18 @@ export function simulateBuildingHVAC(options: {
       hvacSystemResponse,
     });
 
-    // Step forward the simulation by 1 hour
-    localTime = localTime.plus({ hours: 1 });
+    // Step forward the simulation
+
+    // Apply the temperature change caused by HVAC equipment and passive loads
+    // We do this after we add the timestep results to ensure temporal
+    // consistency. All of the entries in the reslts are for the beginning of
+    // that time step.
+    insideAirTempF +=
+      ((passiveBtusPerHour + hvacSystemResponse.btusPerHour) *
+        timeStepInHours) /
+      options.buildingGeometry.btusPerDegreeF;
+
+    localTime = localTime.plus(timeStepDuration);
   }
 
   return {

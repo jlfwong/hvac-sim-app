@@ -38,7 +38,7 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
 
     // We use hour plus one rather than .endOf("hour") here because
     // the end of the hour gives :59:59.99. If you ask for the hourKey
-    // for that hour, you get the same hour.
+    // for that time, you get the same key as the startOfHour.
     const endOfHour = startOfHour.plus({ hours: 1 });
 
     const startWeather = this.getWeatherForHour(startOfHour);
