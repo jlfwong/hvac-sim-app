@@ -85,9 +85,9 @@ export class BuildingGeometry {
     //
     // So in 8 hours, there was only a 1.5C heat loss, or 0.34 deg F/hr.
     //
-    // The BTU loss calculation during that time is around based on infiltration
-    // and convection/conduction is ballpark 5200 BTUs/hr (pluggin in the
-    // temperature differentiatl and assumptions about the building envelope).
+    // The BTU loss calculation during that time based on infiltration and
+    // convection/conduction is ballpark 5000 BTUs/hr (pluggin in the
+    // temperature differential and assumptions about the building envelope).
     //
     // That works out to around 15,000 BTU/deg F.
     //
