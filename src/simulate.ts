@@ -1,12 +1,6 @@
-import { DateTime, Duration } from "luxon";
-import {
-  WeatherSnapshot,
-  FuelUsageRate,
-  HVACAppliance,
-  HVACApplianceResponse,
-} from "./types";
+import { DateTime } from "luxon";
+import { WeatherSnapshot, FuelUsageRate, HVACApplianceResponse } from "./types";
 import { WeatherSource } from "./weather";
-import { Thermostat } from "./thermostat";
 import {
   ElectricalUtilityPlan,
   EnergyBill,
