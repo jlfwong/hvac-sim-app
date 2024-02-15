@@ -64,11 +64,9 @@ export class SimpleHVACSystem implements HVACSystem {
         insideAirTempF: options.insideAirTempF,
         outsideAirTempF: options.outsideAirTempF,
       });
-    }
-
-    if (this.mode === "cool") {
+    } else if (this.mode === "cool") {
       // TODO(jlfwong): Update this once the interface for appliances is updated
-      return this.options.heatingAppliance.getThermalResponse({
+      return this.options.coolingAppliance.getThermalResponse({
         btusPerHourNeeded: -999999,
         insideAirTempF: options.insideAirTempF,
         outsideAirTempF: options.outsideAirTempF,

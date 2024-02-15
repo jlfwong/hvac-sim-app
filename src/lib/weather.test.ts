@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import ottawaData2023 from "../data/weather/2023-ottawa-era5.json";
+import ottawaData2023 from "../../static/data/weather/2023-ottawa-era5.json";
 import { JSONBackedHourlyWeatherSource } from "./weather";
 
 describe("JSONBackedHourlyWeather", () => {

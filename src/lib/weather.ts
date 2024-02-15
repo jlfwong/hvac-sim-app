@@ -6,7 +6,7 @@ export interface WeatherSource {
   getWeather(localTime: DateTime): WeatherSnapshot;
 }
 
-interface JSONWeatherEntry extends WeatherSnapshot {
+export interface JSONWeatherEntry extends WeatherSnapshot {
   datetime: string;
 }
 
@@ -34,7 +34,11 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
   }
 
   getWeather(localTime: DateTime): WeatherSnapshot {
-    const startOfHour = localTime.startOf("hour");
+    // We convert to UTC immediately because the startOf and plus functions are
+    // more efficient when operating on UTC because they don't have to
+    // complicated timezone reconciliation at each step.
+    const utc = localTime.toUTC();
+    const startOfHour = utc.startOf("hour");
 
     // We use hour plus one rather than .endOf("hour") here because
     // the end of the hour gives :59:59.99. If you ask for the hourKey
@@ -53,7 +57,7 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
     // estimate.
     const startMillis = startOfHour.toMillis();
     const endMillis = endOfHour.toMillis();
-    const targetMillis = localTime.toMillis();
+    const targetMillis = utc.toMillis();
 
     const outsideAirTempF = interpolate(
       startMillis,

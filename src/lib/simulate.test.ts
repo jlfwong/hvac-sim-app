@@ -1,5 +1,5 @@
 import { BuildingGeometry } from "./building-geometry";
-import ottawaData2023 from "../../data/weather/2023-ottawa-era5.json";
+import ottawaData2023 from "../../static/data/weather/2023-ottawa-era5.json";
 import { JSONBackedHourlyWeatherSource } from "./weather";
 import { AirConditioner } from "./air-conditioner";
 import {
@@ -74,7 +74,7 @@ describe("simulateBuildingHVAC", () => {
     }),
     naturalGas: new SimpleNaturalGasUtilityPlan({
       fixedCostPerMonth: 22,
-      costPerCcf: 15,
+      costPerCcf: 1.2,
     }),
   };
 

@@ -344,3 +344,85 @@ export class AirSourceHeatPump implements HVACAppliance {
     };
   }
 }
+
+// Example ratings for use in simple tests
+export const panasonicHeatPumpRatings: NEEPccASHPRatingInfo[] = [
+  {
+    mode: "cooling",
+    outdoorDryBulbFahrenheit: 95,
+    insideDryBulbFahrenheit: 80,
+    minCapacity: {
+      btusPerHour: 13000,
+      coefficientOfPerformance: 3.7,
+    },
+    maxCapacity: {
+      btusPerHour: 47400,
+      coefficientOfPerformance: 2.42,
+    },
+  },
+  {
+    mode: "cooling",
+    outdoorDryBulbFahrenheit: 82,
+    insideDryBulbFahrenheit: 80,
+    minCapacity: {
+      btusPerHour: 12000,
+      coefficientOfPerformance: 5.58,
+    },
+    maxCapacity: {
+      btusPerHour: 40000,
+      coefficientOfPerformance: 3.78,
+    },
+  },
+  {
+    mode: "heating",
+    outdoorDryBulbFahrenheit: 47,
+    insideDryBulbFahrenheit: 70,
+    minCapacity: {
+      btusPerHour: 11000,
+      coefficientOfPerformance: 4.67,
+    },
+    maxCapacity: {
+      btusPerHour: 57200,
+      coefficientOfPerformance: 2.94,
+    },
+  },
+  {
+    mode: "heating",
+    outdoorDryBulbFahrenheit: 17,
+    insideDryBulbFahrenheit: 70,
+    minCapacity: {
+      btusPerHour: 15000,
+      coefficientOfPerformance: 3.57,
+    },
+    maxCapacity: {
+      btusPerHour: 47000,
+      coefficientOfPerformance: 1.9,
+    },
+  },
+  {
+    mode: "heating",
+    outdoorDryBulbFahrenheit: 5,
+    insideDryBulbFahrenheit: 70,
+    minCapacity: {
+      btusPerHour: 12500,
+      coefficientOfPerformance: 3.05,
+    },
+    maxCapacity: {
+      btusPerHour: 36876,
+      coefficientOfPerformance: 1.96,
+    },
+  },
+  {
+    mode: "heating",
+    outdoorDryBulbFahrenheit: -22,
+    insideDryBulbFahrenheit: 70,
+    minCapacity: {
+      btusPerHour: 12300,
+      coefficientOfPerformance: 3.05,
+    },
+    maxCapacity: {
+      btusPerHour: 21500,
+      coefficientOfPerformance: 1.26,
+    },
+  },
+];

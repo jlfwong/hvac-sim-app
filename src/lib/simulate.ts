@@ -1,4 +1,4 @@
-import { DateTime, Duration } from "luxon";
+import { DateTime, Duration, Zone } from "luxon";
 import { WeatherSnapshot, FuelUsageRate, HVACApplianceResponse } from "./types";
 import { WeatherSource } from "./weather";
 import {
@@ -24,7 +24,7 @@ interface UtilityBills {
   fuelOil?: EnergyBill[];
 }
 
-interface EquipmentSimulationResult {
+export interface HVACSimulationResult {
   timeSteps: SimulationStep[];
   bills: UtilityBills;
 }
@@ -56,11 +56,9 @@ export class FuelBilling {
 
   recordUsage(
     usageRate: FuelUsageRate,
-    duration: Duration,
+    durationInHours: number,
     localTime: DateTime
   ) {
-    const durationInHours = duration.as("hours");
-
     if (usageRate.electricityKw) {
       if (!this.electricalUtilityPlan) {
         throw new Error("No electrical utility configured");
@@ -128,7 +126,7 @@ export function simulateBuildingHVAC(options: {
     naturalGas?: NaturalGasUtilityPlan;
     fuelOil?: FuelOilUtilityPlan;
   };
-}): EquipmentSimulationResult {
+}): HVACSimulationResult {
   const billing = new FuelBilling();
   if (options.utilityPlans.electrical) {
     billing.setElectricalUtilityPlan(options.utilityPlans.electrical);
@@ -142,14 +140,30 @@ export function simulateBuildingHVAC(options: {
 
   let results: SimulationStep[] = [];
 
-  let localTime: DateTime = options.localStartTime;
+  const timezone: Zone = options.localStartTime.zone;
+
+  if (options.localStartTime.zone !== options.localStartTime.zone) {
+    throw new Error("Given a different timezone for start and end datetimes");
+  }
+
+  // We operate in UTC rather than local time because it makes the date math run
+  // more efficiently since it avoids the need to reconcile timezones after each
+  // operation, because e.g. DST might kick in across an addition boundary.
+  let utcTime: DateTime = options.localStartTime.toUTC();
   let insideAirTempF = options.initialInsideAirTempF;
+
+  const endTimeMillis: number = options.localEndTime.toMillis();
 
   const timeStepDuration = Duration.fromObject({ minutes: 10 });
   const timeStepInHours = timeStepDuration.as("hours");
 
-  while (localTime < options.localEndTime) {
-    const weather = options.weatherSource.getWeather(localTime);
+  while (utcTime.toMillis() < endTimeMillis) {
+    const weather = options.weatherSource.getWeather(utcTime);
+
+    // Timezone reconciliation slows down this simulation a non-negligible
+    // amount, but is unfortunately necessary for time of use billing and for
+    // thermostat schedules that e.g. set different temperatures for sleeping.
+    const localTime = utcTime.setZone(timezone);
 
     const hvacSystemResponse = options.hvacSystem.getThermalResponse({
       localTime,
@@ -160,7 +174,7 @@ export function simulateBuildingHVAC(options: {
     // Bill for fuel usage
     billing.recordUsage(
       hvacSystemResponse.fuelUsage,
-      timeStepDuration,
+      timeStepInHours,
       localTime
     );
 
@@ -170,7 +184,7 @@ export function simulateBuildingHVAC(options: {
     let passiveBtusPerHour = 0;
     for (let loadSource of options.loadSources) {
       passiveBtusPerHour += loadSource.getBtusPerHour(
-        localTime,
+        utcTime,
         insideAirTempF,
         weather
       );
@@ -178,7 +192,7 @@ export function simulateBuildingHVAC(options: {
 
     // Record the results for the hour
     results.push({
-      localTime,
+      localTime: utcTime,
       insideAirTempF,
       weather,
       hvacSystemResponse,
@@ -195,7 +209,7 @@ export function simulateBuildingHVAC(options: {
         timeStepInHours) /
       options.buildingGeometry.btusPerDegreeF;
 
-    localTime = localTime.plus(timeStepDuration);
+    utcTime = utcTime.plus(timeStepDuration);
   }
 
   return {
