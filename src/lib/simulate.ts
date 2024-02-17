@@ -154,7 +154,7 @@ export function simulateBuildingHVAC(options: {
 
   const endTimeMillis: number = options.localEndTime.toMillis();
 
-  const timeStepDuration = Duration.fromObject({ minutes: 10 });
+  const timeStepDuration = Duration.fromObject({ minutes: 60 });
   const timeStepInHours = timeStepDuration.as("hours");
 
   while (utcTime.toMillis() < endTimeMillis) {
