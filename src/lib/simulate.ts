@@ -122,20 +122,20 @@ export function simulateBuildingHVAC(options: {
   hvacSystem: HVACSystem;
   weatherSource: WeatherSource;
   utilityPlans: {
-    electrical?: ElectricalUtilityPlan;
-    naturalGas?: NaturalGasUtilityPlan;
-    fuelOil?: FuelOilUtilityPlan;
+    electrical?: () => ElectricalUtilityPlan;
+    naturalGas?: () => NaturalGasUtilityPlan;
+    fuelOil?: () => FuelOilUtilityPlan;
   };
 }): HVACSimulationResult {
   const billing = new FuelBilling();
   if (options.utilityPlans.electrical) {
-    billing.setElectricalUtilityPlan(options.utilityPlans.electrical);
+    billing.setElectricalUtilityPlan(options.utilityPlans.electrical());
   }
   if (options.utilityPlans.naturalGas) {
-    billing.setNaturalGasUtility(options.utilityPlans.naturalGas);
+    billing.setNaturalGasUtility(options.utilityPlans.naturalGas());
   }
   if (options.utilityPlans.fuelOil) {
-    billing.setFuelOilUtilityPlan(options.utilityPlans.fuelOil);
+    billing.setFuelOilUtilityPlan(options.utilityPlans.fuelOil());
   }
 
   let results: SimulationStep[] = [];
@@ -154,7 +154,7 @@ export function simulateBuildingHVAC(options: {
 
   const endTimeMillis: number = options.localEndTime.toMillis();
 
-  const timeStepDuration = Duration.fromObject({ minutes: 60 });
+  const timeStepDuration = Duration.fromObject({ minutes: 20 });
   const timeStepInHours = timeStepDuration.as("hours");
 
   while (utcTime.toMillis() < endTimeMillis) {

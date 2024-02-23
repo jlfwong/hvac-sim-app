@@ -68,14 +68,16 @@ describe("simulateBuildingHVAC", () => {
   const weatherSource = new JSONBackedHourlyWeatherSource(ottawaData2023);
 
   const utilityPlans = {
-    electrical: new SimpleElectricalUtilityPlan({
-      fixedCostPerMonth: 20,
-      costPerKwh: 0.14,
-    }),
-    naturalGas: new SimpleNaturalGasUtilityPlan({
-      fixedCostPerMonth: 22,
-      costPerCcf: 1.2,
-    }),
+    electrical: () =>
+      new SimpleElectricalUtilityPlan({
+        fixedCostPerMonth: 20,
+        costPerKwh: 0.14,
+      }),
+    naturalGas: () =>
+      new SimpleNaturalGasUtilityPlan({
+        fixedCostPerMonth: 22,
+        costPerCcf: 1.2,
+      }),
   };
 
   it("can simulate a week in January", () => {
