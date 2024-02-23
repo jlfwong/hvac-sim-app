@@ -4,6 +4,7 @@ const BTU_PER_CCF_NATURAL_GAS = 103700;
 
 export class GasFurnace implements HVACAppliance {
   private deratedCapacityBtusPerHour: number;
+  readonly name: string = "Gas Furnace";
 
   constructor(
     private options: {

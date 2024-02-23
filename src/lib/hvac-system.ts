@@ -1,19 +1,13 @@
 import { DateTime } from "luxon";
 import { HVACAppliance, HVACApplianceResponse } from "./types";
-
-export interface HVACSystem {
-  getThermalResponse(options: {
-    localTime: DateTime;
-    insideAirTempF: number;
-    outsideAirTempF: number;
-  }): HVACApplianceResponse;
-}
+import { HVACSystem } from "./types";
 
 // An HVAC system using a thermostat with...
 // - No time dependent settings
 // - Treats heating/cooling equipment as single-stage
 export class SimpleHVACSystem implements HVACSystem {
   constructor(
+    readonly name: string,
     private options: {
       coolingSetPointF: number;
       coolingAppliance: HVACAppliance;
@@ -87,6 +81,7 @@ export class DualFuelTwoStageHVACSystem implements HVACSystem {
   private heatingModeStartTimestamp: number = 0;
 
   constructor(
+    readonly name: string,
     private options: {
       coolingSetPointF: number;
       coolingAppliance: HVACAppliance;

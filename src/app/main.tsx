@@ -9,9 +9,9 @@ import { GasFurnace } from "../lib/gas-furnace";
 import { AirSourceHeatPump, panasonicHeatPumpRatings } from "../lib/heatpump";
 import {
   DualFuelTwoStageHVACSystem,
-  HVACSystem,
   SimpleHVACSystem,
 } from "../lib/hvac-system";
+import { HVACSystem } from "../lib/types";
 import { HVACSimulationResult, simulateBuildingHVAC } from "../lib/simulate";
 import {
   ThermalLoadSource,
@@ -74,7 +74,7 @@ export const Main: React.FC<{
     speedSettings: "single-speed",
   });
 
-  const furnace = new GasFurnace({
+  const gasFurnace = new GasFurnace({
     afuePercent: 96,
     capacityBtusPerHour: 80000,
     elevationFeet: 0,
@@ -86,7 +86,7 @@ export const Main: React.FC<{
   const coolingAppliance = ac;
   const heatingAppliance = heatpump;
 
-  const auxHeatingAppliance = furnace;
+  const auxHeatingAppliance = gasFurnace;
   const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(0);
   const weatherSource = new JSONBackedHourlyWeatherSource(
     props.jsonWeatherData
@@ -134,24 +134,27 @@ export const Main: React.FC<{
   const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
   const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
 
-  const dualFuelSystem = new DualFuelTwoStageHVACSystem({
-    coolingSetPointF,
-    coolingAppliance,
+  const dualFuelSystem = new DualFuelTwoStageHVACSystem(
+    "Heat Pump with Gas Furnace Backup",
+    {
+      coolingSetPointF,
+      coolingAppliance,
 
-    heatingSetPointF,
-    heatingAppliance,
+      heatingSetPointF,
+      heatingAppliance,
 
-    auxSwitchoverTempF,
-    auxHeatingAppliance,
+      auxSwitchoverTempF,
+      auxHeatingAppliance,
 
-    // Like the "Compressor Stage 1 Max Runtime" setting in
-    // ecobee
-    stage1MaxDurationMinutes: 120,
+      // Like the "Compressor Stage 1 Max Runtime" setting in
+      // ecobee
+      stage1MaxDurationMinutes: 120,
 
-    // Like the "Compressor Stage 2 Temperature Delta" setting
-    // in ecobee
-    stage2TemperatureDeltaF: 1,
-  });
+      // Like the "Compressor Stage 2 Temperature Delta" setting
+      // in ecobee
+      stage2TemperatureDeltaF: 1,
+    }
+  );
 
   const dualFuelResult = simulateBuildingHVAC({
     localStartTime,
@@ -164,20 +167,23 @@ export const Main: React.FC<{
     utilityPlans,
   });
 
-  const electricFurnaceSystem = new SimpleHVACSystem({
-    coolingSetPointF,
-    coolingAppliance,
+  const alternativeSystem = new SimpleHVACSystem(
+    `Alternative - ${gasFurnace.name}`,
+    {
+      coolingSetPointF,
+      coolingAppliance,
 
-    heatingSetPointF,
-    heatingAppliance: electricFurnace,
-  });
+      heatingSetPointF,
+      heatingAppliance: gasFurnace,
+    }
+  );
 
-  const electricFurnaceResult = simulateBuildingHVAC({
+  const alternativeResult = simulateBuildingHVAC({
     localStartTime,
     localEndTime,
     initialInsideAirTempF: 72.5,
     buildingGeometry,
-    hvacSystem: electricFurnaceSystem,
+    hvacSystem: alternativeSystem,
     loadSources,
     weatherSource,
     utilityPlans,
@@ -228,12 +234,14 @@ export const Main: React.FC<{
       </InputRow>
       <ColumnContainer>
         <Column>
-          <TemperaturesView simulationResult={electricFurnaceResult} />
-          <BillingView simulationResult={electricFurnaceResult} />
-        </Column>
-        <Column>
+          <h3>{dualFuelSystem.name}</h3>
           <TemperaturesView simulationResult={dualFuelResult} />
           <BillingView simulationResult={dualFuelResult} />
+        </Column>
+        <Column>
+          <h3>{alternativeSystem.name}</h3>
+          <TemperaturesView simulationResult={alternativeResult} />
+          <BillingView simulationResult={alternativeResult} />
         </Column>
       </ColumnContainer>
     </div>

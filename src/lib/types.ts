@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+
 export interface WeatherSnapshot {
   outsideAirTempF: number;
   relativeHumidityPercent: number;
@@ -21,8 +23,20 @@ export interface HVACApplianceResponse {
 }
 
 export interface HVACAppliance {
+  name: string;
+
   getThermalResponse(options: {
     btusPerHourNeeded: number;
+    insideAirTempF: number;
+    outsideAirTempF: number;
+  }): HVACApplianceResponse;
+}
+
+export interface HVACSystem {
+  readonly name: string;
+
+  getThermalResponse(options: {
+    localTime: DateTime;
     insideAirTempF: number;
     outsideAirTempF: number;
   }): HVACApplianceResponse;

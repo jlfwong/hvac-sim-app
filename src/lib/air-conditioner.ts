@@ -45,6 +45,8 @@ import { HVACAppliance, HVACApplianceResponse } from "./types";
 import { WATT_HOUR_PER_BTU, btusToKwh } from "./units";
 
 export class AirConditioner implements HVACAppliance {
+  readonly name = "Air Conditioner";
+
   constructor(
     private options: {
       seer: number;

@@ -293,6 +293,8 @@ export class AirSourceHeatPump implements HVACAppliance {
   private sortedHeatingRatings: NEEPccASHPRatingInfo[];
   private sortedCoolingRatings: NEEPccASHPRatingInfo[];
 
+  readonly name = "AirSourceHeatPump";
+
   constructor(options: {
     elevationFeet: number;
     ratings: NEEPccASHPRatingInfo[];

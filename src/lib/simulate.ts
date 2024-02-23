@@ -9,7 +9,7 @@ import {
 } from "./billing";
 import { BuildingGeometry } from "./building-geometry";
 import { ThermalLoadSource } from "./thermal-loads";
-import { HVACSystem } from "./hvac-system";
+import { HVACSystem } from "./types";
 
 interface SimulationStep {
   localTime: DateTime;

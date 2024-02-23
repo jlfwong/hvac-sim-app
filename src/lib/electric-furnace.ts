@@ -4,6 +4,8 @@ import { kWToBtusPerHour } from "./units";
 const BTU_PER_CCF_NATURAL_GAS = 103700;
 
 export class ElectricFurnace implements HVACAppliance {
+  readonly name: string = "Electric Furnace";
+
   constructor(
     private options: {
       capacityKw: number;
