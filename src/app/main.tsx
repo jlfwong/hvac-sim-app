@@ -31,6 +31,7 @@ import React, { useState, useEffect } from "react";
 import { ElectricFurnace } from "../lib/electric-furnace";
 import { styled } from "./styled";
 import { celciusToFahrenheit } from "../lib/units";
+import d3 from "d3";
 
 export const Main: React.FC<{
   jsonWeatherData: JSONWeatherEntry[];
@@ -87,7 +88,7 @@ export const Main: React.FC<{
   const heatingAppliance = heatpump;
 
   const auxHeatingAppliance = gasFurnace;
-  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(0);
+  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(-16);
   const weatherSource = new JSONBackedHourlyWeatherSource(
     props.jsonWeatherData
   );

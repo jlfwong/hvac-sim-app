@@ -23,23 +23,19 @@ export const BillingView: React.FC<{
     height = 500 - margin.top - margin.bottom;
 
   // Set up the x-axis scale
-  const x0 = d3
+  const x = d3
     .scaleBand()
     .paddingInner(0.1)
     .domain(data.map((d) => d.date.toFormat("LLL")))
     .rangeRound([0, width]);
 
-  // Set up the scale for each group's items
-  const x1 = d3
-    .scaleBand()
-    .padding(0.05)
-    .domain(["gas", "electricity"]) // Assuming each month has the same number of bills
-    .rangeRound([0, x0.bandwidth()]);
-
   // Set up the y-axis scale
+  //
+  // TODO(jlfwong): Ensure the y-axes on each graph in the comparison
+  // view are the same
   const y = d3
     .scaleLinear()
-    .domain([0, d3.max(data, (d) => Math.max(d.gas, d.electricity)) as number])
+    .domain([0, d3.max(data, (d) => d.gas + d.electricity) as number])
     .rangeRound([height, 0]);
 
   const xAxisRef = useRef<SVGGElement | null>(null);
@@ -52,7 +48,7 @@ export const BillingView: React.FC<{
       return;
     }
 
-    d3.select(xAxisRef.current).call(d3.axisBottom(x0));
+    d3.select(xAxisRef.current).call(d3.axisBottom(x));
 
     d3.select(yAxisRef.current).call(
       d3.axisLeft(y).tickFormat((d) => currencyFormat(d))
@@ -78,21 +74,22 @@ export const BillingView: React.FC<{
           <g ref={xAxisRef} transform={`translate(0, ${height})`}></g>
           <g ref={yAxisRef}></g>
           {data.map((monthData) => {
-            const bars: React.ReactNode[] = [];
-            for (let k of ["electricity", "gas"]) {
-              bars.push(
-                <rect
-                  x={x1(k)}
-                  y={y(monthData[k as "electricity" | "gas"])}
-                  width={x1.bandwidth()}
-                  height={height - y(monthData[k as "electricity" | "gas"])}
-                  fill={color(k)}
-                />
-              );
-            }
             return (
-              <g transform={`translate(${x0(monthData.date.toFormat("LLL"))})`}>
-                {bars}
+              <g transform={`translate(${x(monthData.date.toFormat("LLL"))})`}>
+                <rect
+                  x={0}
+                  y={y(monthData.electricity)}
+                  width={x.bandwidth()}
+                  height={height - y(monthData.electricity)}
+                  fill={color("electricity")}
+                />
+                <rect
+                  x={0}
+                  y={y(monthData.gas + monthData.electricity)}
+                  width={x.bandwidth()}
+                  height={height - y(monthData.gas)}
+                  fill={color("gas")}
+                />
               </g>
             );
           })}
