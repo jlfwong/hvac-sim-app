@@ -36,7 +36,7 @@ export const BillingView: React.FC<{
   const y = d3
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.gas + d.electricity) as number])
-    .rangeRound([height, 0]);
+    .range([height, 0]);
 
   const xAxisRef = useRef<SVGGElement | null>(null);
   const yAxisRef = useRef<SVGGElement | null>(null);
@@ -80,14 +80,14 @@ export const BillingView: React.FC<{
                   x={0}
                   y={y(monthData.electricity)}
                   width={x.bandwidth()}
-                  height={height - y(monthData.electricity)}
+                  height={y(0) - y(monthData.electricity)}
                   fill={color("electricity")}
                 />
                 <rect
                   x={0}
                   y={y(monthData.gas + monthData.electricity)}
                   width={x.bandwidth()}
-                  height={height - y(monthData.gas)}
+                  height={y(0) - y(monthData.gas)}
                   fill={color("gas")}
                 />
               </g>
