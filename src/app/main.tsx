@@ -5,7 +5,7 @@ import {
   SimpleNaturalGasUtilityPlan,
 } from "../lib/billing";
 import { BuildingGeometry } from "../lib/building-geometry";
-import { GasFurnace } from "../lib/furnace";
+import { GasFurnace } from "../lib/gas-furnace";
 import { AirSourceHeatPump, panasonicHeatPumpRatings } from "../lib/heatpump";
 import { DualFuelTwoStageHVACSystem, HVACSystem } from "../lib/hvac-system";
 import { HVACSimulationResult, simulateBuildingHVAC } from "../lib/simulate";

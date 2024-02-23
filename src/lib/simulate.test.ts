@@ -9,7 +9,7 @@ import {
   SolarGainLoadSource,
   ThermalLoadSource,
 } from "./thermal-loads";
-import { GasFurnace } from "./furnace";
+import { GasFurnace } from "./gas-furnace";
 import {
   SimpleElectricalUtilityPlan,
   SimpleNaturalGasUtilityPlan,

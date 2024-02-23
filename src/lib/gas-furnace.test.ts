@@ -1,4 +1,4 @@
-import { GasFurnace } from "./furnace";
+import { GasFurnace } from "./gas-furnace";
 
 describe("GasFurnace", () => {
   describe("getThermalResponse", () => {
