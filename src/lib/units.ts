@@ -5,6 +5,10 @@ export function btusToKwh(btu: number): number {
   return btu * KWH_PER_BTU;
 }
 
+export function kWToBtusPerHour(kW: number): number {
+  return kW / KWH_PER_BTU;
+}
+
 export function fahrenheitToCelcius(fahrenheit: number): number {
   return (fahrenheit - 32) / 1.8;
 }

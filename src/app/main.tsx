@@ -7,7 +7,11 @@ import {
 import { BuildingGeometry } from "../lib/building-geometry";
 import { GasFurnace } from "../lib/gas-furnace";
 import { AirSourceHeatPump, panasonicHeatPumpRatings } from "../lib/heatpump";
-import { DualFuelTwoStageHVACSystem, HVACSystem } from "../lib/hvac-system";
+import {
+  DualFuelTwoStageHVACSystem,
+  HVACSystem,
+  SimpleHVACSystem,
+} from "../lib/hvac-system";
 import { HVACSimulationResult, simulateBuildingHVAC } from "../lib/simulate";
 import {
   ThermalLoadSource,
@@ -24,6 +28,7 @@ import {
 import { BillingView } from "./billing-view";
 import { TemperaturesView } from "./temperatures-view";
 import React, { useState, useEffect } from "react";
+import { ElectricFurnace } from "../lib/electric-furnace";
 
 const buildingGeometry = new BuildingGeometry({
   floorSpaceSqFt: 3000,
@@ -66,6 +71,10 @@ const furnace = new GasFurnace({
   afuePercent: 96,
   capacityBtusPerHour: 80000,
   elevationFeet: 0,
+});
+
+const electricFurnace = new ElectricFurnace({
+  capacityKw: 20,
 });
 
 function runSimulation(options: {
@@ -127,18 +136,18 @@ export const Main: React.FC<{
   const heatingAppliance = heatpump;
 
   const auxHeatingAppliance = furnace;
-  const [auxSwitchoverTempF, setAuxSwitchoverTempF] = useState(-5);
+  const [auxSwitchoverTempF, setAuxSwitchoverTempF] = useState(32);
   const weatherSource = new JSONBackedHourlyWeatherSource(
     props.jsonWeatherData
   );
 
-  const simulationResult = runSimulation({
+  const dualFuelResult = runSimulation({
     weatherSource,
     hvacSystem: new DualFuelTwoStageHVACSystem({
       coolingSetPointF,
       coolingAppliance,
 
-      heatingSetPointF: 70,
+      heatingSetPointF,
       heatingAppliance,
 
       auxSwitchoverTempF,
@@ -154,6 +163,17 @@ export const Main: React.FC<{
     }),
   });
 
+  const electricFurnaceResult = runSimulation({
+    weatherSource,
+    hvacSystem: new SimpleHVACSystem({
+      coolingSetPointF,
+      coolingAppliance,
+
+      heatingSetPointF,
+      heatingAppliance: electricFurnace,
+    }),
+  });
+
   return (
     <div>
       <div>
@@ -165,8 +185,16 @@ export const Main: React.FC<{
           }}
         />
       </div>
-      <TemperaturesView simulationResult={simulationResult} />
-      <BillingView simulationResult={simulationResult} />
+      <div>
+        <div>
+          <TemperaturesView simulationResult={electricFurnaceResult} />
+          <BillingView simulationResult={electricFurnaceResult} />
+        </div>
+        <div>
+          <TemperaturesView simulationResult={dualFuelResult} />
+          <BillingView simulationResult={dualFuelResult} />
+        </div>
+      </div>
     </div>
   );
 };

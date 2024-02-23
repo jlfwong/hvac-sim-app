@@ -40,3 +40,7 @@ For example, the results here in a comment suggest something is wrong:
 Both the vertical _and_ horizontal components should be falling as we reach sunset (because the sunlight needs to pass through a larger cylinder of the atmosphere to reach out)
 
 TODO(jlfwong): Confirm that these are different using pysolar
+
+# Electric furnaces
+
+The heat pumps hooray codebase says electric furnaces have no capacity limit, but all the advertised furnaces I see have a kW limit.
