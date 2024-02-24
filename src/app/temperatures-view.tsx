@@ -9,6 +9,13 @@ import { fahrenheitToCelcius } from "../lib/units";
 export const TemperaturesView: React.FC<{
   simulationResult: HVACSimulationResult;
 }> = ({ simulationResult }) => {
+  // TODO(jlfwong): Bucket these temperatures into high/low per day for a more
+  // intuitive display When zooming in, increase the granularity of the buckets.
+  // Also draw the heating set point & cooling set point.
+  //
+  // Instead of changing the buckets, could also still display the line, just
+  // fainter.
+
   // Set the dimensions and margins of the graph
   const margin = { top: 10, right: 30, bottom: 100, left: 60 },
     width = 860 - margin.left - margin.right,
