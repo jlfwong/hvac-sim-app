@@ -121,7 +121,7 @@ export const Main: React.FC<{
     dtOptions
   ).endOf("day");
 
-  const provinceCode = "AB";
+  const provinceCode = "QC";
 
   const utilityPlans = {
     electrical: () => electricalUtilityForProvince(provinceCode),
