@@ -240,11 +240,3 @@ const InputRow = styled("InputRow", "div", {
   display: "flex",
   gap: "1em",
 });
-
-const ColumnContainer = styled("ColumnContainer", "div", {
-  display: "flex",
-});
-
-const Column = styled("Column", "div", {
-  width: "50vw",
-});
