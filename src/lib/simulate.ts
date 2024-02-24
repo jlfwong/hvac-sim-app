@@ -18,15 +18,9 @@ interface SimulationStep {
   hvacSystemResponse: HVACApplianceResponse;
 }
 
-interface UtilityBills {
-  electricity?: EnergyBill[];
-  naturalGas?: EnergyBill[];
-  fuelOil?: EnergyBill[];
-}
-
 export interface HVACSimulationResult {
   timeSteps: SimulationStep[];
-  bills: UtilityBills;
+  bills: EnergyBill[];
 }
 
 // TODO(jlfwong): Move this to a utils file
@@ -89,16 +83,16 @@ export class FuelBilling {
       );
     }
   }
-  getBills(from: DateTime, to: DateTime): UtilityBills {
-    const bills: UtilityBills = {};
+  getBills(from: DateTime, to: DateTime): EnergyBill[] {
+    let bills: EnergyBill[] = [];
     if (this.electricalUtilityPlan) {
-      bills.electricity = this.electricalUtilityPlan.getBills(from, to);
+      bills = bills.concat(this.electricalUtilityPlan.getBills(from, to));
     }
     if (this.naturalGasUtilityPlan) {
-      bills.naturalGas = this.naturalGasUtilityPlan.getBills(from, to);
+      bills = bills.concat(this.naturalGasUtilityPlan.getBills(from, to));
     }
     if (this.fuelOilUtilityPlan) {
-      bills.fuelOil = this.fuelOilUtilityPlan.getBills(from, to);
+      bills = bills.concat(this.fuelOilUtilityPlan.getBills(from, to));
     }
     return bills;
   }

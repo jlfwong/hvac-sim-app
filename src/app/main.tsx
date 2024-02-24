@@ -31,7 +31,10 @@ import React, { useState, useEffect } from "react";
 import { ElectricFurnace } from "../lib/electric-furnace";
 import { styled } from "./styled";
 import { celciusToFahrenheit } from "../lib/units";
-import d3 from "d3";
+import {
+  electricalUtilityForProvince,
+  gasUtilityForProvince,
+} from "./canadian-utility-plans";
 
 export const Main: React.FC<{
   jsonWeatherData: JSONWeatherEntry[];
@@ -118,17 +121,11 @@ export const Main: React.FC<{
     dtOptions
   ).endOf("day");
 
+  const provinceCode = "AB";
+
   const utilityPlans = {
-    electrical: () =>
-      new SimpleElectricalUtilityPlan({
-        fixedCostPerMonth: 20,
-        costPerKwh: 0.1368,
-      }),
-    naturalGas: () =>
-      new SimpleNaturalGasUtilityPlan({
-        fixedCostPerMonth: 22,
-        costPerCcf: 1.19 + 0.42,
-      }),
+    electrical: () => electricalUtilityForProvince(provinceCode),
+    naturalGas: () => gasUtilityForProvince(provinceCode),
   };
 
   const coolingSetPointF = celciusToFahrenheit(coolingSetPointC);
@@ -233,18 +230,8 @@ export const Main: React.FC<{
           }}
         />
       </InputRow>
-      <ColumnContainer>
-        <Column>
-          <h3>{dualFuelSystem.name}</h3>
-          <TemperaturesView simulationResult={dualFuelResult} />
-          <BillingView simulationResult={dualFuelResult} />
-        </Column>
-        <Column>
-          <h3>{alternativeSystem.name}</h3>
-          <TemperaturesView simulationResult={alternativeResult} />
-          <BillingView simulationResult={alternativeResult} />
-        </Column>
-      </ColumnContainer>
+      <TemperaturesView simulationResult={dualFuelResult} />
+      <BillingView simulationResults={[dualFuelResult, alternativeResult]} />
     </div>
   );
 };
