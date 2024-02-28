@@ -12,10 +12,12 @@ export function styled<T>(
   name: string,
   tagName: keyof React.ReactHTML,
   style: CSSProperties | StyleDeclarationMap
-): React.FC<{ children?: React.ReactNode[] }> {
+): React.FC<{ children?: React.ReactNode | React.ReactNode[] }> {
   const sheet = StyleSheet.create({ [name]: style });
 
-  const Component: React.FC<{ children?: React.ReactNode[] }> = (props) => {
+  const Component: React.FC<{
+    children?: React.ReactNode | React.ReactNode[];
+  }> = (props) => {
     return React.createElement(
       tagName,
       { className: css(sheet[name]) },

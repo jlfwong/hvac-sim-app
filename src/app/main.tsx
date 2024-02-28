@@ -45,21 +45,88 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return await response.json(); // Parse the response body as JSON
 }
 
-export const Main: React.FC<{}> = (props) => {
-  const [floorSpaceSqFt, setFloorSpaceSqFt] = useState(3000);
+interface LocationInfo {
+  code: string;
+  placeName: string;
+  provinceCode: string;
+}
 
+type PostalCodesJson = { [forwardSortationArea: string]: LocationInfo };
+
+function useCanadianWeatherSource(initialPostalCode: string) {
+  const [postalCode, setPostalCode] = useState(initialPostalCode);
+  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
   const [weatherSource, setWeatherSource] = useState<WeatherSource | null>(
     null
   );
 
+  const [caPostalCodesJson, setCaPostalCodesJson] =
+    useState<PostalCodesJson | null>(null);
+
   useEffect(() => {
-    (async () => {
-      const ottawaData2023 = await fetchJSON<JSONWeatherEntry[]>(
-        "/data/weather/2023-vancouver-era5.json"
-      );
-      setWeatherSource(new JSONBackedHourlyWeatherSource(ottawaData2023));
-    })();
+    fetchJSON<PostalCodesJson>("./data/ca-postal-codes.json").then((data) =>
+      setCaPostalCodesJson(data)
+    );
   }, []);
+
+  useEffect(() => {
+    if (
+      !caPostalCodesJson ||
+      !/^[A-Za-z][0-9][A-Za-z] ?[0-9][A-Za-z][0-9]$/.exec(postalCode)
+    ) {
+      return;
+    }
+
+    const forwardSortationArea = postalCode.substring(0, 3).toUpperCase();
+
+    const info = caPostalCodesJson[forwardSortationArea];
+
+    // TODO(jlfwong): Consider using AbortController here
+    let cancelled = false;
+
+    if (info) {
+      setLocationInfo(info);
+
+      // TODO(jlfwong): Update this to use S3 buckets when ready
+      fetchJSON<JSONWeatherEntry[]>(
+        `./data/weather/2023-${forwardSortationArea}-era5.json`
+      ).then((weatherDataJson) => {
+        if (!cancelled) {
+          setWeatherSource(new JSONBackedHourlyWeatherSource(weatherDataJson));
+        }
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postalCode, caPostalCodesJson]);
+
+  return {
+    postalCode,
+    setPostalCode: (newPostalCode: string) => {
+      if (newPostalCode === postalCode) {
+        return;
+      }
+
+      // Whenever postal code changes, we clear the weather source and the
+      // location info. We can't do this in the useEffect beacuse then views
+      // will see a state where the new postal code is used, but the old weather
+      // data and location info is used for a single render.
+      setPostalCode(newPostalCode);
+      setWeatherSource(null);
+      setLocationInfo(null);
+    },
+    locationInfo,
+    weatherSource,
+  };
+}
+
+export const Main: React.FC<{}> = (props) => {
+  const [floorSpaceSqFt, setFloorSpaceSqFt] = useState(3000);
+
+  const { postalCode, setPostalCode, locationInfo, weatherSource } =
+    useCanadianWeatherSource("V5K 0A1");
 
   const buildingGeometry = new BuildingGeometry({
     floorSpaceSqFt,
@@ -210,6 +277,20 @@ export const Main: React.FC<{}> = (props) => {
 
   return (
     <div>
+      <InputRow>
+        Postal Code
+        <input
+          value={postalCode}
+          onChange={(ev) => {
+            setPostalCode(ev.target.value);
+          }}
+        />
+      </InputRow>
+      <InputRow>
+        <a onClick={() => setPostalCode("K2A 2Y3")}>Ottawa</a>
+        <a onClick={() => setPostalCode("V5K 0A1")}>Vancouver</a>
+      </InputRow>
+      <div>{locationInfo && locationInfo.placeName}</div>
       <InputRow>
         House Square Feet
         <input

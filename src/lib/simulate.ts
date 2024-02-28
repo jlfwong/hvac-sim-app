@@ -121,6 +121,8 @@ export function simulateBuildingHVAC(options: {
     fuelOil?: () => FuelOilUtilityPlan;
   };
 }): HVACSimulationResult {
+  console.log("Simulation with", options.weatherSource);
+
   const billing = new FuelBilling();
   if (options.utilityPlans.electrical) {
     billing.setElectricalUtilityPlan(options.utilityPlans.electrical());
