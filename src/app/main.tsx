@@ -36,10 +36,30 @@ import {
   gasUtilityForProvince,
 } from "./canadian-utility-plans";
 
-export const Main: React.FC<{
-  jsonWeatherData: JSONWeatherEntry[];
-}> = (props) => {
+async function fetchJSON<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  // Check if the response is ok (status in the range 200-299)
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return await response.json(); // Parse the response body as JSON
+}
+
+export const Main: React.FC<{}> = (props) => {
   const [floorSpaceSqFt, setFloorSpaceSqFt] = useState(3000);
+
+  const [weatherSource, setWeatherSource] = useState<WeatherSource | null>(
+    null
+  );
+
+  useEffect(() => {
+    (async () => {
+      const ottawaData2023 = await fetchJSON<JSONWeatherEntry[]>(
+        "/data/weather/2023-vancouver-era5.json"
+      );
+      setWeatherSource(new JSONBackedHourlyWeatherSource(ottawaData2023));
+    })();
+  }, []);
 
   const buildingGeometry = new BuildingGeometry({
     floorSpaceSqFt,
@@ -92,9 +112,6 @@ export const Main: React.FC<{
 
   const auxHeatingAppliance = gasFurnace;
   const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(-16);
-  const weatherSource = new JSONBackedHourlyWeatherSource(
-    props.jsonWeatherData
-  );
 
   const electricFurnace = new ElectricFurnace({
     capacityKw: 20,
@@ -121,7 +138,7 @@ export const Main: React.FC<{
     dtOptions
   ).endOf("day");
 
-  const provinceCode = "QC";
+  const provinceCode = "BC";
 
   const utilityPlans = {
     electrical: () => electricalUtilityForProvince(provinceCode),
@@ -154,17 +171,6 @@ export const Main: React.FC<{
     }
   );
 
-  const dualFuelResult = simulateBuildingHVAC({
-    localStartTime,
-    localEndTime,
-    initialInsideAirTempF: 72.5,
-    buildingGeometry,
-    hvacSystem: dualFuelSystem,
-    loadSources,
-    weatherSource,
-    utilityPlans,
-  });
-
   const alternativeSystem = new SimpleHVACSystem(
     `Alternative - ${gasFurnace.name}`,
     {
@@ -176,16 +182,31 @@ export const Main: React.FC<{
     }
   );
 
-  const alternativeResult = simulateBuildingHVAC({
-    localStartTime,
-    localEndTime,
-    initialInsideAirTempF: 72.5,
-    buildingGeometry,
-    hvacSystem: alternativeSystem,
-    loadSources,
-    weatherSource,
-    utilityPlans,
-  });
+  const dualFuelResult = weatherSource
+    ? simulateBuildingHVAC({
+        localStartTime,
+        localEndTime,
+        initialInsideAirTempF: 72.5,
+        buildingGeometry,
+        hvacSystem: dualFuelSystem,
+        loadSources,
+        weatherSource,
+        utilityPlans,
+      })
+    : null;
+
+  const alternativeResult = weatherSource
+    ? simulateBuildingHVAC({
+        localStartTime,
+        localEndTime,
+        initialInsideAirTempF: 72.5,
+        buildingGeometry,
+        hvacSystem: alternativeSystem,
+        loadSources,
+        weatherSource,
+        utilityPlans,
+      })
+    : null;
 
   return (
     <div>
@@ -230,8 +251,14 @@ export const Main: React.FC<{
           }}
         />
       </InputRow>
-      <TemperaturesView simulationResult={dualFuelResult} />
-      <BillingView simulationResults={[dualFuelResult, alternativeResult]} />
+      {dualFuelResult && alternativeResult && (
+        <>
+          <TemperaturesView simulationResult={dualFuelResult} />
+          <BillingView
+            simulationResults={[dualFuelResult, alternativeResult]}
+          />
+        </>
+      )}
     </div>
   );
 };

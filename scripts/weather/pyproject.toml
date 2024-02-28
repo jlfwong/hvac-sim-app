@@ -1,0 +1,29 @@
+[project]
+name = "weather-server"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Jamie Wong", email = "jamie.lf.wong@gmail.com" }
+]
+dependencies = [
+    "ipython>=8.12.3",
+    "jupyter>=1.0.0",
+    "pygrib>=2.1.5",
+    "pysolar>=0.11",
+    "pytz>=2023.4",
+    "geopy>=2.4.1",
+    "requests>=2.31.0",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
