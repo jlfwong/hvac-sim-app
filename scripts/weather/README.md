@@ -16,9 +16,69 @@ The key fields sourced from the ERA-5 dataset are:
 - 2 metre temperature
 - Total cloud cover
 
+Here's the relevant API request.
+
+    import cdsapi
+
+    c = cdsapi.Client()
+
+    c.retrieve(
+        'reanalysis-era5-single-levels',
+        {
+            'product_type': 'reanalysis',
+            'variable': [
+                '10m_u_component_of_wind', '10m_v_component_of_wind', '2m_dewpoint_temperature',
+                '2m_temperature', 'total_cloud_cover',
+            ],
+            'year': '2023',
+            'month': [
+                '01', '03', '05',
+                '07', '08', '10',
+                '12',
+            ],
+            'day': [
+                '01', '02', '03',
+                '04', '05', '06',
+                '07', '08', '09',
+                '10', '11', '12',
+                '13', '14', '15',
+                '16', '17', '18',
+                '19', '20', '21',
+                '22', '23', '24',
+                '25', '26', '27',
+                '28', '29', '30',
+                '31',
+            ],
+            'time': [
+                '00:00', '01:00', '02:00',
+                '03:00', '04:00', '05:00',
+                '06:00', '07:00', '08:00',
+                '09:00', '10:00', '11:00',
+                '12:00', '13:00', '14:00',
+                '15:00', '16:00', '17:00',
+                '18:00', '19:00', '20:00',
+                '21:00', '22:00', '23:00',
+            ],
+            'area': [
+                58, -137, 41,
+                -52,
+            ],
+            'format': 'grib',
+        },
+        'download.grib')
+
+Two different requests were made to ensure total coverage of 2023 over all
+timezones. All of Canada is in negative UTC timezones, so we need the extra day
+in January to get all the way to 11:59PM on December 31, 2021
+
+- Jan 1 - Dec 31, 2023
+- Jan 1 2024
+
 The file containing the hourly information for 2023 for all major population
 centers of Canada is around 2GB. This is too large to check-in to the git repo
 without using some git extensions, so for now we just gitignore it.
+
+To sanity check downloaded files, you can use [XyGrib](https://opengribs.org/en/xygrib)
 
 Solar altitude data is determined using [pysolar](https://pysolar.readthedocs.io/en/latest/).
 
