@@ -1,10 +1,11 @@
 import React from "react";
 import { Group } from "@visx/group";
 import { LinePath, Bar } from "@visx/shape";
-import { scaleTime, scaleLinear } from "@visx/scale";
+import { scaleUtc, scaleLinear } from "@visx/scale";
 import { AxisLeft, AxisBottom } from "@visx/axis";
 import { HVACSimulationResult } from "../lib/simulate";
 import { fahrenheitToCelcius } from "../lib/units";
+import { DateTime } from "luxon";
 
 export const TemperaturesView: React.FC<{
   simulationResult: HVACSimulationResult;
@@ -22,20 +23,34 @@ export const TemperaturesView: React.FC<{
     height = 400 - margin.top - margin.bottom;
 
   // Data transformation
+  const tzOffsetMinutes = simulationResult.timeSteps[0].localTime.offset;
+
   const data = simulationResult.timeSteps.map((snapshot) => ({
-    date: snapshot.localTime.toJSDate(),
+    // Because we're using scaleUTC, dates will be formatted as UTC. What we
+    // want, however, is for dates to be displayed in local time. D3 (somewhat
+    // reasonably) does not include direct support for this:
+    // https://github.com/d3/d3/issues/2375
+    //
+    // As a gross hack, we'll modify it by the associated timezone so that when
+    // it's formatted as UTC, it will display the local time.
+    //
+    // This is a hack, and doesn't correctly account for DST or other
+    // single-location variations in timezone offset, but it's still much more
+    // intuitively accurate than displaying UTC or browse local time.
+    date: snapshot.localTime.plus({ minutes: tzOffsetMinutes }).toJSDate(),
+
     insideAirTempC: fahrenheitToCelcius(snapshot.insideAirTempF),
     outsideAirTempC: fahrenheitToCelcius(snapshot.weather.outsideAirTempF),
   }));
 
   // Define the scales
-  const xScale = scaleTime({
+  const xScale = scaleUtc({
     domain: [
       Math.min(...data.map((d) => d.date)),
       Math.max(...data.map((d) => d.date)),
     ],
     range: [0, width],
-  });
+  }).nice();
 
   const yScale = scaleLinear({
     domain: [
@@ -47,7 +62,7 @@ export const TemperaturesView: React.FC<{
       ) + 5,
     ],
     range: [height, 0],
-  });
+  }).nice();
 
   return (
     <svg

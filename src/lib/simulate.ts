@@ -174,7 +174,6 @@ export function simulateBuildingHVAC(options: {
       localTime
     );
 
-    // Apply the temperature change caused by passive loads
     // Determine the heating load on the building from non-HVAC sources (e.g.
     // heating moving through the walls, or sun shining on the building).
     let passiveBtusPerHour = 0;
@@ -188,7 +187,7 @@ export function simulateBuildingHVAC(options: {
 
     // Record the results for the hour
     results.push({
-      localTime: utcTime,
+      localTime,
       insideAirTempF,
       weather,
       hvacSystemResponse,

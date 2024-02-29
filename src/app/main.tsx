@@ -215,10 +215,7 @@ export const Main: React.FC<{}> = (props) => {
       {
         year: 2023,
         month: 12,
-
-        // TODO(jlfwong): Update the dataset to include the the full *local*
-        // year, not the full UTC year. Then this can be 31.
-        day: 30,
+        day: 31,
       },
       dtOptions
     ).endOf("day");
