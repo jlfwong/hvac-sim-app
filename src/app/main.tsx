@@ -35,6 +35,7 @@ import {
   electricalUtilityForProvince,
   gasUtilityForProvince,
 } from "./canadian-utility-plans";
+import { PassiveLoadsView } from "./passive-loads-view";
 
 async function fetchJSON<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -155,6 +156,7 @@ export const Main: React.FC<{}> = (props) => {
     // to share geometry & modifiers. Would perhaps be alleviated by having a
     // function to return standard loads for a building?
     new SolarGainLoadSource({ geometry: buildingGeometry, solarModifier: 1.0 }),
+
     new ConductionConvectionLoadSource({
       geometry: buildingGeometry,
       envelopeModifier: 0.65,
@@ -348,6 +350,7 @@ export const Main: React.FC<{}> = (props) => {
       {dualFuelResult && alternativeResult && (
         <>
           <TemperaturesView simulationResult={dualFuelResult} />
+          <PassiveLoadsView simulationResult={dualFuelResult} />
           <BillingView
             simulationResults={[dualFuelResult, alternativeResult]}
           />

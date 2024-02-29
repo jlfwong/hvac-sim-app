@@ -4,6 +4,8 @@ import { interpolateClamped } from "./math";
 import { WeatherSnapshot } from "./types";
 
 export interface ThermalLoadSource {
+  readonly name: string;
+
   // Positive values mean warming the contents of the building, negative values
   // mean cooling.
   getBtusPerHour(
@@ -15,6 +17,8 @@ export interface ThermalLoadSource {
 
 // Load caused by occupants' bodies emitting heat
 export class OccupantsLoadSource implements ThermalLoadSource {
+  readonly name = "occupants";
+
   constructor(private numOccupants: number) {}
 
   getBtusPerHour(
@@ -55,6 +59,8 @@ export class OccupantsLoadSource implements ThermalLoadSource {
 // Load caused by heat energy equilibriating via conduction and convection
 // through the building envelope
 export class ConductionConvectionLoadSource implements ThermalLoadSource {
+  readonly name = "conduction-convection";
+
   constructor(
     private options: {
       geometry: BuildingGeometry;
@@ -119,6 +125,8 @@ export class ConductionConvectionLoadSource implements ThermalLoadSource {
 
 // Load caused by air moving in and out of the building due to imperfect seal
 export class InfiltrationLoadSource implements ThermalLoadSource {
+  readonly name = "infiltration";
+
   constructor(
     private options: {
       geometry: BuildingGeometry;
@@ -201,6 +209,8 @@ export class InfiltrationLoadSource implements ThermalLoadSource {
 
 // Load from sunlight hitting the house
 export class SolarGainLoadSource implements ThermalLoadSource {
+  name = "solar-gain";
+
   constructor(
     private options: {
       geometry: BuildingGeometry;

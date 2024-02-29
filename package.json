@@ -26,6 +26,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@types/d3-scale-chromatic": "3.0.3",
     "@types/jest": "^29.5.11",
     "@types/luxon": "3.4.2",
     "@visx/axis": "3.8.0",
@@ -36,6 +37,7 @@
     "@visx/shape": "3.5.0",
     "@visx/tooltip": "3.3.0",
     "aphrodite": "2.4.0",
+    "d3-scale-chromatic": "3.0.0",
     "jest": "29.7.0",
     "ts-jest": "29.1.2"
   },

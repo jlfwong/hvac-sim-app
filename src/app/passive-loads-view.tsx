@@ -1,12 +1,13 @@
 import React from "react";
 import { Group } from "@visx/group";
-import { LinePath } from "@visx/shape";
+import { AreaStack } from "@visx/shape";
 import { scaleUtc, scaleLinear } from "@visx/scale";
 import { AxisLeft, AxisBottom } from "@visx/axis";
 import { HVACSimulationResult } from "../lib/simulate";
-import { fahrenheitToCelcius } from "../lib/units";
+import { scaleOrdinal } from "@visx/scale";
+import { schemeSet1 } from "d3-scale-chromatic";
 
-export const TemperaturesView: React.FC<{
+export const PassiveLoadsView: React.FC<{
   simulationResult: HVACSimulationResult;
 }> = ({ simulationResult }) => {
   // TODO(jlfwong): Bucket these temperatures into high/low per day for a more
@@ -38,8 +39,13 @@ export const TemperaturesView: React.FC<{
     // intuitively accurate than displaying UTC or browse local time.
     date: snapshot.localTime.plus({ minutes: tzOffsetMinutes }).toJSDate(),
 
-    insideAirTempC: fahrenheitToCelcius(snapshot.insideAirTempF),
-    outsideAirTempC: fahrenheitToCelcius(snapshot.weather.outsideAirTempF),
+    loads: snapshot.passiveLoads.reduce<{ [name: string]: number }>(
+      (acc, v) => {
+        acc[v.name] = v.btusPerHour;
+        return acc;
+      },
+      {}
+    ),
   }));
 
   // Define the scales
@@ -51,40 +57,59 @@ export const TemperaturesView: React.FC<{
     range: [0, width],
   }).nice();
 
+  const colorScale = scaleOrdinal()
+    .domain(Object.keys(data[0].loads))
+    .range(schemeSet1);
+
+  let maxNegative = 0;
+  let maxPositive = 0;
+
+  for (let step of simulationResult.timeSteps) {
+    const btus = step.passiveLoads.map((v) => v.btusPerHour);
+
+    const negative = btus
+      .filter((v) => v < 0)
+      .reduce<number>((acc, v) => acc + v, 0);
+    if (negative < maxNegative) maxNegative = negative;
+
+    const positive = btus
+      .filter((v) => v > 0)
+      .reduce<number>((acc, v) => acc + v, 0);
+    if (positive > maxPositive) maxPositive = positive;
+  }
+
   const yScale = scaleLinear({
-    domain: [
-      Math.min(
-        ...data.map((d) => Math.min(d.insideAirTempC, d.outsideAirTempC))
-      ) - 5,
-      Math.max(
-        ...data.map((d) => Math.max(d.insideAirTempC, d.outsideAirTempC))
-      ) + 5,
-    ],
+    domain: [maxNegative, maxPositive],
     range: [height, 0],
   }).nice();
 
+  // TODO(jlfwong): There are visual artifacts when loads transition from
+  // negative to positive or vice versa. Figure out how to fix this. This
+  // will likely require creating several path objects per series.
+
+  // TODO(jlfwong): Tooltips. This will likely require doing the series
+  // stacking myself so I can set mouseover events per-area.
+  //
+  // May also want to consider doing stacked bars instead.
   return (
     <svg
       width={width + margin.left + margin.right}
       height={height + margin.top + margin.bottom}
     >
       <Group left={margin.left} top={margin.top}>
-        {/* TODO(jlfwong): Fix the axis labels to be tilted 45 deg */}
         <AxisBottom scale={xScale} top={height} />
         <AxisLeft scale={yScale} />
-        <LinePath
+        <AreaStack
           data={data}
-          x={(d) => xScale(d.date)}
-          y={(d) => yScale(d.outsideAirTempC)}
-          stroke="red"
-          strokeWidth={1.5}
-        />
-        <LinePath
-          data={data}
-          x={(d) => xScale(d.date)}
-          y={(d) => yScale(d.insideAirTempC)}
-          stroke="blue"
-          strokeWidth={1.5}
+          keys={Object.keys(data[0].loads)}
+          color={(key) => `${colorScale(key)}` || "red"}
+          strokeWidth={0}
+          stroke="white"
+          value={(d, k) => d.loads[k]}
+          x={(d) => xScale(d.data.date)}
+          y0={(d) => yScale(d[0])}
+          y1={(d) => yScale(d[1])}
+          offset={"diverging"}
         />
       </Group>
     </svg>

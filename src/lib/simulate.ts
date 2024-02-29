@@ -11,11 +11,17 @@ import { BuildingGeometry } from "./building-geometry";
 import { ThermalLoadSource } from "./thermal-loads";
 import { HVACSystem } from "./types";
 
+interface PassiveLoad {
+  name: string;
+  btusPerHour: number;
+}
+
 interface SimulationStep {
   localTime: DateTime;
   insideAirTempF: number;
   weather: WeatherSnapshot;
   hvacSystemResponse: HVACApplianceResponse;
+  passiveLoads: PassiveLoad[];
 }
 
 export interface HVACSimulationResult {
@@ -121,8 +127,6 @@ export function simulateBuildingHVAC(options: {
     fuelOil?: () => FuelOilUtilityPlan;
   };
 }): HVACSimulationResult {
-  console.log("Simulation with", options.weatherSource);
-
   const billing = new FuelBilling();
   if (options.utilityPlans.electrical) {
     billing.setElectricalUtilityPlan(options.utilityPlans.electrical());
@@ -177,12 +181,15 @@ export function simulateBuildingHVAC(options: {
     // Determine the heating load on the building from non-HVAC sources (e.g.
     // heating moving through the walls, or sun shining on the building).
     let passiveBtusPerHour = 0;
+    let passiveLoads: PassiveLoad[] = [];
     for (let loadSource of options.loadSources) {
-      passiveBtusPerHour += loadSource.getBtusPerHour(
+      const btusPerHour = loadSource.getBtusPerHour(
         utcTime,
         insideAirTempF,
         weather
       );
+      passiveLoads.push({ name: loadSource.name, btusPerHour });
+      passiveBtusPerHour += btusPerHour;
     }
 
     // Record the results for the hour
@@ -191,6 +198,7 @@ export function simulateBuildingHVAC(options: {
       insideAirTempF,
       weather,
       hvacSystemResponse,
+      passiveLoads,
     });
 
     // Step forward the simulation
