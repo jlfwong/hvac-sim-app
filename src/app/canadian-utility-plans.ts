@@ -14,7 +14,7 @@ Source
 const naturalGasPricePerCubicMetreByProvince: { [key: string]: number } = {
   AB: 0.259,
   BC: 0.504,
-  MN: 0.385,
+  MB: 0.385,
   NB: 0.944,
   NT: 1.333,
   NS: 1.096,

@@ -51,19 +51,27 @@ interface LocationInfo {
   provinceCode: string;
 }
 
+interface WeatherInfo {
+  // It's a bit janky that this is here instead of in locationInfo, but I want
+  // to keep the data downloaded for every forward sortation area to a minimum.
+  timezoneName: string;
+  elevationMeters: number;
+  weatherSource: WeatherSource;
+}
+
 type PostalCodesJson = { [forwardSortationArea: string]: LocationInfo };
 
 function useCanadianWeatherSource(initialPostalCode: string) {
   const [postalCode, setPostalCode] = useState(initialPostalCode);
   const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
-  const [weatherSource, setWeatherSource] = useState<WeatherSource | null>(
-    null
-  );
+  const [weatherInfo, setWeatherInfo] = useState<WeatherInfo | null>(null);
 
   const [caPostalCodesJson, setCaPostalCodesJson] =
     useState<PostalCodesJson | null>(null);
 
   useEffect(() => {
+    // TODO(jlfwong): Bake this into the JS bundle instead. Strip the lat/lns
+    // first.
     fetchJSON<PostalCodesJson>("./data/ca-postal-codes.json").then((data) =>
       setCaPostalCodesJson(data)
     );
@@ -88,11 +96,15 @@ function useCanadianWeatherSource(initialPostalCode: string) {
       setLocationInfo(info);
 
       // TODO(jlfwong): Update this to use S3 buckets when ready
-      fetchJSON<JSONWeatherEntry[]>(
-        `./data/weather/2023-${forwardSortationArea}-era5.json`
-      ).then((weatherDataJson) => {
+      fetchJSON<any>(
+        `./data/weather/2023-era5-${forwardSortationArea}.json`
+      ).then((json) => {
         if (!cancelled) {
-          setWeatherSource(new JSONBackedHourlyWeatherSource(weatherDataJson));
+          setWeatherInfo({
+            elevationMeters: json.elevationMeters,
+            timezoneName: json.timezoneName,
+            weatherSource: new JSONBackedHourlyWeatherSource(json.weather),
+          });
         }
       });
     }
@@ -114,18 +126,18 @@ function useCanadianWeatherSource(initialPostalCode: string) {
       // will see a state where the new postal code is used, but the old weather
       // data and location info is used for a single render.
       setPostalCode(newPostalCode);
-      setWeatherSource(null);
+      setWeatherInfo(null);
       setLocationInfo(null);
     },
     locationInfo,
-    weatherSource,
+    weatherInfo,
   };
 }
 
 export const Main: React.FC<{}> = (props) => {
   const [floorSpaceSqFt, setFloorSpaceSqFt] = useState(3000);
 
-  const { postalCode, setPostalCode, locationInfo, weatherSource } =
+  const { postalCode, setPostalCode, locationInfo, weatherInfo } =
     useCanadianWeatherSource("V5K 0A1");
 
   const buildingGeometry = new BuildingGeometry({
@@ -152,6 +164,8 @@ export const Main: React.FC<{}> = (props) => {
       envelopeModifier: 0.65,
     }),
   ];
+
+  // TODO(jlfwong): Elevation
 
   const heatpump = new AirSourceHeatPump({
     elevationFeet: 0,
@@ -180,100 +194,99 @@ export const Main: React.FC<{}> = (props) => {
   const auxHeatingAppliance = gasFurnace;
   const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(-16);
 
-  const electricFurnace = new ElectricFurnace({
-    capacityKw: 20,
-  });
+  let dualFuelResult: HVACSimulationResult | null = null;
+  let alternativeResult: HVACSimulationResult | null = null;
 
-  const dtOptions = { zone: "America/Toronto" };
-  const localStartTime = DateTime.fromObject(
-    {
-      year: 2023,
-      month: 1,
-      day: 1,
-    },
-    dtOptions
-  );
-  const localEndTime = DateTime.fromObject(
-    {
-      year: 2023,
-      month: 12,
+  if (locationInfo && weatherInfo) {
+    const electricFurnace = new ElectricFurnace({
+      capacityKw: 20,
+    });
 
-      // TODO(jlfwong): Update the dataset to include the the full *local*
-      // year, not the full UTC year. Then this can be 31.
-      day: 30,
-    },
-    dtOptions
-  ).endOf("day");
+    const dtOptions = { zone: weatherInfo.timezoneName };
+    const localStartTime = DateTime.fromObject(
+      {
+        year: 2023,
+        month: 1,
+        day: 1,
+      },
+      dtOptions
+    );
+    const localEndTime = DateTime.fromObject(
+      {
+        year: 2023,
+        month: 12,
 
-  const provinceCode = "BC";
+        // TODO(jlfwong): Update the dataset to include the the full *local*
+        // year, not the full UTC year. Then this can be 31.
+        day: 30,
+      },
+      dtOptions
+    ).endOf("day");
 
-  const utilityPlans = {
-    electrical: () => electricalUtilityForProvince(provinceCode),
-    naturalGas: () => gasUtilityForProvince(provinceCode),
-  };
+    const utilityPlans = {
+      electrical: () => electricalUtilityForProvince(locationInfo.provinceCode),
+      naturalGas: () => gasUtilityForProvince(locationInfo.provinceCode),
+    };
 
-  const coolingSetPointF = celciusToFahrenheit(coolingSetPointC);
-  const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
-  const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
+    const coolingSetPointF = celciusToFahrenheit(coolingSetPointC);
+    const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
+    const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
 
-  const dualFuelSystem = new DualFuelTwoStageHVACSystem(
-    "Heat Pump with Gas Furnace Backup",
-    {
-      coolingSetPointF,
-      coolingAppliance,
+    const dualFuelSystem = new DualFuelTwoStageHVACSystem(
+      "Heat Pump with Gas Furnace Backup",
+      {
+        coolingSetPointF,
+        coolingAppliance,
 
-      heatingSetPointF,
-      heatingAppliance,
+        heatingSetPointF,
+        heatingAppliance,
 
-      auxSwitchoverTempF,
-      auxHeatingAppliance,
+        auxSwitchoverTempF,
+        auxHeatingAppliance,
 
-      // Like the "Compressor Stage 1 Max Runtime" setting in
-      // ecobee
-      stage1MaxDurationMinutes: 120,
+        // Like the "Compressor Stage 1 Max Runtime" setting in
+        // ecobee
+        stage1MaxDurationMinutes: 120,
 
-      // Like the "Compressor Stage 2 Temperature Delta" setting
-      // in ecobee
-      stage2TemperatureDeltaF: 1,
-    }
-  );
+        // Like the "Compressor Stage 2 Temperature Delta" setting
+        // in ecobee
+        stage2TemperatureDeltaF: 1,
+      }
+    );
 
-  const alternativeSystem = new SimpleHVACSystem(
-    `Alternative - ${gasFurnace.name}`,
-    {
-      coolingSetPointF,
-      coolingAppliance,
+    const alternativeSystem = new SimpleHVACSystem(
+      `Alternative - ${gasFurnace.name}`,
+      {
+        coolingSetPointF,
+        coolingAppliance,
 
-      heatingSetPointF,
-      heatingAppliance: gasFurnace,
-    }
-  );
+        heatingSetPointF,
+        heatingAppliance: gasFurnace,
+      }
+    );
 
-  const dualFuelResult = weatherSource
-    ? simulateBuildingHVAC({
-        localStartTime,
-        localEndTime,
-        initialInsideAirTempF: 72.5,
-        buildingGeometry,
-        hvacSystem: dualFuelSystem,
-        loadSources,
-        weatherSource,
-        utilityPlans,
-      })
-    : null;
+    dualFuelResult = simulateBuildingHVAC({
+      localStartTime,
+      localEndTime,
+      initialInsideAirTempF: 72.5,
+      buildingGeometry,
+      hvacSystem: dualFuelSystem,
+      loadSources,
+      weatherSource: weatherInfo.weatherSource,
+      utilityPlans,
+    });
 
-  const alternativeResult = weatherSource
-    ? simulateBuildingHVAC({
-        localStartTime,
-        localEndTime,
-        initialInsideAirTempF: 72.5,
-        buildingGeometry,
-        hvacSystem: alternativeSystem,
-        loadSources,
-        weatherSource,
-        utilityPlans,
-      })
-    : null;
+    alternativeResult = simulateBuildingHVAC({
+      localStartTime,
+      localEndTime,
+      initialInsideAirTempF: 72.5,
+      buildingGeometry,
+      hvacSystem: alternativeSystem,
+      loadSources,
+      weatherSource: weatherInfo.weatherSource,
+      utilityPlans,
+    });
+  }
 
   return (
     <div>
@@ -289,6 +302,9 @@ export const Main: React.FC<{}> = (props) => {
       <InputRow>
         <a onClick={() => setPostalCode("K2A 2Y3")}>Ottawa</a>
         <a onClick={() => setPostalCode("V5K 0A1")}>Vancouver</a>
+        <a onClick={() => setPostalCode("H3H 2H9")}>Montreal</a>
+        <a onClick={() => setPostalCode("R3T 2N2")}>Winnipeg</a>
+        <a onClick={() => setPostalCode("T6G 2R3")}>Edmonton</a>
       </InputRow>
       <div>{locationInfo && locationInfo.placeName}</div>
       <InputRow>
