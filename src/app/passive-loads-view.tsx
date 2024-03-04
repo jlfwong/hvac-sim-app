@@ -37,7 +37,10 @@ export const PassiveLoadsView: React.FC<{
     // This is a hack, and doesn't correctly account for DST or other
     // single-location variations in timezone offset, but it's still much more
     // intuitively accurate than displaying UTC or browse local time.
-    date: snapshot.localTime.plus({ minutes: tzOffsetMinutes }).toJSDate(),
+    date: snapshot.localTime
+      .toUTC()
+      .plus({ minutes: tzOffsetMinutes })
+      .toJSDate(),
 
     loads: snapshot.passiveLoads.reduce<{ [name: string]: number }>(
       (acc, v) => {

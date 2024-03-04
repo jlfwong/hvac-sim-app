@@ -36,7 +36,10 @@ export const TemperaturesView: React.FC<{
     // This is a hack, and doesn't correctly account for DST or other
     // single-location variations in timezone offset, but it's still much more
     // intuitively accurate than displaying UTC or browse local time.
-    date: snapshot.localTime.plus({ minutes: tzOffsetMinutes }).toJSDate(),
+    date: snapshot.localTime
+      .toUTC()
+      .plus({ minutes: tzOffsetMinutes })
+      .toJSDate(),
 
     insideAirTempC: fahrenheitToCelcius(snapshot.insideAirTempF),
     outsideAirTempC: fahrenheitToCelcius(snapshot.weather.outsideAirTempF),
@@ -77,14 +80,14 @@ export const TemperaturesView: React.FC<{
           x={(d) => xScale(d.date)}
           y={(d) => yScale(d.outsideAirTempC)}
           stroke="red"
-          strokeWidth={1.5}
+          strokeWidth={1}
         />
         <LinePath
           data={data}
           x={(d) => xScale(d.date)}
           y={(d) => yScale(d.insideAirTempC)}
           stroke="blue"
-          strokeWidth={1.5}
+          strokeWidth={1}
         />
       </Group>
     </svg>
