@@ -10,6 +10,27 @@ export interface JSONWeatherEntry extends WeatherSnapshot {
   datetime: string;
 }
 
+export class BinnedTemperatures {
+  private hoursByTempF = new Map<number, number>();
+
+  constructor(entries: JSONWeatherEntry[]) {
+    for (let entry of entries) {
+      this.hoursByTempF.set(
+        entry.outsideAirTempF,
+        (this.hoursByTempF.get(entry.outsideAirTempF) || 0) + 1
+      );
+    }
+  }
+
+  forEachBin(
+    cb: (bin: { outsideAirTempF: number; hourCount: number }) => void
+  ) {
+    for (let [outsideAirTempF, hourCount] of this.hoursByTempF.entries()) {
+      cb({ outsideAirTempF, hourCount });
+    }
+  }
+}
+
 export class JSONBackedHourlyWeatherSource implements WeatherSource {
   private entryByHour: { [key: string]: JSONWeatherEntry } = {};
 
@@ -22,7 +43,10 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
 
   private hourKey(datetime: DateTime): string {
     // Make sure we convert to UTC first to get the hour of the day!
-    return datetime.toUTC().toFormat("yyyy-LL-dd HH");
+    const dt = datetime.toUTC();
+
+    // We could use luxon's DateTime.toFormat here, but this is much much faster
+    return `${dt.year}-${dt.month}-${dt.day} ${dt.hour}:00`;
   }
 
   private getWeatherForHour(localTime: DateTime): WeatherSnapshot {
