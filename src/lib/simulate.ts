@@ -104,9 +104,82 @@ export class FuelBilling {
   }
 }
 
-// Simulate the use of a building's HVAC system on an hour-by-hour basis.
+interface TimeStepInput {
+  localTime: DateTime;
+  weather: WeatherSnapshot;
+}
+
+let cachedTimeSteps: {
+  localStartTime: DateTime;
+  localEndTime: DateTime;
+  timeStepDuration: Duration;
+  weatherSource: WeatherSource;
+  steps: TimeStepInput[];
+} | null = null;
+
+function getTimeSteps(
+  localStartTime: DateTime,
+  localEndTime: DateTime,
+  timeStepDuration: Duration,
+  weatherSource: WeatherSource
+): TimeStepInput[] {
+  const timezone: Zone = localStartTime.zone;
+
+  if (localStartTime.zone !== localEndTime.zone) {
+    throw new Error("Given a different timezone for start and end datetimes");
+  }
+
+  if (
+    cachedTimeSteps &&
+    cachedTimeSteps.localStartTime.equals(localStartTime) &&
+    cachedTimeSteps.localEndTime.equals(localEndTime) &&
+    cachedTimeSteps.timeStepDuration.equals(timeStepDuration) &&
+    cachedTimeSteps.weatherSource == weatherSource
+  ) {
+    // It's common to run multiple simulations on the same time span for the
+    // same location. Calculations involving repeated timezone lookup are quite
+    // slow in Luxon, but we need time-zone awareness to e.g. support correct recording
+    // under time-of-use billing.
+    //
+    // To ease the performance pain, we cache the time step inputs so that
+    // repeated runs are faster.
+    return cachedTimeSteps.steps;
+  }
+
+  const steps: TimeStepInput[] = [];
+
+  // We operate in UTC rather than local time because it makes the date math run
+  // more efficiently since it avoids the need to reconcile timezones after each
+  // operation, because e.g. DST might kick in across an addition boundary.
+  let utcTime: DateTime = localStartTime.toUTC();
+  const endTimeMillis: number = localEndTime.toMillis();
+
+  while (utcTime.toMillis() < endTimeMillis) {
+    const weather = weatherSource.getWeather(utcTime);
+
+    // Timezone reconciliation slows down this simulation a non-negligible
+    // amount, but is unfortunately necessary for time of use billing and for
+    // thermostat schedules that e.g. set different temperatures for sleeping.
+    const localTime = utcTime.setZone(timezone);
+
+    utcTime = utcTime.plus(timeStepDuration);
+
+    steps.push({ localTime, weather });
+  }
+
+  cachedTimeSteps = {
+    localStartTime,
+    localEndTime,
+    weatherSource,
+    timeStepDuration,
+    steps,
+  };
+  return steps;
+}
+
+// Simulate the use of a building's HVAC system.
 //
-// Every hour, this involves a few key steps:
+// Every time step, this involves a few key steps:
 // 1. Determine the passive heating load on the house due to e.g. sunlight
 //    hitting the house, or temperature differentials causing heat to enter or
 //    leave the house
@@ -152,19 +225,15 @@ export function simulateBuildingHVAC(options: {
   let utcTime: DateTime = options.localStartTime.toUTC();
   let insideAirTempF = options.initialInsideAirTempF;
 
-  const endTimeMillis: number = options.localEndTime.toMillis();
-
   const timeStepDuration = Duration.fromObject({ minutes: 20 });
   const timeStepInHours = timeStepDuration.as("hours");
 
-  while (utcTime.toMillis() < endTimeMillis) {
-    const weather = options.weatherSource.getWeather(utcTime);
-
-    // Timezone reconciliation slows down this simulation a non-negligible
-    // amount, but is unfortunately necessary for time of use billing and for
-    // thermostat schedules that e.g. set different temperatures for sleeping.
-    const localTime = utcTime.setZone(timezone);
-
+  for (let { localTime, weather } of getTimeSteps(
+    options.localStartTime,
+    options.localEndTime,
+    timeStepDuration,
+    options.weatherSource
+  )) {
     const hvacSystemResponse = options.hvacSystem.getThermalResponse({
       localTime,
       insideAirTempF,
@@ -201,8 +270,6 @@ export function simulateBuildingHVAC(options: {
       passiveLoads,
     });
 
-    // Step forward the simulation
-
     // Apply the temperature change caused by HVAC equipment and passive loads
     // We do this after we add the timestep results to ensure temporal
     // consistency. All of the entries in the reslts are for the beginning of
@@ -211,8 +278,6 @@ export function simulateBuildingHVAC(options: {
       ((passiveBtusPerHour + hvacSystemResponse.btusPerHour) *
         timeStepInHours) /
       options.buildingGeometry.btusPerDegreeF;
-
-    utcTime = utcTime.plus(timeStepDuration);
   }
 
   return {
