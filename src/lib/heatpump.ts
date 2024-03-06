@@ -11,13 +11,13 @@ export interface PerformanceRating {
 export interface NEEPccASHPRatingInfo {
   mode: "heating" | "cooling";
   insideDryBulbFahrenheit: number;
-  outdoorDryBulbFahrenheit: number;
+  outsideDryBulbFahrenheit: number;
   minCapacity: PerformanceRating;
   maxCapacity: PerformanceRating;
 }
 
 function absDeltaT(r: NEEPccASHPRatingInfo): number {
-  return Math.abs(r.insideDryBulbFahrenheit - r.outdoorDryBulbFahrenheit);
+  return Math.abs(r.insideDryBulbFahrenheit - r.outsideDryBulbFahrenheit);
 }
 
 function interpolateCOP(
@@ -293,12 +293,16 @@ export class AirSourceHeatPump implements HVACAppliance {
   private sortedHeatingRatings: NEEPccASHPRatingInfo[];
   private sortedCoolingRatings: NEEPccASHPRatingInfo[];
 
-  readonly name = "Air Source Heat Pump";
+  readonly name: string = "Air Source Heat Pump";
 
   constructor(options: {
     elevationFeet: number;
     ratings: NEEPccASHPRatingInfo[];
+    name?: string;
   }) {
+    if (options.name) {
+      this.name = options.name;
+    }
     this.elevationFeet = options.elevationFeet;
 
     this.sortedHeatingRatings = options.ratings
@@ -351,7 +355,7 @@ export class AirSourceHeatPump implements HVACAppliance {
 export const panasonicHeatPumpRatings: NEEPccASHPRatingInfo[] = [
   {
     mode: "cooling",
-    outdoorDryBulbFahrenheit: 95,
+    outsideDryBulbFahrenheit: 95,
     insideDryBulbFahrenheit: 80,
     minCapacity: {
       btusPerHour: 13000,
@@ -364,7 +368,7 @@ export const panasonicHeatPumpRatings: NEEPccASHPRatingInfo[] = [
   },
   {
     mode: "cooling",
-    outdoorDryBulbFahrenheit: 82,
+    outsideDryBulbFahrenheit: 82,
     insideDryBulbFahrenheit: 80,
     minCapacity: {
       btusPerHour: 12000,
@@ -377,7 +381,7 @@ export const panasonicHeatPumpRatings: NEEPccASHPRatingInfo[] = [
   },
   {
     mode: "heating",
-    outdoorDryBulbFahrenheit: 47,
+    outsideDryBulbFahrenheit: 47,
     insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 11000,
@@ -390,7 +394,7 @@ export const panasonicHeatPumpRatings: NEEPccASHPRatingInfo[] = [
   },
   {
     mode: "heating",
-    outdoorDryBulbFahrenheit: 17,
+    outsideDryBulbFahrenheit: 17,
     insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 15000,
@@ -403,7 +407,7 @@ export const panasonicHeatPumpRatings: NEEPccASHPRatingInfo[] = [
   },
   {
     mode: "heating",
-    outdoorDryBulbFahrenheit: 5,
+    outsideDryBulbFahrenheit: 5,
     insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 12500,
@@ -416,7 +420,7 @@ export const panasonicHeatPumpRatings: NEEPccASHPRatingInfo[] = [
   },
   {
     mode: "heating",
-    outdoorDryBulbFahrenheit: -22,
+    outsideDryBulbFahrenheit: -22,
     insideDryBulbFahrenheit: 70,
     minCapacity: {
       btusPerHour: 12300,

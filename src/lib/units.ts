@@ -17,3 +17,7 @@ export function fahrenheitToCelcius(fahrenheit: number): number {
 export function celciusToFahrenheit(celcius: number): number {
   return celcius * 1.8 + 32;
 }
+
+export function metersToFeet(meters: number): number {
+  return meters * 3.28084;
+}

@@ -83,8 +83,8 @@ export class DualFuelTwoStageHVACSystem implements HVACSystem {
   constructor(
     readonly name: string,
     private options: {
-      coolingSetPointF: number;
       coolingAppliance: HVACAppliance;
+      coolingSetPointF: number;
 
       heatingAppliance: HVACAppliance;
       heatingSetPointF: number;

@@ -6,7 +6,7 @@ import {
 } from "../lib/billing";
 import { BuildingGeometry } from "../lib/building-geometry";
 import { GasFurnace } from "../lib/gas-furnace";
-import { AirSourceHeatPump, panasonicHeatPumpRatings } from "../lib/heatpump";
+import { AirSourceHeatPump, NEEPccASHPRatingInfo } from "../lib/heatpump";
 import {
   DualFuelTwoStageHVACSystem,
   SimpleHVACSystem,
@@ -24,116 +24,22 @@ import {
   JSONWeatherEntry,
   JSONBackedHourlyWeatherSource,
   WeatherSource,
+  BinnedTemperatures,
 } from "../lib/weather";
 import { BillingView } from "./billing-view";
 import { TemperaturesView } from "./temperatures-view";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ElectricFurnace } from "../lib/electric-furnace";
 import { styled } from "./styled";
-import { celciusToFahrenheit } from "../lib/units";
+import { celciusToFahrenheit, metersToFeet } from "../lib/units";
 import {
   electricalUtilityForProvince,
   gasUtilityForProvince,
 } from "./canadian-utility-plans";
 import { PassiveLoadsView } from "./passive-loads-view";
-
-async function fetchJSON<T>(url: string): Promise<T> {
-  const response = await fetch(url);
-  // Check if the response is ok (status in the range 200-299)
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
-  }
-  return await response.json(); // Parse the response body as JSON
-}
-
-interface LocationInfo {
-  code: string;
-  placeName: string;
-  provinceCode: string;
-}
-
-interface WeatherInfo {
-  // It's a bit janky that this is here instead of in locationInfo, but I want
-  // to keep the data downloaded for every forward sortation area to a minimum.
-  timezoneName: string;
-  elevationMeters: number;
-  weatherSource: WeatherSource;
-}
-
-type PostalCodesJson = { [forwardSortationArea: string]: LocationInfo };
-
-function useCanadianWeatherSource(initialPostalCode: string) {
-  const [postalCode, setPostalCode] = useState(initialPostalCode);
-  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
-  const [weatherInfo, setWeatherInfo] = useState<WeatherInfo | null>(null);
-
-  const [caPostalCodesJson, setCaPostalCodesJson] =
-    useState<PostalCodesJson | null>(null);
-
-  useEffect(() => {
-    // TODO(jlfwong): Bake this into the JS bundle instead. Strip the lat/lns
-    // first.
-    fetchJSON<PostalCodesJson>("./data/ca-postal-codes.json").then((data) =>
-      setCaPostalCodesJson(data)
-    );
-  }, []);
-
-  useEffect(() => {
-    if (
-      !caPostalCodesJson ||
-      !/^[A-Za-z][0-9][A-Za-z] ?[0-9][A-Za-z][0-9]$/.exec(postalCode)
-    ) {
-      return;
-    }
-
-    const forwardSortationArea = postalCode.substring(0, 3).toUpperCase();
-
-    const info = caPostalCodesJson[forwardSortationArea];
-
-    // TODO(jlfwong): Consider using AbortController here
-    let cancelled = false;
-
-    if (info) {
-      setLocationInfo(info);
-
-      // TODO(jlfwong): Update this to use S3 buckets when ready
-      fetchJSON<any>(
-        `./data/weather/2023-era5-${forwardSortationArea}.json`
-      ).then((json) => {
-        if (!cancelled) {
-          setWeatherInfo({
-            elevationMeters: json.elevationMeters,
-            timezoneName: json.timezoneName,
-            weatherSource: new JSONBackedHourlyWeatherSource(json.weather),
-          });
-        }
-      });
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [postalCode, caPostalCodesJson]);
-
-  return {
-    postalCode,
-    setPostalCode: (newPostalCode: string) => {
-      if (newPostalCode === postalCode) {
-        return;
-      }
-
-      // Whenever postal code changes, we clear the weather source and the
-      // location info. We can't do this in the useEffect beacuse then views
-      // will see a state where the new postal code is used, but the old weather
-      // data and location info is used for a single render.
-      setPostalCode(newPostalCode);
-      setWeatherInfo(null);
-      setLocationInfo(null);
-    },
-    locationInfo,
-    weatherInfo,
-  };
-}
+import { fetchJSON } from "./fetch";
+import { useCanadianWeatherSource } from "./use-canadian-weather-source";
+import { useSelectHeatpump } from "./use-select-heatpump";
 
 export const Main: React.FC<{}> = (props) => {
   const [floorSpaceSqFt, setFloorSpaceSqFt] = useState(3000);
@@ -167,13 +73,6 @@ export const Main: React.FC<{}> = (props) => {
     }),
   ];
 
-  // TODO(jlfwong): Elevation
-
-  const heatpump = new AirSourceHeatPump({
-    elevationFeet: 0,
-    ratings: panasonicHeatPumpRatings,
-  });
-
   const ac = new AirConditioner({
     seer: 11,
     capacityBtusPerHour: 40000,
@@ -201,28 +100,6 @@ export const Main: React.FC<{}> = (props) => {
   const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
   const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
 
-  const dualFuelSystem = new DualFuelTwoStageHVACSystem(
-    `Dual Fuel (${heatpump.name} + ${gasFurnace.name})`,
-    {
-      coolingSetPointF,
-      coolingAppliance: heatpump,
-
-      heatingSetPointF,
-      heatingAppliance: heatpump,
-
-      auxSwitchoverTempF,
-      auxHeatingAppliance,
-
-      // Like the "Compressor Stage 1 Max Runtime" setting in
-      // ecobee
-      stage1MaxDurationMinutes: 120,
-
-      // Like the "Compressor Stage 2 Temperature Delta" setting
-      // in ecobee
-      stage2TemperatureDeltaF: 1,
-    }
-  );
-
   const gasFurnaceSystem = new SimpleHVACSystem(
     `${gasFurnace.name} + ${ac.name}`,
     {
@@ -247,7 +124,18 @@ export const Main: React.FC<{}> = (props) => {
 
   let simulations: HVACSimulationResult[] | null = null;
 
-  if (locationInfo && weatherInfo) {
+  const heatPumpCandidates = useSelectHeatpump(
+    weatherInfo
+      ? {
+          weatherInfo,
+          coolingSetPointInsideTempF: coolingSetPointF,
+          heatingSetPointInsideTempF: heatingSetPointF,
+          loadSources,
+        }
+      : null
+  );
+
+  if (locationInfo && weatherInfo && heatPumpCandidates) {
     const dtOptions = { zone: weatherInfo.timezoneName };
     const localStartTime = DateTime.fromObject(
       {
@@ -271,18 +159,46 @@ export const Main: React.FC<{}> = (props) => {
       naturalGas: () => gasUtilityForProvince(locationInfo.provinceCode),
     };
 
-    simulations = [dualFuelSystem, gasFurnaceSystem, electricFurnaceSystem].map(
-      (hvacSystem) =>
-        simulateBuildingHVAC({
-          localStartTime,
-          localEndTime,
-          initialInsideAirTempF: 72.5,
-          buildingGeometry,
-          hvacSystem,
-          loadSources,
-          weatherSource: weatherInfo.weatherSource,
-          utilityPlans,
-        })
+    const systems: HVACSystem[] = [gasFurnaceSystem, electricFurnaceSystem];
+
+    for (let i = 0; i < Math.min(heatPumpCandidates.length, 5); i++) {
+      const heatpump = heatPumpCandidates[i].heatpump;
+      systems.unshift(
+        new DualFuelTwoStageHVACSystem(
+          `Dual Fuel (${heatpump.name} + ${gasFurnace.name})`,
+          {
+            coolingSetPointF,
+            coolingAppliance: heatpump,
+
+            heatingSetPointF,
+            heatingAppliance: heatpump,
+
+            auxSwitchoverTempF,
+            auxHeatingAppliance,
+
+            // Like the "Compressor Stage 1 Max Runtime" setting in
+            // ecobee
+            stage1MaxDurationMinutes: 120,
+
+            // Like the "Compressor Stage 2 Temperature Delta" setting
+            // in ecobee
+            stage2TemperatureDeltaF: 1,
+          }
+        )
+      );
+    }
+
+    simulations = systems.map((hvacSystem) =>
+      simulateBuildingHVAC({
+        localStartTime,
+        localEndTime,
+        initialInsideAirTempF: 72.5,
+        buildingGeometry,
+        hvacSystem,
+        loadSources,
+        weatherSource: weatherInfo.weatherSource,
+        utilityPlans,
+      })
     );
   }
 

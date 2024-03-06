@@ -12,14 +12,22 @@ export interface JSONWeatherEntry extends WeatherSnapshot {
 
 export class BinnedTemperatures {
   private hoursByTempF = new Map<number, number>();
+  private sortedTempF: number[] = [];
 
   constructor(entries: JSONWeatherEntry[]) {
     for (let entry of entries) {
+      this.sortedTempF.push(entry.outsideAirTempF);
       this.hoursByTempF.set(
-        entry.outsideAirTempF,
+        Math.round(entry.outsideAirTempF),
         (this.hoursByTempF.get(entry.outsideAirTempF) || 0) + 1
       );
     }
+    this.sortedTempF.sort();
+  }
+
+  getTempAtPercentile(percentile: number) {
+    const idx = Math.floor((percentile / 100) * (this.sortedTempF.length - 1));
+    return this.sortedTempF[idx];
   }
 
   forEachBin(

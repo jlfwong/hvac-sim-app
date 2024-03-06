@@ -8,7 +8,7 @@ import { BinnedTemperatures } from "./weather";
 // pre-selection, but then still requires 100% coverage, which will include
 // temperatures outisde the [1%-ile, 99%-ile] range. Does this make sense?
 
-interface HeatpumpSelectionResult {
+export interface HeatpumpSelectionResult {
   heatpump: AirSourceHeatPump;
   averageCoefficientOfPerformance: number;
   underCapacityHeatingHours: number;
@@ -40,6 +40,8 @@ export function selectHeatpump(options: {
   // temperatures as an optimization.
   binnedTemperatures: BinnedTemperatures;
 }): HeatpumpSelectionResult[] {
+  console.log("options", options);
+
   function getBtusPerHourLoad(insideAirTempF: number, outsideAirTempF: number) {
     // We're looking for worst case scenarios, so we'll make assumptions for
     // weather based on that.
@@ -81,7 +83,7 @@ export function selectHeatpump(options: {
 
   const btusPerHourNeededHeating = Math.max(
     0,
-    getBtusPerHourLoad(
+    -getBtusPerHourLoad(
       options.heatingSetPointInsideTempF,
       options.designHeatingOutsideAirTempF
     )
@@ -89,11 +91,13 @@ export function selectHeatpump(options: {
 
   const btusPerHourNeededCooling = Math.min(
     0,
-    getBtusPerHourLoad(
+    -getBtusPerHourLoad(
       options.coolingSetPointInsideTempF,
       options.designCoolingOutsideAirTempF
     )
   );
+
+  console.log(btusPerHourNeededCooling, btusPerHourNeededHeating);
 
   // Step 1: Filter out heat pumps which lack the capacity for the design
   // heating and cooling temperatures
@@ -120,8 +124,8 @@ export function selectHeatpump(options: {
   // Step 2: For the remaining heat pumps, estimated their average COP
   // using the binned temperatures provided
   const results = candidateHeatpumps.map<HeatpumpSelectionResult>((pump) => {
-    let totalCoefficientOfPerformance = 0;
-    let totalHourCount = 0;
+    let totalSum = 0;
+    let totalWeight = 0;
     let underCapacityCoolingHours = 0;
     let underCapacityHeatingHours = 0;
 
@@ -149,16 +153,16 @@ export function selectHeatpump(options: {
         }
       }
 
-      // Total coefficient of performance isn't a meaningful number -- this is
-      // just done to avoid unnecessary divisions during computation
-      totalCoefficientOfPerformance += rating.coefficientOfPerformance;
-      totalHourCount += hourCount;
+      // We weight based on # of btus, instead of # of hours
+      const weight = hourCount * btusPerHourNeeded;
+
+      totalSum += rating.coefficientOfPerformance * weight;
+      totalWeight += weight;
     });
 
     return {
       heatpump: pump,
-      averageCoefficientOfPerformance:
-        totalCoefficientOfPerformance / totalHourCount,
+      averageCoefficientOfPerformance: totalSum / totalWeight,
       underCapacityCoolingHours,
       underCapacityHeatingHours,
     };
@@ -166,7 +170,7 @@ export function selectHeatpump(options: {
 
   results.sort(
     (a, b) =>
-      a.averageCoefficientOfPerformance - b.averageCoefficientOfPerformance
+      b.averageCoefficientOfPerformance - a.averageCoefficientOfPerformance
   );
 
   return results;
