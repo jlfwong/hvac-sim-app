@@ -139,7 +139,7 @@ export const Main: React.FC<{}> = (props) => {
   const [floorSpaceSqFt, setFloorSpaceSqFt] = useState(3000);
 
   const { postalCode, setPostalCode, locationInfo, weatherInfo } =
-    useCanadianWeatherSource("V5K 0A1");
+    useCanadianWeatherSource("K2A 2Y3");
 
   const buildingGeometry = new BuildingGeometry({
     floorSpaceSqFt,
@@ -187,23 +187,67 @@ export const Main: React.FC<{}> = (props) => {
     elevationFeet: 0,
   });
 
+  const electricFurnace = new ElectricFurnace({
+    capacityKw: 20,
+  });
+
   const [coolingSetPointC, setCoolingSetPointC] = useState(26);
   const [heatingSetPointC, setHeatingSetPointC] = useState(20);
-
-  const coolingAppliance = ac;
-  const heatingAppliance = heatpump;
 
   const auxHeatingAppliance = gasFurnace;
   const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(-16);
 
-  let dualFuelResult: HVACSimulationResult | null = null;
-  let alternativeResult: HVACSimulationResult | null = null;
+  const coolingSetPointF = celciusToFahrenheit(coolingSetPointC);
+  const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
+  const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
+
+  const dualFuelSystem = new DualFuelTwoStageHVACSystem(
+    `Dual Fuel (${heatpump.name} + ${gasFurnace.name})`,
+    {
+      coolingSetPointF,
+      coolingAppliance: heatpump,
+
+      heatingSetPointF,
+      heatingAppliance: heatpump,
+
+      auxSwitchoverTempF,
+      auxHeatingAppliance,
+
+      // Like the "Compressor Stage 1 Max Runtime" setting in
+      // ecobee
+      stage1MaxDurationMinutes: 120,
+
+      // Like the "Compressor Stage 2 Temperature Delta" setting
+      // in ecobee
+      stage2TemperatureDeltaF: 1,
+    }
+  );
+
+  const gasFurnaceSystem = new SimpleHVACSystem(
+    `${gasFurnace.name} + ${ac.name}`,
+    {
+      coolingSetPointF,
+      coolingAppliance: ac,
+
+      heatingSetPointF,
+      heatingAppliance: gasFurnace,
+    }
+  );
+
+  const electricFurnaceSystem = new SimpleHVACSystem(
+    `${electricFurnace.name} + ${ac.name}`,
+    {
+      coolingSetPointF,
+      coolingAppliance: ac,
+
+      heatingSetPointF,
+      heatingAppliance: electricFurnace,
+    }
+  );
+
+  let simulations: HVACSimulationResult[] | null = null;
 
   if (locationInfo && weatherInfo) {
-    const electricFurnace = new ElectricFurnace({
-      capacityKw: 20,
-    });
-
     const dtOptions = { zone: weatherInfo.timezoneName };
     const localStartTime = DateTime.fromObject(
       {
@@ -227,64 +271,19 @@ export const Main: React.FC<{}> = (props) => {
       naturalGas: () => gasUtilityForProvince(locationInfo.provinceCode),
     };
 
-    const coolingSetPointF = celciusToFahrenheit(coolingSetPointC);
-    const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
-    const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
-
-    const dualFuelSystem = new DualFuelTwoStageHVACSystem(
-      "Heat Pump with Gas Furnace Backup",
-      {
-        coolingSetPointF,
-        coolingAppliance,
-
-        heatingSetPointF,
-        heatingAppliance,
-
-        auxSwitchoverTempF,
-        auxHeatingAppliance,
-
-        // Like the "Compressor Stage 1 Max Runtime" setting in
-        // ecobee
-        stage1MaxDurationMinutes: 120,
-
-        // Like the "Compressor Stage 2 Temperature Delta" setting
-        // in ecobee
-        stage2TemperatureDeltaF: 1,
-      }
+    simulations = [dualFuelSystem, gasFurnaceSystem, electricFurnaceSystem].map(
+      (hvacSystem) =>
+        simulateBuildingHVAC({
+          localStartTime,
+          localEndTime,
+          initialInsideAirTempF: 72.5,
+          buildingGeometry,
+          hvacSystem,
+          loadSources,
+          weatherSource: weatherInfo.weatherSource,
+          utilityPlans,
+        })
     );
-
-    const alternativeSystem = new SimpleHVACSystem(
-      `Alternative - ${gasFurnace.name}`,
-      {
-        coolingSetPointF,
-        coolingAppliance,
-
-        heatingSetPointF,
-        heatingAppliance: gasFurnace,
-      }
-    );
-
-    dualFuelResult = simulateBuildingHVAC({
-      localStartTime,
-      localEndTime,
-      initialInsideAirTempF: 72.5,
-      buildingGeometry,
-      hvacSystem: dualFuelSystem,
-      loadSources,
-      weatherSource: weatherInfo.weatherSource,
-      utilityPlans,
-    });
-
-    alternativeResult = simulateBuildingHVAC({
-      localStartTime,
-      localEndTime,
-      initialInsideAirTempF: 72.5,
-      buildingGeometry,
-      hvacSystem: alternativeSystem,
-      loadSources,
-      weatherSource: weatherInfo.weatherSource,
-      utilityPlans,
-    });
   }
 
   return (
@@ -347,13 +346,15 @@ export const Main: React.FC<{}> = (props) => {
           }}
         />
       </InputRow>
-      {dualFuelResult && alternativeResult && (
+      {simulations && (
         <>
-          <TemperaturesView simulationResult={dualFuelResult} />
-          <PassiveLoadsView simulationResult={dualFuelResult} />
-          <BillingView
-            simulationResults={[dualFuelResult, alternativeResult]}
+          <TemperaturesView
+            heatingSetPointC={heatingSetPointC}
+            coolingSetPointC={coolingSetPointC}
+            simulationResult={simulations[0]}
           />
+          <PassiveLoadsView simulationResult={simulations[0]} />
+          <BillingView simulations={simulations} />
         </>
       )}
     </div>

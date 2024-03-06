@@ -25,6 +25,7 @@ interface SimulationStep {
 }
 
 export interface HVACSimulationResult {
+  name: string;
   timeSteps: SimulationStep[];
   bills: EnergyBill[];
 }
@@ -281,6 +282,7 @@ export function simulateBuildingHVAC(options: {
   }
 
   return {
+    name: options.hvacSystem.name,
     timeSteps: results,
     bills: billing.getBills(options.localStartTime, options.localEndTime),
   };

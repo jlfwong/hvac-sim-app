@@ -7,7 +7,9 @@ import {
   useTooltipInPortal,
   TooltipWithBounds,
 } from "@visx/tooltip";
+import { schemeSet1 } from "d3-scale-chromatic";
 import { localPoint } from "@visx/event";
+import { LegendOrdinal } from "@visx/legend";
 
 import { scaleBand, scaleLinear, scaleOrdinal } from "@visx/scale";
 import { AxisBottom, AxisLeft } from "@visx/axis";
@@ -16,17 +18,17 @@ import { DateTime } from "luxon";
 import { EnergyBill } from "../lib/billing";
 
 export const BillingView: React.FC<{
-  simulationResults: HVACSimulationResult[];
-}> = ({ simulationResults }) => {
+  simulations: HVACSimulationResult[];
+}> = (props) => {
   // TODO(jlfwong): Legends, axis titles, pretty printed month names
 
-  const margin = { top: 20, right: 20, bottom: 70, left: 60 },
+  const margin = { top: 20, right: 20, bottom: 40, left: 60 },
     width = 860 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
   const monthKey = (date: DateTime) => date.toFormat("yyyy-LL");
 
-  let dateRange = simulationResults
+  let dateRange = props.simulations
     .flatMap((res) => res.bills.flatMap((b) => b.getBillingPeriodStart()))
     .reduce(
       (acc, date) => {
@@ -48,10 +50,10 @@ export const BillingView: React.FC<{
     }
   }
 
-  const allBills: { [key: string]: EnergyBill[] }[] = simulationResults.map(
-    (res) => {
+  const allBills: { [key: string]: EnergyBill[] }[] = props.simulations.map(
+    (sim) => {
       let map: { [key: string]: EnergyBill[] } = {};
-      res.bills.forEach((bill) => {
+      sim.bills.forEach((bill) => {
         const key = monthKey(bill.getBillingPeriodStart());
         if (!map[key]) {
           map[key] = [bill];
@@ -70,7 +72,7 @@ export const BillingView: React.FC<{
   });
 
   const xMinor = scaleBand<string>({
-    domain: simulationResults.map((_, i) => i.toString()),
+    domain: props.simulations.map((_, i) => i.toString()),
     paddingInner: 0.1,
     range: [0, xMajor.bandwidth()],
   });
@@ -89,10 +91,9 @@ export const BillingView: React.FC<{
     range: [height, 0],
   });
 
-  const color = scaleOrdinal({
-    domain: ["electricity", "natural gas"],
-    range: ["green", "orange"],
-  });
+  const color = scaleOrdinal<string>()
+    .domain(props.simulations.map((s) => s.name))
+    .range(schemeSet1);
 
   const {
     tooltipData,
@@ -101,7 +102,7 @@ export const BillingView: React.FC<{
     tooltipOpen,
     showTooltip,
     hideTooltip,
-  } = useTooltip<EnergyBill>();
+  } = useTooltip<{ name: string; bills: EnergyBill[] }>();
 
   // If you don't want to use a Portal, simply replace `TooltipInPortal` below with
   // `Tooltip` or `TooltipWithBounds` and remove `containerRef`
@@ -112,7 +113,11 @@ export const BillingView: React.FC<{
     scroll: true,
   });
 
-  const handleMouseOver = (event: React.MouseEvent, bill: EnergyBill) => {
+  const handleMouseOver = (
+    event: React.MouseEvent,
+    simIdx: number,
+    monthKey: string
+  ) => {
     const coords = localPoint(
       (event.target as SVGElement).ownerSVGElement!,
       event
@@ -120,8 +125,18 @@ export const BillingView: React.FC<{
     showTooltip({
       tooltipLeft: coords.x,
       tooltipTop: coords.y,
-      tooltipData: bill,
+      tooltipData: {
+        name: props.simulations[simIdx].name,
+        bills: allBills[simIdx][monthKey],
+      },
     });
+  };
+
+  const monthTickFormat = (value: string): string => {
+    return DateTime.fromObject({
+      year: parseInt(value.split("-")[0]),
+      month: parseInt(value.split("-")[1]),
+    }).toFormat("LLLL");
   };
 
   return (
@@ -131,54 +146,78 @@ export const BillingView: React.FC<{
         height={height + margin.top + margin.bottom}
         ref={containerRef}
       >
-        <PatternLines
-          id="green-lines"
-          height={10}
-          width={10}
-          background="green"
-          stroke={"white"}
-          strokeWidth={1}
-          orientation={["diagonal"]}
-        />
-        <PatternLines
-          id="orange-lines"
-          height={10}
-          width={10}
-          background="orange"
-          stroke={"white"}
-          strokeWidth={1}
-          orientation={["diagonal"]}
-        />
+        {color.range().map((value) => {
+          return (
+            <PatternLines
+              key={`${value}`}
+              id={`lines-${value}`}
+              height={5}
+              width={5}
+              stroke={`${value}`}
+              background={"white"}
+              strokeWidth={2}
+              orientation={["diagonal"]}
+            />
+          );
+        })}
         <Group left={margin.left} top={margin.top}>
-          <AxisBottom top={height} scale={xMajor} />
+          <AxisBottom
+            top={height}
+            scale={xMajor}
+            tickFormat={monthTickFormat}
+          />
           <AxisLeft scale={y} tickFormat={(v) => `\$${v}`} />
           {allBills.flatMap((billsByMonth, idx) =>
             Object.entries(billsByMonth).flatMap(([month, bills]) => {
               let runningTotalCost = 0;
 
-              return bills.map((bill, billIdx) => {
-                const rectX = xMajor(month)! + xMinor(idx.toString())!;
-                runningTotalCost += bill.getTotalCost();
-                const rectY = y(runningTotalCost);
-                const fillColor = color(bill.getFuelType());
+              return (
+                <Group
+                  onMouseOver={(ev) => handleMouseOver(ev, idx, month)}
+                  onMouseOut={hideTooltip}
+                >
+                  {bills.map((bill, billIdx) => {
+                    const rectX = xMajor(month)! + xMinor(idx.toString())!;
+                    runningTotalCost += bill.getTotalCost();
+                    const rectY = y(runningTotalCost);
+                    const fillColor = color(props.simulations[idx].name);
 
-                return (
-                  <Bar
-                    key={`bar-${month}-${idx}-${billIdx}`}
-                    x={rectX}
-                    y={rectY}
-                    width={xMinor.bandwidth()}
-                    height={y(0) - y(bill.getTotalCost())}
-                    onMouseOver={(ev) => handleMouseOver(ev, bill)}
-                    onMouseOut={hideTooltip}
-                    fill={idx % 2 == 0 ? fillColor : `url(#${fillColor}-lines)`}
-                  />
-                );
-              });
+                    return (
+                      <Bar
+                        key={`bar-${month}-${idx}-${billIdx}`}
+                        x={rectX}
+                        y={rectY}
+                        width={xMinor.bandwidth()}
+                        height={y(0) - y(bill.getTotalCost())}
+                        fill={
+                          bill.getFuelType() == "electricity"
+                            ? fillColor
+                            : `url(#lines-${fillColor})`
+                        }
+                      />
+                    );
+                  })}
+                </Group>
+              );
             })
           )}
         </Group>
       </svg>
+      <div style={{ marginLeft: margin.left }}>
+        <LegendOrdinal
+          scale={color}
+          labelFormat={(name) => {
+            for (let sim of props.simulations) {
+              if (sim.name === name) {
+                const total = sim.bills
+                  .flatMap((b) => b.getTotalCost())
+                  .reduce((acc, x) => acc + x, 0);
+                return `${name} (Total: \$${total.toFixed(2)})`;
+              }
+            }
+          }}
+        />
+      </div>
       {tooltipOpen && tooltipData && (
         <TooltipInPortal
           // set this to random so it correctly updates with parent bounds
@@ -186,14 +225,20 @@ export const BillingView: React.FC<{
           top={tooltipTop}
           left={tooltipLeft}
         >
-          {/* TODO(jlfwong): Make one tooltip per simulation/month instead of one per bill */}
-          {`${tooltipData.getFuelType()} bill`}
-          <br />
-          {`Usage: ${tooltipData
-            .getFuelUsage()
-            .toFixed(2)} ${tooltipData.getFuelUnit()}`}
-          <br />
-          {`Total: \$${tooltipData.getTotalCost().toFixed(2)}`}
+          {tooltipData.name}
+          {tooltipData.bills.map((bill) => {
+            if (bill.getTotalCost() === 0) return null;
+            return (
+              <>
+                <div key={bill.getFuelType()} style={{ marginTop: 10 }}>
+                  <u>{bill.getFuelType()} bill</u> <br />
+                  <strong>Usage</strong>: {bill.getFuelUsage().toFixed(2)}{" "}
+                  {bill.getFuelUnit()} <br />
+                  <strong>Total</strong>: ${bill.getTotalCost().toFixed(2)}
+                </div>
+              </>
+            );
+          })}
         </TooltipInPortal>
       )}
     </>

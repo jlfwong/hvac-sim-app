@@ -44,3 +44,10 @@ TODO(jlfwong): Confirm that these are different using pysolar
 # Electric furnaces
 
 The heat pumps hooray codebase says electric furnaces have no capacity limit, but all the advertised furnaces I see have a kW limit.
+
+# Significant divergence
+
+- IAT BTU calculation in heat pumps hooray seems like it's off by ~50x. This is a TODO in the python server codebase
+- hvac-math simulates equipment being turned on & off, rather than just assuming equipment operates instantaneously to maintain temperature. This supports calculation of real resulting temperatures when equipment is undersized
+- The solar calculations in the python codebase are incorrect
+- So far, zones is assumed to always be 1 in this codebase

@@ -214,6 +214,10 @@ export class SolarGainLoadSource implements ThermalLoadSource {
   constructor(
     private options: {
       geometry: BuildingGeometry;
+
+      // TODO(jlfwong): Should this also have the envelope modifier for the wall
+      // & ceiling gain? Presumably the walls & roof heating up due to sun
+      // exposure has thermal transfer modulated by insulation.
       solarModifier: number;
     }
   ) {}
