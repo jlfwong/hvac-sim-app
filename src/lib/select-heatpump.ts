@@ -129,6 +129,16 @@ export function selectHeatpump(options: {
 
     options.binnedTemperatures.forEachBin((bin) => {
       const { outsideAirTempF, hourCount } = bin;
+
+      // TODO(jlfwong): Consider ignoring weights on temperatures below the
+      // auxiliary switchover temperature
+      /*
+      if (outsideAirTempF < options.auxiliarySwitchoverTempF) {
+        // Handled by auxiliary heating
+        return;
+      }
+      */
+
       let mode: "heating" | "cooling" | null = null;
       if (outsideAirTempF < options.heatingSetPointInsideTempF) {
         mode = "heating";

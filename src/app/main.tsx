@@ -130,6 +130,7 @@ export const Main: React.FC<{}> = (props) => {
           weatherInfo,
           coolingSetPointInsideTempF: coolingSetPointF,
           heatingSetPointInsideTempF: heatingSetPointF,
+          auxSwitchoverTempF,
           loadSources,
         }
       : null

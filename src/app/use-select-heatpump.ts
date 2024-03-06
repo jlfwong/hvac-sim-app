@@ -23,7 +23,9 @@ function useKelvinJson() {
   return heatPumpMetadata;
 }
 
-const useHeatPumpCandidates = (elevationFeet: number | null) => {
+const useKelvinHeatPumpCandidates = (
+  elevationFeet: number | null
+): AirSourceHeatPump[] | null => {
   const heatPumpMetadata = useKelvinJson();
 
   const heatPumpCandidates = useMemo(() => {
@@ -62,6 +64,85 @@ const useHeatPumpCandidates = (elevationFeet: number | null) => {
   return heatPumpCandidates;
 };
 
+function useTopRatedJson() {
+  const [heatPumpMetadata, setHeatPumpMetadata] = useState<any>(null);
+
+  useEffect(() => {
+    fetchJSON<any>(`./data/equipment/top_rated.json`).then((json) => {
+      setHeatPumpMetadata(json);
+    });
+  }, []);
+
+  return heatPumpMetadata;
+}
+
+const useTopRatedHeatPumpCandidates = (
+  elevationFeet: number | null
+): AirSourceHeatPump[] | null => {
+  const json = useTopRatedJson();
+
+  // This json file is an array represented as an object of arrays instead of
+  // array of objects for some reason, and each of the arrays in the object are
+  // objects with numeric keys instead of actual arrays.
+  const candidates = useMemo(() => {
+    if (json == null || elevationFeet == null) return null;
+
+    const maxKey = Math.max(...Object.keys(json.brand).map((n) => parseInt(n)));
+
+    const pumpInfo: {
+      [ahriCertificateNumber: string]: {
+        name: string;
+        ducted: boolean;
+        ratings: NEEPccASHPRatingInfo[];
+      };
+    } = {};
+
+    for (let i = 0; i <= maxKey; i++) {
+      const key = json.ahri_certificate_number[i];
+      if (!(key in pumpInfo)) {
+        pumpInfo[key] = {
+          name: `${json.brand[i]} ${json.outdoor_unit_number[i]}`,
+          ducted: json.ducted[i],
+          ratings: [],
+        };
+      }
+      pumpInfo[key].ratings.push({
+        mode: json.heat_cool[i].toLowerCase(),
+        insideDryBulbFahrenheit: json.indoor_dry_bulb[i],
+        outsideDryBulbFahrenheit: json.outdoor_dry_bulb[i],
+        minCapacity: {
+          btusPerHour: json.capacity_min[i],
+          coefficientOfPerformance: json.cop_min[i],
+        },
+        maxCapacity: {
+          btusPerHour: json.capacity_max[i],
+          coefficientOfPerformance: json.cop_max[i],
+        },
+      });
+    }
+
+    const pumps: AirSourceHeatPump[] = [];
+    for (let key of Object.keys(pumpInfo)) {
+      const { name, ducted, ratings } = pumpInfo[key];
+      if (!ducted) {
+        // TODO(jlfwong): Deal with ducting configurations,
+        // all-electric v.s. dual-fuel, etc.
+        continue;
+      }
+      pumps.push(
+        new AirSourceHeatPump({
+          name,
+          ratings,
+          elevationFeet,
+        })
+      );
+    }
+    return pumps;
+  }, [json, elevationFeet]);
+
+  return candidates;
+};
+
 export function useSelectHeatpump(
   options: {
     weatherInfo: WeatherInfo;
@@ -72,31 +153,45 @@ export function useSelectHeatpump(
     // The temperature to heat the home to
     heatingSetPointInsideTempF: number;
 
+    // The temperature at which auxiliary heat will be used
+    auxSwitchoverTempF: number | null;
+
     // The thermal loads the heatpump will need to counteract
     loadSources: ThermalLoadSource[];
   } | null
 ): HeatpumpSelectionResult[] | null {
-  const candidates = useHeatPumpCandidates(
+  const candidates = useTopRatedHeatPumpCandidates(
     options ? metersToFeet(options.weatherInfo.elevationMeters) : null
   );
 
-  const results =
-    candidates &&
-    options &&
-    selectHeatpump({
-      heatpumps: candidates,
+  if (!candidates || !options) {
+    return null;
+  }
 
-      designCoolingOutsideAirTempF:
-        options.weatherInfo.binnedTemperatures.getTempAtPercentile(99),
-      coolingSetPointInsideTempF: options.coolingSetPointInsideTempF,
+  const designCoolingOutsideAirTempF =
+    options?.weatherInfo.binnedTemperatures.getTempAtPercentile(99);
 
-      designHeatingOutsideAirTempF:
-        options.weatherInfo.binnedTemperatures.getTempAtPercentile(1),
-      heatingSetPointInsideTempF: options.heatingSetPointInsideTempF,
+  let designHeatingOutsideAirTempF =
+    options?.weatherInfo.binnedTemperatures.getTempAtPercentile(1);
+  if (designHeatingOutsideAirTempF && options?.auxSwitchoverTempF != null) {
+    designHeatingOutsideAirTempF = Math.max(
+      designHeatingOutsideAirTempF,
+      options.auxSwitchoverTempF
+    );
+  }
 
-      loadSources: options.loadSources,
-      binnedTemperatures: options.weatherInfo.binnedTemperatures,
-    });
+  const results = selectHeatpump({
+    heatpumps: candidates,
+
+    designCoolingOutsideAirTempF,
+    coolingSetPointInsideTempF: options.coolingSetPointInsideTempF,
+
+    designHeatingOutsideAirTempF,
+    heatingSetPointInsideTempF: options.heatingSetPointInsideTempF,
+
+    loadSources: options.loadSources,
+    binnedTemperatures: options.weatherInfo.binnedTemperatures,
+  });
 
   return results;
 }
