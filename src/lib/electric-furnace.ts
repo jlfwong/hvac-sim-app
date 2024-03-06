@@ -1,9 +1,9 @@
-import { HVACAppliance, HVACApplianceResponse } from "./types";
+import { HeatingAppliance, HVACApplianceResponse } from "./types";
 import { kWToBtusPerHour } from "./units";
 
 const BTU_PER_CCF_NATURAL_GAS = 103700;
 
-export class ElectricFurnace implements HVACAppliance {
+export class ElectricFurnace implements HeatingAppliance {
   readonly name: string = "Electric Furnace";
 
   constructor(
@@ -12,30 +12,17 @@ export class ElectricFurnace implements HVACAppliance {
     }
   ) {}
 
-  getThermalResponse(options: {
-    btusPerHourNeeded: number;
+  getHeatingPerformanceInfo(options: {
     insideAirTempF: number;
     outsideAirTempF: number;
   }): HVACApplianceResponse {
-    if (options.btusPerHourNeeded < 0) {
-      // Furnaces can't cool :)
-      return { btusPerHour: 0, fuelUsage: {} };
-    }
-
     const capacityBtusPerHour = kWToBtusPerHour(this.options.capacityKw);
 
-    // Thermal response is independent of temperature differential
-    const btusPerHourProduced = Math.min(
-      options.btusPerHourNeeded,
-      capacityBtusPerHour
-    );
-
     return {
-      btusPerHour: btusPerHourProduced,
+      btusPerHour: capacityBtusPerHour,
       fuelUsage: {
         // This assumes variable control
-        electricityKw:
-          (btusPerHourProduced / capacityBtusPerHour) * this.options.capacityKw,
+        electricityKw: this.options.capacityKw,
       },
     };
   }

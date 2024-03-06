@@ -9,7 +9,7 @@ describe("GasFurnace", () => {
         elevationFeet: 0,
       });
 
-      const response = furnace.getThermalResponse({
+      const response = furnace.getHeatingPerformanceInfo({
         btusPerHourNeeded: 40000,
         insideAirTempF: 70,
         outsideAirTempF: 5,
@@ -27,7 +27,7 @@ describe("GasFurnace", () => {
         elevationFeet: 0,
       });
 
-      const response = furnace.getThermalResponse({
+      const response = furnace.getHeatingPerformanceInfo({
         btusPerHourNeeded: 40000,
         insideAirTempF: 70,
         outsideAirTempF: 5,
@@ -45,7 +45,7 @@ describe("GasFurnace", () => {
         elevationFeet: 0,
       });
 
-      const response = furnace.getThermalResponse({
+      const response = furnace.getHeatingPerformanceInfo({
         btusPerHourNeeded: 100000,
         insideAirTempF: 70,
         outsideAirTempF: 5,
@@ -63,7 +63,7 @@ describe("GasFurnace", () => {
         elevationFeet: 5000,
       });
 
-      const response = furnace.getThermalResponse({
+      const response = furnace.getHeatingPerformanceInfo({
         btusPerHourNeeded: 100000,
         insideAirTempF: 70,
         outsideAirTempF: 5,

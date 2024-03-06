@@ -164,7 +164,7 @@ describe("AirSourceHeatPump", () => {
       test("elevation de-rating", () => {
         let deratedHeatPump = new AirSourceHeatPump({
           elevationFeet: 5300,
-          ratings: panasonicRatings,
+          ratings: panasonicHeatPumpRatings,
         });
 
         const rating = deratedHeatPump.getEstimatedPerformanceRating({
@@ -228,8 +228,7 @@ describe("AirSourceHeatPump", () => {
 
   describe("getThermalResponse", () => {
     test("max capacity", () => {
-      const response = panasonicHeatPump.getThermalResponse({
-        btusPerHourNeeded: 36876,
+      const response = panasonicHeatPump.getHeatingPerformanceInfo({
         insideAirTempF: 70,
         outsideAirTempF: 5,
       });
@@ -242,8 +241,7 @@ describe("AirSourceHeatPump", () => {
     });
 
     test("cooling", () => {
-      const response = panasonicHeatPump.getThermalResponse({
-        btusPerHourNeeded: -30000,
+      const response = panasonicHeatPump.getCoolingPerformanceInfo({
         insideAirTempF: 70,
         outsideAirTempF: 90,
       });

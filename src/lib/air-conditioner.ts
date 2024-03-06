@@ -41,10 +41,14 @@ SEER.
 */
 
 import { PerformanceRating, derateHeatPumpForElevation } from "./heatpump";
-import { HVACAppliance, HVACApplianceResponse } from "./types";
+import {
+  CoolingAppliance,
+  HeatingAppliance,
+  HVACApplianceResponse,
+} from "./types";
 import { WATT_HOUR_PER_BTU, btusToKwh } from "./units";
 
-export class AirConditioner implements HVACAppliance {
+export class AirConditioner implements CoolingAppliance {
   readonly name = "Air Conditioner";
 
   constructor(
@@ -67,15 +71,9 @@ export class AirConditioner implements HVACAppliance {
   }
 
   getEstimatedPerformanceRating(options: {
-    btusPerHourNeeded: number;
     insideAirTempF: number;
     outsideAirTempF: number;
   }): PerformanceRating {
-    if (options.btusPerHourNeeded > 0) {
-      // Air conditioner cannot provide heat
-      return { btusPerHour: 0, coefficientOfPerformance: 1 };
-    }
-
     // The units of SEER are BTU/Watt-hour. COP is unit-less (e.g. kWh/kWh).
     // To convert from SEER to COP, we therefore multiple by Watt-hour/BTU
     const nameplaceCOP = this.options.seer * WATT_HOUR_PER_BTU;
@@ -100,18 +98,14 @@ export class AirConditioner implements HVACAppliance {
     return derateHeatPumpForElevation(
       {
         coefficientOfPerformance,
-        btusPerHour: -Math.min(
-          Math.abs(options.btusPerHourNeeded),
-          this.options.capacityBtusPerHour
-        ),
+        btusPerHour: -this.options.capacityBtusPerHour,
       },
       this.options.elevationFeet,
       this.options.speedSettings
     );
   }
 
-  getThermalResponse(options: {
-    btusPerHourNeeded: number;
+  getCoolingPerformanceInfo(options: {
     insideAirTempF: number;
     outsideAirTempF: number;
   }): HVACApplianceResponse {

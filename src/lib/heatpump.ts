@@ -1,5 +1,9 @@
 import { interpolate, clamp, interpolateClamped } from "./math";
-import { HVACAppliance, HVACApplianceResponse } from "./types";
+import {
+  CoolingAppliance,
+  HeatingAppliance,
+  HVACApplianceResponse,
+} from "./types";
 import { btusToKwh } from "./units";
 
 export interface PerformanceRating {
@@ -132,24 +136,80 @@ function derateCapacityPerformanceRating(
   };
 }
 
-export function estimatePerformanceRating({
-  insideAirTempF,
-  outsideAirTempF,
-  btusPerHourNeeded,
-  sortedRatings,
-  elevationFeet,
-}: {
+function estimatePerformanceRange(options: {
   insideAirTempF: number;
   outsideAirTempF: number;
-  btusPerHourNeeded: number;
+  sortedRatings: NEEPccASHPRatingInfo[];
+  elevationFeet?: number;
+}): { minCapacity: PerformanceRating; maxCapacity: PerformanceRating } {
+  const deltaTempF = Math.abs(options.insideAirTempF - options.outsideAirTempF);
+  if (options.elevationFeet == null) {
+    options.elevationFeet = 0;
+  }
+
+  let left: NEEPccASHPRatingInfo | null = null;
+  let right: NEEPccASHPRatingInfo | null = null;
+  for (let i = 1; i < options.sortedRatings.length; i++) {
+    left = options.sortedRatings[i - 1];
+    right = options.sortedRatings[i];
+    if (absDeltaT(left!) <= deltaTempF && deltaTempF <= absDeltaT(right!)) {
+      break;
+    }
+  }
+
+  if (!left || !right) {
+    throw new Error(
+      `Not enough ratings. Expected a minimum of 2, got ${options.sortedRatings.length}`
+    );
+  }
+  const deltaTempLeft = absDeltaT(left);
+  const deltaTempRight = absDeltaT(right);
+
+  let minCapacity = interpolatePerformanceRatings(
+    deltaTempLeft,
+    left.minCapacity,
+    deltaTempRight,
+    right.minCapacity,
+    deltaTempF
+  );
+  minCapacity = derateCapacityPerformanceRating(
+    minCapacity,
+    options.outsideAirTempF,
+    options.elevationFeet,
+    "min"
+  );
+  let maxCapacity = interpolatePerformanceRatings(
+    deltaTempLeft,
+    left.maxCapacity,
+    deltaTempRight,
+    right.maxCapacity,
+    deltaTempF
+  );
+  maxCapacity = derateCapacityPerformanceRating(
+    maxCapacity,
+    options.outsideAirTempF,
+    options.elevationFeet,
+    "max"
+  );
+
+  return {
+    minCapacity,
+    maxCapacity,
+  };
+}
+
+export type PowerSetting =
+  | { type: "btus"; btusPerHourNeeded: number }
+  | { type: "percent"; percentPower: number };
+
+function estimatePerformanceRating(options: {
+  insideAirTempF: number;
+  outsideAirTempF: number;
+  power: PowerSetting;
+  mode: "heating" | "cooling";
   sortedRatings: NEEPccASHPRatingInfo[];
   elevationFeet?: number;
 }): PerformanceRating {
-  const deltaTempF = Math.abs(insideAirTempF - outsideAirTempF);
-  if (elevationFeet == null) {
-    elevationFeet = 0;
-  }
-
   // We interpolate on two axes. First, we interpolate on the temperature axis
   // (specifically on delta temperature) to generate a pair of performance
   // characteristics corresponding to the heat pump operating at minimum and
@@ -158,90 +218,66 @@ export function estimatePerformanceRating({
   // After we have those, we interpolate on capacity to determine the
   // coefficient of performance when running at the target btus per hour needed.
 
-  let left: NEEPccASHPRatingInfo | null = null;
-  let right: NEEPccASHPRatingInfo | null = null;
+  const { minCapacity, maxCapacity } = estimatePerformanceRange(options);
 
-  for (let i = 1; i < sortedRatings.length; i++) {
-    left = sortedRatings[i - 1];
-    right = sortedRatings[i];
-    if (absDeltaT(left!) <= deltaTempF && deltaTempF <= absDeltaT(right!)) {
+  let btusPerHourNeeded = 0;
+  switch (options.power.type) {
+    case "btus": {
+      btusPerHourNeeded = options.power.btusPerHourNeeded;
       break;
+    }
+
+    case "percent": {
+      btusPerHourNeeded =
+        maxCapacity.btusPerHour * (options.power.percentPower / 100.0);
+      if (options.mode === "cooling") {
+        btusPerHourNeeded = -btusPerHourNeeded;
+      }
+      break;
+    }
+
+    default: {
+      throw new Error(`Unexpected power type: ${options.power}`);
     }
   }
 
-  if (left && right) {
-    const deltaTempLeft = absDeltaT(left);
-    const deltaTempRight = absDeltaT(right);
-
-    let minCapacity = interpolatePerformanceRatings(
-      deltaTempLeft,
-      left.minCapacity,
-      deltaTempRight,
-      right.minCapacity,
-      deltaTempF
-    );
-    minCapacity = derateCapacityPerformanceRating(
-      minCapacity,
-      outsideAirTempF,
-      elevationFeet,
-      "min"
-    );
-    let maxCapacity = interpolatePerformanceRatings(
-      deltaTempLeft,
-      left.maxCapacity,
-      deltaTempRight,
-      right.maxCapacity,
-      deltaTempF
-    );
-    maxCapacity = derateCapacityPerformanceRating(
-      maxCapacity,
-      outsideAirTempF,
-      elevationFeet,
-      "max"
-    );
-
-    if (Math.abs(btusPerHourNeeded) > Math.abs(maxCapacity.btusPerHour)) {
-      // Can't supply more than max capacity
-      return {
-        btusPerHour:
-          btusPerHourNeeded < 0
-            ? -maxCapacity.btusPerHour
-            : maxCapacity.btusPerHour,
-        coefficientOfPerformance: maxCapacity.coefficientOfPerformance,
-      };
-    } else if (
-      Math.abs(btusPerHourNeeded) < Math.abs(minCapacity.btusPerHour)
-    ) {
-      // Can supply less than min capacity by cycling, but coefficient of
-      // performance won't improve.
-      //
-      // NOTE: Normally COP at minimum capacity is *higher* than COP at maximum
-      // capacity.
-      return {
-        btusPerHour: btusPerHourNeeded,
-        coefficientOfPerformance: minCapacity.coefficientOfPerformance,
-      };
-    } else {
-      // Thermal demand is within bounds of variable compressor operation,
-      // so interpolate to find the coefficient of performance here.
-      //
-      // TODO(jlfwong): Is this actually a linear function?
-      const coefficientOfPerformance = interpolateCOP(
-        minCapacity.btusPerHour,
-        minCapacity.coefficientOfPerformance,
-        maxCapacity.btusPerHour,
-        maxCapacity.coefficientOfPerformance,
-        Math.abs(btusPerHourNeeded)
-      );
-      return {
-        btusPerHour: btusPerHourNeeded,
-        coefficientOfPerformance,
-      };
-    }
+  if (Math.abs(btusPerHourNeeded) > Math.abs(maxCapacity.btusPerHour)) {
+    // Can't supply more than max capacity
+    return {
+      btusPerHour:
+        btusPerHourNeeded < 0
+          ? -maxCapacity.btusPerHour
+          : maxCapacity.btusPerHour,
+      coefficientOfPerformance: maxCapacity.coefficientOfPerformance,
+    };
+  } else if (Math.abs(btusPerHourNeeded) < Math.abs(minCapacity.btusPerHour)) {
+    // Can't supply less than min capacity (without cycling).
+    //
+    // NOTE: Normally COP at minimum capacity is *higher* than COP at maximum
+    // capacity.
+    return {
+      btusPerHour:
+        btusPerHourNeeded < 0
+          ? -minCapacity.btusPerHour
+          : minCapacity.btusPerHour,
+      coefficientOfPerformance: minCapacity.coefficientOfPerformance,
+    };
   } else {
-    throw new Error(
-      `Not enough ratings. Expected a minimum of 2, got ${sortedRatings.length}`
+    // Thermal demand is within bounds of variable compressor operation,
+    // so interpolate to find the coefficient of performance here.
+    //
+    // TODO(jlfwong): Is this actually a linear function?
+    const coefficientOfPerformance = interpolateCOP(
+      minCapacity.btusPerHour,
+      minCapacity.coefficientOfPerformance,
+      maxCapacity.btusPerHour,
+      maxCapacity.coefficientOfPerformance,
+      Math.abs(btusPerHourNeeded)
     );
+    return {
+      btusPerHour: btusPerHourNeeded,
+      coefficientOfPerformance,
+    };
   }
 }
 
@@ -288,7 +324,7 @@ function getAltitudeCorrectionFactor(elevationInFeet: number): number {
   );
 }
 
-export class AirSourceHeatPump implements HVACAppliance {
+export class AirSourceHeatPump implements HeatingAppliance, CoolingAppliance {
   private elevationFeet: number;
   private sortedHeatingRatings: NEEPccASHPRatingInfo[];
   private sortedCoolingRatings: NEEPccASHPRatingInfo[];
@@ -315,28 +351,65 @@ export class AirSourceHeatPump implements HVACAppliance {
   }
 
   getEstimatedPerformanceRating(options: {
-    btusPerHourNeeded: number;
+    power: PowerSetting;
     insideAirTempF: number;
     outsideAirTempF: number;
+    mode: "heating" | "cooling";
   }): PerformanceRating {
     return estimatePerformanceRating({
       insideAirTempF: options.insideAirTempF,
       outsideAirTempF: options.outsideAirTempF,
-      btusPerHourNeeded: options.btusPerHourNeeded,
+      power: options.power,
+      mode: options.mode,
       sortedRatings:
-        options.btusPerHourNeeded > 0
+        options.mode == "heating"
           ? this.sortedHeatingRatings
           : this.sortedCoolingRatings,
       elevationFeet: this.elevationFeet,
     });
   }
 
-  getThermalResponse(options: {
-    btusPerHourNeeded: number;
+  getCoolingPerformanceInfo(options: {
     insideAirTempF: number;
     outsideAirTempF: number;
+    percentPower?: number;
   }): HVACApplianceResponse {
-    const rating = this.getEstimatedPerformanceRating(options);
+    const rating = this.getEstimatedPerformanceRating({
+      mode: "cooling",
+      power: {
+        type: "percent",
+        percentPower: options.percentPower != null ? options.percentPower : 100,
+      },
+      insideAirTempF: options.insideAirTempF,
+      outsideAirTempF: options.outsideAirTempF,
+    });
+
+    // Convert from BTUs/hr to kW, incorporating coefficient of performance
+    const kWNeeded =
+      btusToKwh(Math.abs(rating.btusPerHour)) / rating.coefficientOfPerformance;
+
+    return {
+      btusPerHour: rating.btusPerHour,
+      fuelUsage: {
+        electricityKw: kWNeeded,
+      },
+    };
+  }
+
+  getHeatingPerformanceInfo(options: {
+    insideAirTempF: number;
+    outsideAirTempF: number;
+    percentPower?: number;
+  }): HVACApplianceResponse {
+    const rating = this.getEstimatedPerformanceRating({
+      mode: "heating",
+      power: {
+        type: "percent",
+        percentPower: options.percentPower != null ? options.percentPower : 100,
+      },
+      insideAirTempF: options.insideAirTempF,
+      outsideAirTempF: options.outsideAirTempF,
+    });
 
     // Convert from BTUs/hr to kW, incorporating coefficient of performance
     const kWNeeded =

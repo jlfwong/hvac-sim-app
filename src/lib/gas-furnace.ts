@@ -1,8 +1,8 @@
-import { HVACAppliance, HVACApplianceResponse } from "./types";
+import { HeatingAppliance, HVACApplianceResponse } from "./types";
 
 const BTU_PER_CCF_NATURAL_GAS = 103700;
 
-export class GasFurnace implements HVACAppliance {
+export class GasFurnace implements HeatingAppliance {
   private deratedCapacityBtusPerHour: number;
   readonly name: string = "Gas Furnace";
 
@@ -32,22 +32,14 @@ export class GasFurnace implements HVACAppliance {
       this.options.capacityBtusPerHour * capacityElevationMultiplier;
   }
 
-  getThermalResponse(options: {
-    btusPerHourNeeded: number;
+  getHeatingPerformanceInfo(options: {
     insideAirTempF: number;
     outsideAirTempF: number;
   }): HVACApplianceResponse {
-    if (options.btusPerHourNeeded < 0) {
-      // Furnaces can't cool :)
-      return { btusPerHour: 0, fuelUsage: {} };
-    }
     // Gas furnaces' efficiency in converting natural gas to heat is independent
     // of the temperature differential.
 
-    const btusPerHourProduced = Math.min(
-      options.btusPerHourNeeded,
-      this.deratedCapacityBtusPerHour
-    );
+    const btusPerHourProduced = this.deratedCapacityBtusPerHour;
 
     const btuConsumptionRate =
       btusPerHourProduced / (this.options.afuePercent / 100.0);

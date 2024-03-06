@@ -147,13 +147,13 @@ describe("AirConditioner", () => {
         speedSettings: "single-speed",
       });
 
-      const response90 = ac.getThermalResponse({
+      const response90 = ac.getHeatingPerformanceInfo({
         btusPerHourNeeded: -30000,
         insideAirTempF: 80,
         outsideAirTempF: 90,
       });
 
-      const response100 = ac.getThermalResponse({
+      const response100 = ac.getHeatingPerformanceInfo({
         btusPerHourNeeded: -30000,
         insideAirTempF: 80,
         outsideAirTempF: 100,

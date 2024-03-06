@@ -163,9 +163,14 @@ export const Main: React.FC<{}> = (props) => {
 
     for (let i = 0; i < Math.min(heatPumpCandidates.length, 5); i++) {
       const heatpump = heatPumpCandidates[i].heatpump;
+
+      // TODO(jlfwong): Sometimes the top candidate doesn't actually end up
+      // being the cheapest. This *might* be because the heatpump selection
+      // algorithm assumes perfect modulation, whereas the simulation (so far)
+      // only uses a dumb two-stage algorithm.
       systems.unshift(
         new DualFuelTwoStageHVACSystem(
-          `Dual Fuel (${heatpump.name} + ${gasFurnace.name})`,
+          `Dual Fuel Two Stage (${heatpump.name} + ${gasFurnace.name})`,
           {
             coolingSetPointF,
             coolingAppliance: heatpump,
@@ -267,7 +272,7 @@ export const Main: React.FC<{}> = (props) => {
           <TemperaturesView
             heatingSetPointC={heatingSetPointC}
             coolingSetPointC={coolingSetPointC}
-            simulationResult={simulations[0]}
+            simulationResult={simulations[simulations.length - 1]}
           />
           <PassiveLoadsView simulationResult={simulations[0]} />
           <BillingView simulations={simulations} />

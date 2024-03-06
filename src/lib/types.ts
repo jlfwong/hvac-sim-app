@@ -22,11 +22,19 @@ export interface HVACApplianceResponse {
   fuelUsage: FuelUsageRate;
 }
 
-export interface HVACAppliance {
+export interface HeatingAppliance {
   name: string;
 
-  getThermalResponse(options: {
-    btusPerHourNeeded: number;
+  getHeatingPerformanceInfo(options: {
+    insideAirTempF: number;
+    outsideAirTempF: number;
+  }): HVACApplianceResponse;
+}
+
+export interface CoolingAppliance {
+  name: string;
+
+  getCoolingPerformanceInfo(options: {
     insideAirTempF: number;
     outsideAirTempF: number;
   }): HVACApplianceResponse;

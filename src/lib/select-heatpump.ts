@@ -40,8 +40,6 @@ export function selectHeatpump(options: {
   // temperatures as an optimization.
   binnedTemperatures: BinnedTemperatures;
 }): HeatpumpSelectionResult[] {
-  console.log("options", options);
-
   function getBtusPerHourLoad(insideAirTempF: number, outsideAirTempF: number) {
     // We're looking for worst case scenarios, so we'll make assumptions for
     // weather based on that.
@@ -97,19 +95,19 @@ export function selectHeatpump(options: {
     )
   );
 
-  console.log(btusPerHourNeededCooling, btusPerHourNeededHeating);
-
   // Step 1: Filter out heat pumps which lack the capacity for the design
   // heating and cooling temperatures
   const candidateHeatpumps = options.heatpumps.filter((pump) => {
     const heatingRating = pump.getEstimatedPerformanceRating({
-      btusPerHourNeeded: btusPerHourNeededHeating,
+      mode: "heating",
+      power: { type: "btus", btusPerHourNeeded: btusPerHourNeededHeating },
       insideAirTempF: options.heatingSetPointInsideTempF,
       outsideAirTempF: options.designHeatingOutsideAirTempF,
     });
 
     const coolingRating = pump.getEstimatedPerformanceRating({
-      btusPerHourNeeded: btusPerHourNeededCooling,
+      mode: "cooling",
+      power: { type: "btus", btusPerHourNeeded: btusPerHourNeededCooling },
       insideAirTempF: options.coolingSetPointInsideTempF,
       outsideAirTempF: options.designCoolingOutsideAirTempF,
     });
@@ -131,6 +129,17 @@ export function selectHeatpump(options: {
 
     options.binnedTemperatures.forEachBin((bin) => {
       const { outsideAirTempF, hourCount } = bin;
+      let mode: "heating" | "cooling" | null = null;
+      if (outsideAirTempF < options.heatingSetPointInsideTempF) {
+        mode = "heating";
+      } else if (outsideAirTempF > options.coolingSetPointInsideTempF) {
+        mode = "cooling";
+      }
+
+      if (mode == null) {
+        return;
+      }
+
       const insideAirTempF =
         outsideAirTempF < options.designHeatingOutsideAirTempF
           ? options.designHeatingOutsideAirTempF
@@ -140,7 +149,8 @@ export function selectHeatpump(options: {
         outsideAirTempF
       );
       const rating = pump.getEstimatedPerformanceRating({
-        btusPerHourNeeded,
+        power: { type: "btus", btusPerHourNeeded },
+        mode,
         insideAirTempF,
         outsideAirTempF,
       });

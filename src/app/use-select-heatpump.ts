@@ -98,8 +98,5 @@ export function useSelectHeatpump(
       binnedTemperatures: options.weatherInfo.binnedTemperatures,
     });
 
-  console.log("Candidates", candidates);
-  console.log("Selection results", results);
-
   return results;
 }
