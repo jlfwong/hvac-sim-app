@@ -245,7 +245,7 @@ function estimatePerformanceRating(options: {
     // Can't supply more than max capacity
     return {
       btusPerHour:
-        btusPerHourNeeded < 0
+        options.mode == "cooling"
           ? -maxCapacity.btusPerHour
           : maxCapacity.btusPerHour,
       coefficientOfPerformance: maxCapacity.coefficientOfPerformance,
@@ -257,7 +257,7 @@ function estimatePerformanceRating(options: {
     // capacity.
     return {
       btusPerHour:
-        btusPerHourNeeded < 0
+        options.mode == "cooling"
           ? -minCapacity.btusPerHour
           : minCapacity.btusPerHour,
       coefficientOfPerformance: minCapacity.coefficientOfPerformance,

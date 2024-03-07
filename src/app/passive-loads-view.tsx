@@ -6,6 +6,9 @@ import { AxisLeft, AxisBottom } from "@visx/axis";
 import { HVACSimulationResult } from "../lib/simulate";
 import { scaleOrdinal } from "@visx/scale";
 import { schemeSet1 } from "d3-scale-chromatic";
+import { ChartGroup, ChartHeader } from "./chart";
+import { LegendOrdinal } from "@visx/legend";
+import { GridRows } from "@visx/grid";
 
 export const PassiveLoadsView: React.FC<{
   simulationResult: HVACSimulationResult;
@@ -18,7 +21,7 @@ export const PassiveLoadsView: React.FC<{
   // fainter.
 
   // Set the dimensions and margins of the graph
-  const margin = { top: 10, right: 30, bottom: 100, left: 60 },
+  const margin = { top: 10, right: 30, bottom: 30, left: 60 },
     width = 860 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
@@ -60,7 +63,7 @@ export const PassiveLoadsView: React.FC<{
     range: [0, width],
   }).nice();
 
-  const colorScale = scaleOrdinal()
+  const color = scaleOrdinal()
     .domain(Object.keys(data[0].loads))
     .range(schemeSet1);
 
@@ -95,26 +98,52 @@ export const PassiveLoadsView: React.FC<{
   //
   // May also want to consider doing stacked bars instead.
   return (
-    <svg
-      width={width + margin.left + margin.right}
-      height={height + margin.top + margin.bottom}
-    >
-      <Group left={margin.left} top={margin.top}>
-        <AxisBottom scale={xScale} top={height} />
-        <AxisLeft scale={yScale} />
-        <AreaStack
-          data={data}
-          keys={Object.keys(data[0].loads)}
-          color={(key) => `${colorScale(key)}` || "red"}
-          strokeWidth={0}
-          stroke="white"
-          value={(d, k) => d.loads[k]}
-          x={(d) => xScale(d.data.date)}
-          y0={(d) => yScale(d[0])}
-          y1={(d) => yScale(d[1])}
-          offset={"diverging"}
+    <ChartGroup>
+      <ChartHeader>Passive Thermal Loads (BTUs/hour)</ChartHeader>
+      <svg
+        width={width + margin.left + margin.right}
+        height={height + margin.top + margin.bottom}
+      >
+        <Group left={margin.left} top={margin.top}>
+          <GridRows scale={yScale} width={width} />
+          <AreaStack
+            data={data}
+            keys={Object.keys(data[0].loads)}
+            color={(key) => `${color(key)}` || "red"}
+            strokeWidth={0}
+            stroke="white"
+            value={(d, k) => d.loads[k]}
+            x={(d) => xScale(d.data.date)}
+            y0={(d) => yScale(d[0])}
+            y1={(d) => yScale(d[1])}
+            offset={"diverging"}
+          />
+          <AxisBottom scale={xScale} top={height} />
+          <AxisLeft scale={yScale} />
+        </Group>
+      </svg>
+      <div style={{ marginLeft: margin.left }}>
+        <LegendOrdinal
+          scale={color}
+          labelFormat={(key) => {
+            switch (key) {
+              case "solar-gain": {
+                return "Solar gain";
+              }
+              case "conduction-convection": {
+                return "Conduction & convection";
+              }
+              case "infiltration": {
+                return "Infiltration";
+              }
+              case "occupants": {
+                return "Occupants body heat";
+              }
+            }
+            return key;
+          }}
         />
-      </Group>
-    </svg>
+      </div>
+    </ChartGroup>
   );
 };

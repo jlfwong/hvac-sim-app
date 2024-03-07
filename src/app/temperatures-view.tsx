@@ -1,11 +1,13 @@
 import React from "react";
 import { Group } from "@visx/group";
 import { LinePath, Bar } from "@visx/shape";
-import { Text } from "@visx/text";
-import { scaleUtc, scaleLinear } from "@visx/scale";
+import { scaleUtc, scaleLinear, scaleOrdinal } from "@visx/scale";
 import { AxisLeft, AxisBottom } from "@visx/axis";
+import { GridRows } from "@visx/grid";
 import { HVACSimulationResult } from "../lib/simulate";
 import { fahrenheitToCelcius } from "../lib/units";
+import { ChartGroup, ChartHeader } from "./chart";
+import { LegendOrdinal } from "@visx/legend";
 
 export const TemperaturesView: React.FC<{
   heatingSetPointC: number;
@@ -20,7 +22,7 @@ export const TemperaturesView: React.FC<{
   // fainter.
 
   // Set the dimensions and margins of the graph
-  const margin = { top: 30, right: 30, bottom: 30, left: 60 },
+  const margin = { top: 10, right: 30, bottom: 30, left: 60 },
     width = 860 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
@@ -72,42 +74,67 @@ export const TemperaturesView: React.FC<{
     range: [height, 0],
   }).nice();
 
+  const color = scaleOrdinal<"inside" | "comfort-range" | "outside", string>()
+    .domain(["outside", "inside", "comfort-range"])
+    .range(["#1D82F8", "#F8861D", "rgba(248, 134, 29, 0.2)"]);
+
   return (
-    <svg
-      width={width + margin.left + margin.right}
-      height={height + margin.top + margin.bottom}
-    >
-      <Group left={margin.left} top={margin.top}>
-        {/* TODO(jlfwong): Fix the axis labels to be tilted 45 deg */}
-        <AxisBottom scale={xScale} top={height} />
-        <AxisLeft
-          scale={yScale}
-          tickFormat={(temp) => `${(+temp).toFixed(0)}°C`}
+    <ChartGroup>
+      <ChartHeader>Inside v.s. Outside Air Temperature</ChartHeader>
+      <svg
+        width={width + margin.left + margin.right}
+        height={height + margin.top + margin.bottom}
+      >
+        <Group left={margin.left} top={margin.top}>
+          <GridRows scale={yScale} width={width} />
+          <Bar
+            x={xScale.range()[0]}
+            y={yScale(props.coolingSetPointC)}
+            width={xScale.range()[1] - xScale.range()[0]}
+            height={
+              yScale(props.heatingSetPointC) - yScale(props.coolingSetPointC)
+            }
+            fill={color("comfort-range")}
+          />
+          <LinePath
+            data={data}
+            x={(d) => xScale(d.date)}
+            y={(d) => yScale(d.outsideAirTempC)}
+            stroke={color("outside")}
+            strokeWidth={1}
+          />
+          <LinePath
+            data={data}
+            x={(d) => xScale(d.date)}
+            y={(d) => yScale(d.insideAirTempC)}
+            stroke={color("inside")}
+            strokeWidth={1}
+          />
+          <AxisBottom scale={xScale} top={height} />
+          <AxisLeft
+            scale={yScale}
+            tickFormat={(temp) => `${(+temp).toFixed(0)}°C`}
+          />
+        </Group>
+      </svg>
+      <div style={{ marginLeft: margin.left }}>
+        <LegendOrdinal
+          scale={color}
+          labelFormat={(name) => {
+            switch (name) {
+              case "comfort-range": {
+                return "Target inside air temperature range";
+              }
+              case "inside": {
+                return "Inside air temperature";
+              }
+              case "outside": {
+                return "Outside air temperature";
+              }
+            }
+          }}
         />
-        <Bar
-          x={xScale.range()[0]}
-          y={yScale(props.coolingSetPointC)}
-          width={xScale.range()[1] - xScale.range()[0]}
-          height={
-            yScale(props.heatingSetPointC) - yScale(props.coolingSetPointC)
-          }
-          fill="rgba(0, 0, 255, 0.2)"
-        />
-        <LinePath
-          data={data}
-          x={(d) => xScale(d.date)}
-          y={(d) => yScale(d.outsideAirTempC)}
-          stroke="red"
-          strokeWidth={1}
-        />
-        <LinePath
-          data={data}
-          x={(d) => xScale(d.date)}
-          y={(d) => yScale(d.insideAirTempC)}
-          stroke="blue"
-          strokeWidth={1}
-        />
-      </Group>
-    </svg>
+      </div>
+    </ChartGroup>
   );
 };

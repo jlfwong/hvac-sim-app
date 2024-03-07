@@ -2,27 +2,23 @@ import React from "react";
 import { Group } from "@visx/group";
 import { Bar } from "@visx/shape";
 import { PatternLines } from "@visx/pattern";
-import {
-  useTooltip,
-  useTooltipInPortal,
-  TooltipWithBounds,
-} from "@visx/tooltip";
+import { useTooltip, useTooltipInPortal } from "@visx/tooltip";
 import { schemeSet1 } from "d3-scale-chromatic";
 import { localPoint } from "@visx/event";
 import { LegendOrdinal } from "@visx/legend";
 
 import { scaleBand, scaleLinear, scaleOrdinal } from "@visx/scale";
 import { AxisBottom, AxisLeft } from "@visx/axis";
+import { GridRows } from "@visx/grid";
 import { HVACSimulationResult } from "../lib/simulate";
 import { DateTime } from "luxon";
 import { EnergyBill } from "../lib/billing";
+import { ChartGroup, ChartHeader } from "./chart";
 
 export const BillingView: React.FC<{
   simulations: HVACSimulationResult[];
 }> = (props) => {
-  // TODO(jlfwong): Legends, axis titles, pretty printed month names
-
-  const margin = { top: 20, right: 20, bottom: 40, left: 60 },
+  const margin = { top: 10, right: 20, bottom: 40, left: 60 },
     width = 860 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
@@ -89,7 +85,7 @@ export const BillingView: React.FC<{
       ),
     ],
     range: [height, 0],
-  });
+  }).nice();
 
   const color = scaleOrdinal<string>()
     .domain(props.simulations.map((s) => s.name))
@@ -140,7 +136,8 @@ export const BillingView: React.FC<{
   };
 
   return (
-    <>
+    <ChartGroup>
+      <ChartHeader>Energy Bills</ChartHeader>
       <svg
         width={width + margin.left + margin.right}
         height={height + margin.top + margin.bottom}
@@ -161,12 +158,7 @@ export const BillingView: React.FC<{
           );
         })}
         <Group left={margin.left} top={margin.top}>
-          <AxisBottom
-            top={height}
-            scale={xMajor}
-            tickFormat={monthTickFormat}
-          />
-          <AxisLeft scale={y} tickFormat={(v) => `\$${v}`} />
+          <GridRows scale={y} width={width} />
           {allBills.flatMap((billsByMonth, idx) =>
             Object.entries(billsByMonth).flatMap(([month, bills]) => {
               let runningTotalCost = 0;
@@ -201,6 +193,12 @@ export const BillingView: React.FC<{
               );
             })
           )}
+          <AxisBottom
+            top={height}
+            scale={xMajor}
+            tickFormat={monthTickFormat}
+          />
+          <AxisLeft scale={y} tickFormat={(v) => `\$${v}`} />
         </Group>
       </svg>
       <div style={{ marginLeft: margin.left }}>
@@ -241,6 +239,6 @@ export const BillingView: React.FC<{
           })}
         </TooltipInPortal>
       )}
-    </>
+    </ChartGroup>
   );
 };

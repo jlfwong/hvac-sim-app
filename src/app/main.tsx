@@ -1,12 +1,7 @@
 import { DateTime } from "luxon";
 import { AirConditioner } from "../lib/air-conditioner";
-import {
-  SimpleElectricalUtilityPlan,
-  SimpleNaturalGasUtilityPlan,
-} from "../lib/billing";
 import { BuildingGeometry } from "../lib/building-geometry";
 import { GasFurnace } from "../lib/gas-furnace";
-import { AirSourceHeatPump, NEEPccASHPRatingInfo } from "../lib/heatpump";
 import {
   DualFuelTwoStageHVACSystem,
   SimpleHVACSystem,
@@ -20,24 +15,17 @@ import {
   ConductionConvectionLoadSource,
   InfiltrationLoadSource,
 } from "../lib/thermal-loads";
-import {
-  JSONWeatherEntry,
-  JSONBackedHourlyWeatherSource,
-  WeatherSource,
-  BinnedTemperatures,
-} from "../lib/weather";
 import { BillingView } from "./billing-view";
 import { TemperaturesView } from "./temperatures-view";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import { ElectricFurnace } from "../lib/electric-furnace";
 import { styled } from "./styled";
-import { celciusToFahrenheit, metersToFeet } from "../lib/units";
+import { celciusToFahrenheit } from "../lib/units";
 import {
   electricalUtilityForProvince,
   gasUtilityForProvince,
 } from "./canadian-utility-plans";
 import { PassiveLoadsView } from "./passive-loads-view";
-import { fetchJSON } from "./fetch";
 import { useCanadianWeatherSource } from "./use-canadian-weather-source";
 import { useSelectHeatpump } from "./use-select-heatpump";
 
@@ -65,7 +53,7 @@ export const Main: React.FC<{}> = (props) => {
 
     new ConductionConvectionLoadSource({
       geometry: buildingGeometry,
-      envelopeModifier: 0.65,
+      envelopeModifier: 0.15,
     }),
     new InfiltrationLoadSource({
       geometry: buildingGeometry,
@@ -162,7 +150,7 @@ export const Main: React.FC<{}> = (props) => {
 
     const systems: HVACSystem[] = [gasFurnaceSystem, electricFurnaceSystem];
 
-    for (let i = 0; i < Math.min(heatPumpCandidates.length, 5); i++) {
+    for (let i = 0; i < Math.min(heatPumpCandidates.length, 1); i++) {
       const heatpump = heatPumpCandidates[i].heatpump;
 
       // TODO(jlfwong): Sometimes the top candidate doesn't actually end up
@@ -209,81 +197,139 @@ export const Main: React.FC<{}> = (props) => {
   }
 
   return (
-    <div>
-      <InputRow>
-        Postal Code
-        <input
-          value={postalCode}
-          onChange={(ev) => {
-            setPostalCode(ev.target.value);
-          }}
-        />
-      </InputRow>
-      <InputRow>
-        <a onClick={() => setPostalCode("K2A 2Y3")}>Ottawa</a>
-        <a onClick={() => setPostalCode("V5K 0A1")}>Vancouver</a>
-        <a onClick={() => setPostalCode("H3H 2H9")}>Montreal</a>
-        <a onClick={() => setPostalCode("R3T 2N2")}>Winnipeg</a>
-        <a onClick={() => setPostalCode("T6G 2R3")}>Edmonton</a>
-      </InputRow>
-      <div>{locationInfo && locationInfo.placeName}</div>
-      <InputRow>
-        House Square Feet
-        <input
-          type="number"
-          value={floorSpaceSqFt}
-          onChange={(ev) => {
-            const switchoverTempC = parseFloat(ev.target.value);
-            setFloorSpaceSqFt(switchoverTempC);
-          }}
-        />
-      </InputRow>
-      <InputRow>
-        Heating Set Point (°C)
-        <input
-          type="number"
-          value={heatingSetPointC}
-          onChange={(ev) => {
-            setHeatingSetPointC(parseFloat(ev.target.value));
-          }}
-        />
-      </InputRow>
-      <InputRow>
-        Cooling Set Point (°C)
-        <input
-          type="number"
-          value={coolingSetPointC}
-          onChange={(ev) => {
-            setCoolingSetPointC(parseFloat(ev.target.value));
-          }}
-        />
-      </InputRow>
-      <InputRow>
-        Auxiliary Switchover Temperature (°C)
-        <input
-          type="number"
-          value={auxSwitchoverTempC}
-          onChange={(ev) => {
-            setAuxSwitchoverTempC(parseFloat(ev.target.value));
-          }}
-        />
-      </InputRow>
+    <MainWrapper>
+      <h1>Heat Pump Calculator</h1>
+      <InputsWrapper>
+        <InputRow>
+          Postal Code
+          <input
+            value={postalCode}
+            onChange={(ev) => {
+              setPostalCode(ev.target.value);
+            }}
+          />
+          {/* Replace parentheticals to prevent confusion */}
+          {locationInfo &&
+            `(${locationInfo.placeName.replace(/\s+\(.*\)$/g, "")})`}
+        </InputRow>
+        <InputRow>
+          Switch to:
+          <LocationLink
+            setPostalCode={setPostalCode}
+            postalCode="K2A 2Y3"
+            placeName="Ottawa"
+          />
+          <LocationLink
+            setPostalCode={setPostalCode}
+            postalCode="V5K 0A1"
+            placeName="Vancouver"
+          />
+          <LocationLink
+            setPostalCode={setPostalCode}
+            postalCode="H3H 2H9"
+            placeName="Montreal"
+          />
+          <LocationLink
+            setPostalCode={setPostalCode}
+            postalCode="R3T 2N2"
+            placeName="Winnipeg"
+          />
+          <LocationLink
+            setPostalCode={setPostalCode}
+            postalCode="T6G 2R3"
+            placeName="Edmonton"
+          />
+        </InputRow>
+        <InputRow>
+          House square footage
+          <input
+            type="number"
+            value={floorSpaceSqFt}
+            onChange={(ev) => {
+              const switchoverTempC = parseFloat(ev.target.value);
+              setFloorSpaceSqFt(switchoverTempC);
+            }}
+          />
+        </InputRow>
+        <InputRow>
+          Heat when colder than (°C)
+          <input
+            type="number"
+            value={heatingSetPointC}
+            onChange={(ev) => {
+              setHeatingSetPointC(parseFloat(ev.target.value));
+            }}
+          />
+        </InputRow>
+        <InputRow>
+          Cool when hotter than (°C)
+          <input
+            type="number"
+            value={coolingSetPointC}
+            onChange={(ev) => {
+              setCoolingSetPointC(parseFloat(ev.target.value));
+            }}
+          />
+        </InputRow>
+        <InputRow>
+          Switch to backup heat when below (°C)
+          <input
+            type="number"
+            value={auxSwitchoverTempC}
+            onChange={(ev) => {
+              setAuxSwitchoverTempC(parseFloat(ev.target.value));
+            }}
+          />
+        </InputRow>
+      </InputsWrapper>
       {simulations && (
         <>
+          <BillingView simulations={simulations} />
           <TemperaturesView
             heatingSetPointC={heatingSetPointC}
             coolingSetPointC={coolingSetPointC}
             simulationResult={simulations[simulations.length - 1]}
           />
           <PassiveLoadsView simulationResult={simulations[0]} />
-          <BillingView simulations={simulations} />
         </>
       )}
-    </div>
+    </MainWrapper>
   );
 };
 
 const InputRow = styled("InputRow", "div", {
   display: "flex",
+  alignItems: "baseline",
   gap: "1em",
+  marginBottom: 10,
 });
+
+const MainWrapper = styled("MainWrapper", "div", {
+  margin: "0 auto",
+  width: 860,
+  maxWidth: "100vw",
+});
+
+const InputsWrapper = styled("MainWrapper", "div", {
+  marginBottom: 20,
+  paddingTop: 20,
+});
+
+const LocationLink: React.FC<{
+  setPostalCode: (postalCode: string) => void;
+  postalCode: string;
+  placeName: string;
+}> = (props) => {
+  const onClick: React.EventHandler<React.MouseEvent> = useCallback(
+    (ev) => {
+      props.setPostalCode(props.postalCode);
+      ev.preventDefault();
+    },
+    [props.setPostalCode, props.postalCode]
+  );
+  return (
+    <a href="#" onClick={onClick}>
+      {props.placeName} ({props.postalCode})
+    </a>
+  );
+};
