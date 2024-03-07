@@ -48,7 +48,7 @@ export const loadSourcesAtom = atom<ThermalLoadSource[]>((get) => {
 
     new ConductionConvectionLoadSource({
       geometry: buildingGeometry,
-      envelopeModifier: 0.15,
+      envelopeModifier: 0.65,
     }),
     new InfiltrationLoadSource({
       geometry: buildingGeometry,
