@@ -19,7 +19,6 @@ import { BillingView } from "./billing-view";
 import { TemperaturesView } from "./temperatures-view";
 import React, { useState, useCallback } from "react";
 import { ElectricFurnace } from "../lib/electric-furnace";
-import { styled } from "./styled";
 import { celciusToFahrenheit } from "../lib/units";
 import {
   electricalUtilityForProvince,
@@ -28,58 +27,44 @@ import {
 import { PassiveLoadsView } from "./passive-loads-view";
 import { useCanadianWeatherSource } from "./use-canadian-weather-source";
 import { useSelectHeatpump } from "./use-select-heatpump";
+import {
+  Center,
+  Flex,
+  HStack,
+  VStack,
+  FormControl,
+  FormLabel,
+  Heading,
+  StackDivider,
+  Input,
+  Box,
+  chakra,
+} from "@chakra-ui/react";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  buildingGeometryAtom,
+  coolingSetPointCAtom,
+  electricFurnaceAtom,
+  electricFurnaceSystemAtom,
+  floorSpaceSqFtAtom,
+  gasFurnaceAtom,
+  gasFurnaceSystemAtom,
+  heatingSetPointCAtom,
+  loadSources,
+  loadSourcesAtom,
+} from "./app-state";
 
 export const Main: React.FC<{}> = (props) => {
-  const [floorSpaceSqFt, setFloorSpaceSqFt] = useState(3000);
+  const [floorSpaceSqFt, setFloorSpaceSqFt] = useAtom(floorSpaceSqFtAtom);
 
   const { postalCode, setPostalCode, locationInfo, weatherInfo } =
     useCanadianWeatherSource("K2A 2Y3");
 
-  const buildingGeometry = new BuildingGeometry({
-    floorSpaceSqFt,
-    ceilingHeightFt: 9,
-    numAboveGroundStories: 2,
-    lengthToWidthRatio: 3,
-    hasConditionedBasement: true,
-  });
+  const [coolingSetPointC, setCoolingSetPointC] = useAtom(coolingSetPointCAtom);
+  const [heatingSetPointC, setHeatingSetPointC] = useAtom(heatingSetPointCAtom);
 
-  const loadSources: ThermalLoadSource[] = [
-    new OccupantsLoadSource(2),
-
-    // TODO(jlfwong): these are a bit weird to have separately because they have
-    // to share geometry & modifiers. Would perhaps be alleviated by having a
-    // function to return standard loads for a building?
-    new SolarGainLoadSource({ geometry: buildingGeometry, solarModifier: 1.0 }),
-
-    new ConductionConvectionLoadSource({
-      geometry: buildingGeometry,
-      envelopeModifier: 0.15,
-    }),
-    new InfiltrationLoadSource({
-      geometry: buildingGeometry,
-      envelopeModifier: 0.65,
-    }),
-  ];
-
-  const ac = new AirConditioner({
-    seer: 11,
-    capacityBtusPerHour: 40000,
-    elevationFeet: 0,
-    speedSettings: "single-speed",
-  });
-
-  const gasFurnace = new GasFurnace({
-    afuePercent: 96,
-    capacityBtusPerHour: 80000,
-    elevationFeet: 0,
-  });
-
-  const electricFurnace = new ElectricFurnace({
-    capacityKw: 20,
-  });
-
-  const [coolingSetPointC, setCoolingSetPointC] = useState(26);
-  const [heatingSetPointC, setHeatingSetPointC] = useState(20);
+  const gasFurnace = useAtomValue(gasFurnaceAtom);
+  const buildingGeometry = useAtomValue(buildingGeometryAtom);
 
   const auxHeatingAppliance = gasFurnace;
   const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(-16);
@@ -88,27 +73,10 @@ export const Main: React.FC<{}> = (props) => {
   const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
   const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
 
-  const gasFurnaceSystem = new SimpleHVACSystem(
-    `${gasFurnace.name} + ${ac.name}`,
-    {
-      coolingSetPointF,
-      coolingAppliance: ac,
+  const electricFurnaceSystem = useAtomValue(electricFurnaceSystemAtom);
+  const gasFurnaceSystem = useAtomValue(gasFurnaceSystemAtom);
 
-      heatingSetPointF,
-      heatingAppliance: gasFurnace,
-    }
-  );
-
-  const electricFurnaceSystem = new SimpleHVACSystem(
-    `${electricFurnace.name} + ${ac.name}`,
-    {
-      coolingSetPointF,
-      coolingAppliance: ac,
-
-      heatingSetPointF,
-      heatingAppliance: electricFurnace,
-    }
-  );
+  const loadSources = useAtomValue(loadSourcesAtom);
 
   let simulations: HVACSimulationResult[] | null = null;
 
@@ -197,122 +165,134 @@ export const Main: React.FC<{}> = (props) => {
   }
 
   return (
-    <MainWrapper>
-      <h1>Heat Pump Calculator</h1>
-      <InputsWrapper>
-        <InputRow>
-          Postal Code
-          <input
-            value={postalCode}
-            onChange={(ev) => {
-              setPostalCode(ev.target.value);
-            }}
-          />
-          {/* Replace parentheticals to prevent confusion */}
-          {locationInfo &&
-            `(${locationInfo.placeName.replace(/\s+\(.*\)$/g, "")})`}
-        </InputRow>
-        <InputRow>
-          Switch to:
-          <LocationLink
-            setPostalCode={setPostalCode}
-            postalCode="K2A 2Y3"
-            placeName="Ottawa"
-          />
-          <LocationLink
-            setPostalCode={setPostalCode}
-            postalCode="V5K 0A1"
-            placeName="Vancouver"
-          />
-          <LocationLink
-            setPostalCode={setPostalCode}
-            postalCode="H3H 2H9"
-            placeName="Montreal"
-          />
-          <LocationLink
-            setPostalCode={setPostalCode}
-            postalCode="R3T 2N2"
-            placeName="Winnipeg"
-          />
-          <LocationLink
-            setPostalCode={setPostalCode}
-            postalCode="T6G 2R3"
-            placeName="Edmonton"
-          />
-        </InputRow>
-        <InputRow>
-          House square footage
-          <input
-            type="number"
-            value={floorSpaceSqFt}
-            onChange={(ev) => {
-              const switchoverTempC = parseFloat(ev.target.value);
-              setFloorSpaceSqFt(switchoverTempC);
-            }}
-          />
-        </InputRow>
-        <InputRow>
-          Heat when colder than (°C)
-          <input
-            type="number"
-            value={heatingSetPointC}
-            onChange={(ev) => {
-              setHeatingSetPointC(parseFloat(ev.target.value));
-            }}
-          />
-        </InputRow>
-        <InputRow>
-          Cool when hotter than (°C)
-          <input
-            type="number"
-            value={coolingSetPointC}
-            onChange={(ev) => {
-              setCoolingSetPointC(parseFloat(ev.target.value));
-            }}
-          />
-        </InputRow>
-        <InputRow>
-          Switch to backup heat when below (°C)
-          <input
-            type="number"
-            value={auxSwitchoverTempC}
-            onChange={(ev) => {
-              setAuxSwitchoverTempC(parseFloat(ev.target.value));
-            }}
-          />
-        </InputRow>
-      </InputsWrapper>
-      {simulations && (
-        <>
-          <BillingView simulations={simulations} />
-          <TemperaturesView
-            heatingSetPointC={heatingSetPointC}
-            coolingSetPointC={coolingSetPointC}
-            simulationResult={simulations[simulations.length - 1]}
-          />
-          <PassiveLoadsView simulationResult={simulations[0]} />
-        </>
-      )}
-    </MainWrapper>
+    <Center mb={40}>
+      <Flex direction="column" gap={40} width={860} maxWidth={"100vw"}>
+        <Flex direction="column">
+          <Heading as="h1" size="4xl">
+            Heat Pump Calculator
+          </Heading>
+          <StackDivider />
+          <Flex direction="column" gap={20}>
+            <Flex direction="column">
+              <HStack>
+                <FullWidthFormControl>
+                  <Flex justifyContent={"space-between"}>
+                    <FormLabel htmlFor="postal-code-input">
+                      Postal Code
+                    </FormLabel>
+                    {/* Replace parentheticals to prevent confusion */}
+                    <Box color={"grey"}>
+                      {`(${
+                        locationInfo?.placeName.replace(/\s+\(.*\)$/g, "") ||
+                        "Unknown"
+                      })`}
+                    </Box>
+                  </Flex>
+                  <Input
+                    id="postal-code-input"
+                    value={postalCode}
+                    onChange={(ev) => {
+                      setPostalCode(ev.target.value);
+                    }}
+                  />
+                </FullWidthFormControl>
+                <FullWidthFormControl>
+                  <FormLabel>House square footage</FormLabel>
+                  <Input
+                    type="number"
+                    value={floorSpaceSqFt}
+                    onChange={(ev) => {
+                      const switchoverTempC = parseFloat(ev.target.value);
+                      setFloorSpaceSqFt(switchoverTempC);
+                    }}
+                  />
+                </FullWidthFormControl>
+              </HStack>
+              <HStack>
+                Switch to:
+                <LocationLink
+                  setPostalCode={setPostalCode}
+                  postalCode="K2A 2Y3"
+                  placeName="Ottawa"
+                />
+                <LocationLink
+                  setPostalCode={setPostalCode}
+                  postalCode="V5K 0A1"
+                  placeName="Vancouver"
+                />
+                <LocationLink
+                  setPostalCode={setPostalCode}
+                  postalCode="H3H 2H9"
+                  placeName="Montreal"
+                />
+                <LocationLink
+                  setPostalCode={setPostalCode}
+                  postalCode="R3T 2N2"
+                  placeName="Winnipeg"
+                />
+                <LocationLink
+                  setPostalCode={setPostalCode}
+                  postalCode="T6G 2R3"
+                  placeName="Edmonton"
+                />
+              </HStack>
+            </Flex>
+            <HStack>
+              <FullWidthFormControl>
+                <FormLabel>Heat when colder than (°C)</FormLabel>
+                <Input
+                  type="number"
+                  value={heatingSetPointC}
+                  onChange={(ev) => {
+                    setHeatingSetPointC(parseFloat(ev.target.value));
+                  }}
+                />
+              </FullWidthFormControl>
+              <FullWidthFormControl>
+                <FormLabel>Cool when hotter than (°C)</FormLabel>
+                <Input
+                  type="number"
+                  value={coolingSetPointC}
+                  onChange={(ev) => {
+                    setCoolingSetPointC(parseFloat(ev.target.value));
+                  }}
+                />
+              </FullWidthFormControl>
+              <FullWidthFormControl>
+                <FormLabel>Switch to backup heat when below (°C)</FormLabel>
+                <Input
+                  type="number"
+                  value={auxSwitchoverTempC}
+                  onChange={(ev) => {
+                    setAuxSwitchoverTempC(parseFloat(ev.target.value));
+                  }}
+                />
+              </FullWidthFormControl>
+            </HStack>
+          </Flex>
+        </Flex>
+        {simulations && (
+          <>
+            <BillingView simulations={simulations} />
+            <TemperaturesView
+              heatingSetPointC={heatingSetPointC}
+              coolingSetPointC={coolingSetPointC}
+              simulationResult={simulations[simulations.length - 1]}
+            />
+            <PassiveLoadsView simulationResult={simulations[0]} />
+          </>
+        )}
+      </Flex>
+    </Center>
   );
 };
 
-const InputRow = styled("InputRow", "div", {
-  display: "flex",
-  alignItems: "baseline",
-  gap: "1em",
-  marginBottom: 10,
-});
-
-const MainWrapper = styled("MainWrapper", "div", {
-  margin: "0 auto",
-  width: 860,
-  maxWidth: "100vw",
-});
-
-const InputsWrapper = styled("MainWrapper", "div", {
-  marginBottom: 20,
-  paddingTop: 20,
+const FullWidthFormControl = chakra(FormControl, {
+  baseStyle: {
+    display: "flex",
+    flexGrow: 1,
+    flexDirection: "column",
+  },
 });
 
 const LocationLink: React.FC<{

@@ -216,6 +216,7 @@ export const BillingView: React.FC<{
           }}
         />
       </div>
+      {/* TODO(jlfwong): billing info is shown in CCFs, which won't be meaningful for Canadians */}
       {tooltipOpen && tooltipData && (
         <TooltipInPortal
           // set this to random so it correctly updates with parent bounds
