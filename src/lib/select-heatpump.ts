@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime } from "./datetime";
 import { BuildingGeometry } from "./building-geometry";
 import { AirSourceHeatPump } from "./heatpump";
 import { ThermalLoadSource } from "./thermal-loads";
@@ -46,6 +46,7 @@ export function selectHeatpump(options: {
     let colderOutside = insideAirTempF < outsideAirTempF;
 
     const dateTime = DateTime.fromObject({
+      timeZoneName: "UTC",
       year: 2023,
       month: 1,
       day: 1,

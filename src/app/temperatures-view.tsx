@@ -27,7 +27,8 @@ export const TemperaturesView: React.FC<{
     height = 400 - margin.top - margin.bottom;
 
   // Data transformation
-  const tzOffsetMinutes = props.simulationResult.timeSteps[0].localTime.offset;
+  const tzOffsetMinutes =
+    props.simulationResult.timeSteps[0].localTime.offsetMs() / (60 * 1000);
 
   let minTempC = 1000;
   let maxTempC = -1000;
@@ -53,10 +54,7 @@ export const TemperaturesView: React.FC<{
       // This is a hack, and doesn't correctly account for DST or other
       // single-location variations in timezone offset, but it's still much more
       // intuitively accurate than displaying UTC or browse local time.
-      date: snapshot.localTime
-        .toUTC()
-        .plus({ minutes: tzOffsetMinutes })
-        .toJSDate(),
+      date: snapshot.localTime.plusMinutes(tzOffsetMinutes).toJSDate(),
 
       insideAirTempC: fahrenheitToCelcius(snapshot.insideAirTempF),
       outsideAirTempC: fahrenheitToCelcius(snapshot.weather.outsideAirTempF),

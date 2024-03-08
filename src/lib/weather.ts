@@ -1,6 +1,6 @@
-import { DateTime } from "luxon";
 import { WeatherSnapshot } from "./types";
 import { interpolate } from "./math";
+import { DateTime } from "./datetime";
 
 export interface WeatherSource {
   getWeather(localTime: DateTime): WeatherSnapshot;
@@ -44,7 +44,7 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
 
   constructor(entries: JSONWeatherEntry[]) {
     for (let entry of entries) {
-      const dt = DateTime.fromISO(entry.datetime);
+      const dt = DateTime.utcFromISO(entry.datetime);
       this.entryByHour[this.hourKey(dt)] = entry;
     }
   }
@@ -60,6 +60,7 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
   private getWeatherForHour(localTime: DateTime): WeatherSnapshot {
     const hourKey = this.hourKey(localTime);
     if (!(hourKey in this.entryByHour)) {
+      debugger;
       throw new Error(`No entry for ${hourKey}`);
     }
     return this.entryByHour[hourKey];
@@ -70,12 +71,8 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
     // more efficient when operating on UTC because they don't have to
     // complicated timezone reconciliation at each step.
     const utc = localTime.toUTC();
-    const startOfHour = utc.startOf("hour");
-
-    // We use hour plus one rather than .endOf("hour") here because
-    // the end of the hour gives :59:59.99. If you ask for the hourKey
-    // for that time, you get the same key as the startOfHour.
-    const endOfHour = startOfHour.plus({ hours: 1 });
+    const startOfHour = utc.startOfHour();
+    const endOfHour = startOfHour.plusHours(1);
 
     const startWeather = this.getWeatherForHour(startOfHour);
     if (localTime.equals(startOfHour)) {

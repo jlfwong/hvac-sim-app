@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime } from "./datetime";
 
 export interface WeatherSnapshot {
   outsideAirTempF: number;

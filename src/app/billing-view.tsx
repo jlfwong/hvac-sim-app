@@ -11,7 +11,7 @@ import { scaleBand, scaleLinear, scaleOrdinal } from "@visx/scale";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { GridRows } from "@visx/grid";
 import { HVACSimulationResult } from "../lib/simulate";
-import { DateTime } from "luxon";
+import { DateTime } from "../lib/datetime";
 import { EnergyBill } from "../lib/billing";
 import { ChartGroup, ChartHeader } from "./chart";
 
@@ -22,7 +22,7 @@ export const BillingView: React.FC<{
     width = 860 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
-  const monthKey = (date: DateTime) => date.toFormat("yyyy-LL");
+  const monthKey = (date: DateTime) => `${date.year}-${date.month}}`;
 
   let dateRange = props.simulations
     .flatMap((res) => res.bills.flatMap((b) => b.getBillingPeriodStart()))
@@ -40,7 +40,7 @@ export const BillingView: React.FC<{
     for (
       let date = dateRange[0];
       date <= dateRange[1];
-      date = date.plus({ months: 1 })
+      date = date.plusMonths(1)
     ) {
       xAxisDomain.push(monthKey(date));
     }
@@ -129,10 +129,15 @@ export const BillingView: React.FC<{
   };
 
   const monthTickFormat = (value: string): string => {
+    const [year, month] = value.split("-").map((v) => parseInt(v, 10));
     return DateTime.fromObject({
-      year: parseInt(value.split("-")[0]),
-      month: parseInt(value.split("-")[1]),
-    }).toFormat("LLLL");
+      timeZoneName: "UTC",
+      year,
+      month,
+      day: 1,
+    }).format({
+      month: "long",
+    });
   };
 
   return (

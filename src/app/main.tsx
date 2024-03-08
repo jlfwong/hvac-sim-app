@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime } from "../lib/datetime";
 import { DualFuelTwoStageHVACSystem } from "../lib/hvac-system";
 import { HVACSystem } from "../lib/types";
 import { HVACSimulationResult, simulateBuildingHVAC } from "../lib/simulate";
@@ -63,29 +63,27 @@ export const Main: React.FC<{}> = (props) => {
   const systems = useAtomValue(systemsToSimulate);
 
   if (locationInfo && weatherInfo && systems) {
-    const dtOptions = { zone: weatherInfo.timezoneName };
-    const localStartTime = DateTime.fromObject(
-      {
-        year: 2023,
-        month: 1,
-        day: 1,
-      },
-      dtOptions
-    );
-    const localEndTime = DateTime.fromObject(
-      {
-        year: 2023,
-        month: 12,
-        day: 31,
-      },
-      dtOptions
-    ).endOf("day");
+    const localStartTime = DateTime.fromObject({
+      timeZoneName: weatherInfo.timezoneName,
+      year: 2023,
+      month: 1,
+      day: 1,
+    });
+    const localEndTime = DateTime.fromObject({
+      timeZoneName: weatherInfo.timezoneName,
+      year: 2023,
+      month: 1,
+      day: 7,
+    }).endOfDay();
 
     const utilityPlans = {
       electrical: () => electricalUtilityForProvince(locationInfo.provinceCode),
       naturalGas: () => gasUtilityForProvince(locationInfo.provinceCode),
     };
 
+    console.log("Simulating");
+
+    // TODO(jlfwong): Move this into a jotai atom
     simulations = systems.map((hvacSystem) =>
       simulateBuildingHVAC({
         localStartTime,

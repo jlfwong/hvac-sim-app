@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime } from "./datetime";
 
 type FuelType = "electricity" | "natural gas" | "fuel oil" | "propane";
 
@@ -87,11 +87,11 @@ function* eachMonthInclusive(
   from: DateTime,
   to: DateTime
 ): Generator<[DateTime, DateTime]> {
-  let monthStart = from.startOf("month");
+  let monthStart = from.startOfMonth();
   while (monthStart < to) {
-    const monthEnd = monthStart.endOf("month");
+    const monthEnd = monthStart.endOfMonth();
     yield [monthStart, monthEnd];
-    monthStart = monthStart.plus({ months: 1 });
+    monthStart = monthStart.plusMonths(1);
   }
 }
 
@@ -111,7 +111,7 @@ class SimpleMonthlyUsageTracker {
   } = {};
 
   private monthKeyFor(localTime: DateTime): string {
-    return localTime.toFormat("YYYY-MM");
+    return `${localTime.year}-${localTime.month}`;
   }
 
   recordUsage(amount: number, localTime: DateTime): void {
@@ -272,7 +272,7 @@ export class TimeOfUseElectricalUtilityPlan implements ElectricalUtilityPlan {
   } = {};
 
   private monthKeyFor(localTime: DateTime): string {
-    return localTime.toFormat("YYYY-MM");
+    return `${localTime.year}-${localTime.month}`;
   }
 
   private timeOfUsePeriodFor(localTime: DateTime): TimeOfUsePeriod {
