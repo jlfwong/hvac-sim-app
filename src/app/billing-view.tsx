@@ -165,6 +165,7 @@ export const BillingView: React.FC<{
 
               return (
                 <Group
+                  key={`group-${month}-${idx}`}
                   onMouseOver={(ev) => handleMouseOver(ev, idx, month)}
                   onMouseOut={hideTooltip}
                 >

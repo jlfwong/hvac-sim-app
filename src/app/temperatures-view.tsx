@@ -70,7 +70,7 @@ export const TemperaturesView: React.FC<{
   }).nice();
 
   const yScale = scaleLinear({
-    domain: [minTempC - 5, maxTempC + 5],
+    domain: [minTempC - 2, maxTempC + 2],
     range: [height, 0],
   }).nice();
 

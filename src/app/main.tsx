@@ -1,37 +1,26 @@
 import { DateTime } from "luxon";
-import { AirConditioner } from "../lib/air-conditioner";
-import { BuildingGeometry } from "../lib/building-geometry";
-import { GasFurnace } from "../lib/gas-furnace";
-import {
-  DualFuelTwoStageHVACSystem,
-  SimpleHVACSystem,
-} from "../lib/hvac-system";
+import { DualFuelTwoStageHVACSystem } from "../lib/hvac-system";
 import { HVACSystem } from "../lib/types";
 import { HVACSimulationResult, simulateBuildingHVAC } from "../lib/simulate";
-import {
-  ThermalLoadSource,
-  OccupantsLoadSource,
-  SolarGainLoadSource,
-  ConductionConvectionLoadSource,
-  InfiltrationLoadSource,
-} from "../lib/thermal-loads";
 import { BillingView } from "./billing-view";
 import { TemperaturesView } from "./temperatures-view";
 import React, { useState, useCallback } from "react";
-import { ElectricFurnace } from "../lib/electric-furnace";
 import { celciusToFahrenheit } from "../lib/units";
 import {
   electricalUtilityForProvince,
   gasUtilityForProvince,
 } from "./canadian-utility-plans";
 import { PassiveLoadsView } from "./passive-loads-view";
-import { useCanadianWeatherSource } from "./use-canadian-weather-source";
-import { useSelectHeatpump } from "./use-select-heatpump";
+import {
+  locationInfoAtom,
+  weatherInfoAtom,
+} from "./app-state/canadian-weather";
+import { postalCodeAtom } from "./app-state/config";
+import { selectedHeatpumpsAtom } from "./app-state/select-heatpump";
 import {
   Center,
   Flex,
   HStack,
-  VStack,
   FormControl,
   FormLabel,
   Heading,
@@ -42,57 +31,38 @@ import {
 } from "@chakra-ui/react";
 import { useAtom, useAtomValue } from "jotai";
 import {
-  buildingGeometryAtom,
   coolingSetPointCAtom,
-  electricFurnaceAtom,
-  electricFurnaceSystemAtom,
   floorSpaceSqFtAtom,
-  gasFurnaceAtom,
-  gasFurnaceSystemAtom,
   heatingSetPointCAtom,
-  loadSources,
-  loadSourcesAtom,
-} from "./app-state";
+} from "./app-state/config";
+import {
+  electricFurnaceSystemAtom,
+  gasFurnaceSystemAtom,
+  systemsToSimulate,
+} from "./app-state/hvac-systems";
+import { gasFurnaceAtom } from "./app-state/equipment";
+import { buildingGeometryAtom, loadSourcesAtom } from "./app-state/loads";
 
 export const Main: React.FC<{}> = (props) => {
   const [floorSpaceSqFt, setFloorSpaceSqFt] = useAtom(floorSpaceSqFtAtom);
 
-  const { postalCode, setPostalCode, locationInfo, weatherInfo } =
-    useCanadianWeatherSource("K2A 2Y3");
+  const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
+  const locationInfo = useAtomValue(locationInfoAtom);
+  const weatherInfo = useAtomValue(weatherInfoAtom);
 
   const [coolingSetPointC, setCoolingSetPointC] = useAtom(coolingSetPointCAtom);
   const [heatingSetPointC, setHeatingSetPointC] = useAtom(heatingSetPointCAtom);
 
-  const gasFurnace = useAtomValue(gasFurnaceAtom);
   const buildingGeometry = useAtomValue(buildingGeometryAtom);
 
-  const auxHeatingAppliance = gasFurnace;
   const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(-16);
-
-  const coolingSetPointF = celciusToFahrenheit(coolingSetPointC);
-  const heatingSetPointF = celciusToFahrenheit(heatingSetPointC);
-  const auxSwitchoverTempF = celciusToFahrenheit(auxSwitchoverTempC);
-
-  const electricFurnaceSystem = useAtomValue(electricFurnaceSystemAtom);
-  const gasFurnaceSystem = useAtomValue(gasFurnaceSystemAtom);
 
   const loadSources = useAtomValue(loadSourcesAtom);
 
   let simulations: HVACSimulationResult[] | null = null;
+  const systems = useAtomValue(systemsToSimulate);
 
-  const heatPumpCandidates = useSelectHeatpump(
-    weatherInfo
-      ? {
-          weatherInfo,
-          coolingSetPointInsideTempF: coolingSetPointF,
-          heatingSetPointInsideTempF: heatingSetPointF,
-          auxSwitchoverTempF,
-          loadSources,
-        }
-      : null
-  );
-
-  if (locationInfo && weatherInfo && heatPumpCandidates) {
+  if (locationInfo && weatherInfo && systems) {
     const dtOptions = { zone: weatherInfo.timezoneName };
     const localStartTime = DateTime.fromObject(
       {
@@ -115,40 +85,6 @@ export const Main: React.FC<{}> = (props) => {
       electrical: () => electricalUtilityForProvince(locationInfo.provinceCode),
       naturalGas: () => gasUtilityForProvince(locationInfo.provinceCode),
     };
-
-    const systems: HVACSystem[] = [gasFurnaceSystem, electricFurnaceSystem];
-
-    for (let i = 0; i < Math.min(heatPumpCandidates.length, 1); i++) {
-      const heatpump = heatPumpCandidates[i].heatpump;
-
-      // TODO(jlfwong): Sometimes the top candidate doesn't actually end up
-      // being the cheapest. This *might* be because the heatpump selection
-      // algorithm assumes perfect modulation, whereas the simulation (so far)
-      // only uses a dumb two-stage algorithm.
-      systems.unshift(
-        new DualFuelTwoStageHVACSystem(
-          `Dual Fuel Two Stage (${heatpump.name} + ${gasFurnace.name})`,
-          {
-            coolingSetPointF,
-            coolingAppliance: heatpump,
-
-            heatingSetPointF,
-            heatingAppliance: heatpump,
-
-            auxSwitchoverTempF,
-            auxHeatingAppliance,
-
-            // Like the "Compressor Stage 1 Max Runtime" setting in
-            // ecobee
-            stage1MaxDurationMinutes: 120,
-
-            // Like the "Compressor Stage 2 Temperature Delta" setting
-            // in ecobee
-            stage2TemperatureDeltaF: 1,
-          }
-        )
-      );
-    }
 
     simulations = systems.map((hvacSystem) =>
       simulateBuildingHVAC({
@@ -290,7 +226,7 @@ export const Main: React.FC<{}> = (props) => {
 const FullWidthFormControl = chakra(FormControl, {
   baseStyle: {
     display: "flex",
-    flexGrow: 1,
+    flex: 1,
     flexDirection: "column",
   },
 });
