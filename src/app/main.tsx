@@ -15,7 +15,7 @@ import {
   locationInfoAtom,
   weatherInfoAtom,
 } from "./app-state/canadian-weather";
-import { postalCodeAtom } from "./app-state/config";
+import { auxSwitchoverTempCAtom, postalCodeAtom } from "./app-state/config";
 import { selectedHeatpumpsAtom } from "./app-state/select-heatpump";
 import {
   Center,
@@ -55,7 +55,9 @@ export const Main: React.FC<{}> = (props) => {
 
   const buildingGeometry = useAtomValue(buildingGeometryAtom);
 
-  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useState(-16);
+  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useAtom(
+    auxSwitchoverTempCAtom
+  );
 
   const loadSources = useAtomValue(loadSourcesAtom);
 
