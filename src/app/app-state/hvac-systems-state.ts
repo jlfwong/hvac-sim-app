@@ -8,13 +8,9 @@ import {
   coolingSetPointFAtom,
   heatingSetPointFAtom,
 } from "./config-state";
-import {
-  gasFurnaceAtom,
-  acAtom,
-  electricFurnaceAtom,
-  heatpumpAtom,
-} from "./equipment-state";
+import { gasFurnaceAtom, acAtom, electricFurnaceAtom } from "./equipment-state";
 import { HVACSystem } from "../../lib/types";
+import { selectedHeatpumpsAtom } from "./selected-heatpumps-state";
 
 export const gasFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
   const gasFurnace = get(gasFurnaceAtom);
@@ -46,33 +42,36 @@ export const electricFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
   });
 });
 
-export const dualFuelSystemAtom = atom<HVACSystem | null>((get) => {
-  const heatpump = get(heatpumpAtom);
+export const dualFuelSystemAtom = atom<HVACSystem[] | null>((get) => {
+  const candidates = get(selectedHeatpumpsAtom);
   const gasFurnace = get(gasFurnaceAtom);
 
-  if (!heatpump || !gasFurnace) return null;
+  if (!candidates || !gasFurnace) return null;
 
-  return new DualFuelTwoStageHVACSystem(
-    `Dual Fuel Two Stage (${heatpump.name} + ${gasFurnace.name})`,
-    {
-      coolingSetPointF: get(coolingSetPointFAtom),
-      coolingAppliance: heatpump,
+  return candidates.map((c) => {
+    const heatpump = c.heatpump;
+    return new DualFuelTwoStageHVACSystem(
+      `Dual Fuel Two Stage (${heatpump.name} + ${gasFurnace.name})`,
+      {
+        coolingSetPointF: get(coolingSetPointFAtom),
+        coolingAppliance: heatpump,
 
-      heatingSetPointF: get(heatingSetPointFAtom),
-      heatingAppliance: heatpump,
+        heatingSetPointF: get(heatingSetPointFAtom),
+        heatingAppliance: heatpump,
 
-      auxSwitchoverTempF: get(auxSwitchoverTempFAtom),
-      auxHeatingAppliance: gasFurnace,
+        auxSwitchoverTempF: get(auxSwitchoverTempFAtom),
+        auxHeatingAppliance: gasFurnace,
 
-      // Like the "Compressor Stage 1 Max Runtime" setting in
-      // ecobee
-      stage1MaxDurationMinutes: 120,
+        // Like the "Compressor Stage 1 Max Runtime" setting in
+        // ecobee
+        stage1MaxDurationMinutes: 120,
 
-      // Like the "Compressor Stage 2 Temperature Delta" setting
-      // in ecobee
-      stage2TemperatureDeltaF: 1,
-    }
-  );
+        // Like the "Compressor Stage 2 Temperature Delta" setting
+        // in ecobee
+        stage2TemperatureDeltaF: 1,
+      }
+    );
+  });
 });
 
 export const systemsToSimulateAtom = atom<HVACSystem[] | null>((get) => {
@@ -84,5 +83,7 @@ export const systemsToSimulateAtom = atom<HVACSystem[] | null>((get) => {
     return null;
   }
 
-  return [dualFuelSystem, gasFurnaceSystem, electricFurnaceSystem];
+  return dualFuelSystem
+    .slice(0, 1)
+    .concat([gasFurnaceSystem, electricFurnaceSystem]);
 });

@@ -1,5 +1,4 @@
 import { DateTime } from "luxon";
-import { BuildingGeometry } from "./building-geometry";
 import { AirSourceHeatPump } from "./heatpump";
 import { ThermalLoadSource } from "./thermal-loads";
 import { BinnedTemperatures } from "./weather";

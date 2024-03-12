@@ -36,9 +36,3 @@ export const electricFurnaceAtom = atom<ElectricFurnace | null>((get) => {
     capacityKw: 20,
   });
 });
-
-export const heatpumpAtom = atom<AirSourceHeatPump | null>((get) => {
-  const candidates = get(selectedHeatpumpsAtom);
-  if (candidates == null) return null;
-  return candidates[0].heatpump;
-});
