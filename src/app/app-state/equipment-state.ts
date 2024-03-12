@@ -2,9 +2,9 @@ import { atom } from "jotai";
 import { AirConditioner } from "../../lib/air-conditioner";
 import { ElectricFurnace } from "../../lib/electric-furnace";
 import { GasFurnace } from "../../lib/gas-furnace";
-import { elevationFeetAtom } from "./canadian-weather";
+import { elevationFeetAtom } from "./canadian-weather-state";
 import { AirSourceHeatPump } from "../../lib/heatpump";
-import { selectedHeatpumpsAtom } from "./select-heatpump";
+import { selectedHeatpumpsAtom } from "./selected-heatpump-state";
 
 export const acAtom = atom<AirConditioner | null>((get) => {
   const elevationFeet = get(elevationFeetAtom);

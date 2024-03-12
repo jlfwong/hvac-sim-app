@@ -7,13 +7,13 @@ import {
   auxSwitchoverTempFAtom,
   coolingSetPointFAtom,
   heatingSetPointFAtom,
-} from "./config";
+} from "./config-state";
 import {
   gasFurnaceAtom,
   acAtom,
   electricFurnaceAtom,
   heatpumpAtom,
-} from "./equipment";
+} from "./equipment-state";
 import { HVACSystem } from "../../lib/types";
 
 export const gasFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
@@ -75,7 +75,7 @@ export const dualFuelSystemAtom = atom<HVACSystem | null>((get) => {
   );
 });
 
-export const systemsToSimulate = atom<HVACSystem[] | null>((get) => {
+export const systemsToSimulateAtom = atom<HVACSystem[] | null>((get) => {
   const dualFuelSystem = get(dualFuelSystemAtom);
   const gasFurnaceSystem = get(gasFurnaceSystemAtom);
   const electricFurnaceSystem = get(electricFurnaceSystemAtom);

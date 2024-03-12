@@ -8,7 +8,6 @@ import { HVACSimulationResult } from "../lib/simulate";
 import { fahrenheitToCelcius } from "../lib/units";
 import { ChartGroup, ChartHeader } from "./chart";
 import { LegendOrdinal } from "@visx/legend";
-import { Duration } from "luxon";
 
 export const TemperaturesView: React.FC<{
   heatingSetPointC: number;

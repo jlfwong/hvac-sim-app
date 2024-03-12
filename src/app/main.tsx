@@ -14,9 +14,12 @@ import { PassiveLoadsView } from "./passive-loads-view";
 import {
   locationInfoAtom,
   weatherInfoAtom,
-} from "./app-state/canadian-weather";
-import { auxSwitchoverTempCAtom, postalCodeAtom } from "./app-state/config";
-import { selectedHeatpumpsAtom } from "./app-state/select-heatpump";
+} from "./app-state/canadian-weather-state";
+import {
+  auxSwitchoverTempCAtom,
+  postalCodeAtom,
+} from "./app-state/config-state";
+import { selectedHeatpumpsAtom } from "./app-state/selected-heatpump-state";
 import {
   Center,
   Flex,
@@ -34,73 +37,22 @@ import {
   coolingSetPointCAtom,
   floorSpaceSqFtAtom,
   heatingSetPointCAtom,
-} from "./app-state/config";
-import {
-  electricFurnaceSystemAtom,
-  gasFurnaceSystemAtom,
-  systemsToSimulate,
-} from "./app-state/hvac-systems";
-import { gasFurnaceAtom } from "./app-state/equipment";
-import { buildingGeometryAtom, loadSourcesAtom } from "./app-state/loads";
+} from "./app-state/config-state";
+import { simulationsAtom } from "./app-state/simulations-state";
 
 export const Main: React.FC<{}> = (props) => {
   const [floorSpaceSqFt, setFloorSpaceSqFt] = useAtom(floorSpaceSqFtAtom);
 
   const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
-  const weatherInfo = useAtomValue(weatherInfoAtom);
-
   const [coolingSetPointC, setCoolingSetPointC] = useAtom(coolingSetPointCAtom);
   const [heatingSetPointC, setHeatingSetPointC] = useAtom(heatingSetPointCAtom);
-
-  const buildingGeometry = useAtomValue(buildingGeometryAtom);
 
   const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useAtom(
     auxSwitchoverTempCAtom
   );
 
-  const loadSources = useAtomValue(loadSourcesAtom);
-
-  let simulations: HVACSimulationResult[] | null = null;
-  const systems = useAtomValue(systemsToSimulate);
-
-  if (locationInfo && weatherInfo && systems) {
-    const dtOptions = { zone: weatherInfo.timezoneName };
-    const localStartTime = DateTime.fromObject(
-      {
-        year: 2023,
-        month: 1,
-        day: 1,
-      },
-      dtOptions
-    );
-    const localEndTime = DateTime.fromObject(
-      {
-        year: 2023,
-        month: 12,
-        day: 31,
-      },
-      dtOptions
-    ).endOf("day");
-
-    const utilityPlans = {
-      electrical: () => electricalUtilityForProvince(locationInfo.provinceCode),
-      naturalGas: () => gasUtilityForProvince(locationInfo.provinceCode),
-    };
-
-    simulations = systems.map((hvacSystem) =>
-      simulateBuildingHVAC({
-        localStartTime,
-        localEndTime,
-        initialInsideAirTempF: 72.5,
-        buildingGeometry,
-        hvacSystem,
-        loadSources,
-        weatherSource: weatherInfo.weatherSource,
-        utilityPlans,
-      })
-    );
-  }
+  const simulations = useAtomValue(simulationsAtom);
 
   return (
     <Center mb={40}>
@@ -215,9 +167,12 @@ export const Main: React.FC<{}> = (props) => {
             <TemperaturesView
               heatingSetPointC={heatingSetPointC}
               coolingSetPointC={coolingSetPointC}
-              simulationResult={simulations[simulations.length - 1]}
+              simulationResult={simulations[0]}
             />
+            {/*
+            // TODO(jlfwong): Create a toggle for this
             <PassiveLoadsView simulationResult={simulations[0]} />
+            */}
           </>
         )}
       </Flex>

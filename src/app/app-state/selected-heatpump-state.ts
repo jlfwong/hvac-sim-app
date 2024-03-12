@@ -9,7 +9,7 @@ import {
   WeatherInfo,
   elevationFeetAtom,
   weatherInfoAtom,
-} from "./canadian-weather";
+} from "./canadian-weather-state";
 import { metersToFeet } from "../../lib/units";
 import { atom } from "jotai";
 import { asyncAtomOrNull } from "./utils";
@@ -17,8 +17,8 @@ import {
   auxSwitchoverTempFAtom,
   coolingSetPointFAtom,
   heatingSetPointFAtom,
-} from "./config";
-import { loadSourcesAtom } from "./loads";
+} from "./config-state";
+import { loadSourcesAtom } from "./loads-state";
 
 const kelvinJsonAtom = asyncAtomOrNull<any>(async (get, { signal }) => {
   return await fetchJSON<any>(`./data/equipment/kelvin-all.json`);

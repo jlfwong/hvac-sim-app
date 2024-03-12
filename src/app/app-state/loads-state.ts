@@ -1,4 +1,4 @@
-import { floorSpaceSqFtAtom } from "./config";
+import { floorSpaceSqFtAtom } from "./config-state";
 
 import { atom } from "jotai";
 import { BuildingGeometry } from "../../lib/building-geometry";

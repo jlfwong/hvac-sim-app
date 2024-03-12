@@ -3,7 +3,7 @@ import {
   JSONBackedHourlyWeatherSource,
   WeatherSource,
 } from "../../lib/weather";
-import { postalCodeAtom } from "./config";
+import { postalCodeAtom } from "./config-state";
 import { fetchJSON } from "../fetch";
 import { atom } from "jotai";
 import { metersToFeet } from "../../lib/units";
