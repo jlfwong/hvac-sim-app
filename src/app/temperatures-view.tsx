@@ -124,7 +124,7 @@ export const TemperaturesView: React.FC<{
                 return "Target inside air temperature range";
               }
               case "inside": {
-                return "Inside air temperature";
+                return `Inside air temperature (${props.simulationResult.name})`;
               }
               case "outside": {
                 return "Outside air temperature";

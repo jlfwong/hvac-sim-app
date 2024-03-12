@@ -1,25 +1,11 @@
-import { DateTime } from "luxon";
-import { DualFuelTwoStageHVACSystem } from "../lib/hvac-system";
-import { HVACSystem } from "../lib/types";
-import { HVACSimulationResult, simulateBuildingHVAC } from "../lib/simulate";
 import { BillingView } from "./billing-view";
 import { TemperaturesView } from "./temperatures-view";
-import React, { useState, useCallback } from "react";
-import { celciusToFahrenheit } from "../lib/units";
-import {
-  electricalUtilityForProvince,
-  gasUtilityForProvince,
-} from "./canadian-utility-plans";
-import { PassiveLoadsView } from "./passive-loads-view";
-import {
-  locationInfoAtom,
-  weatherInfoAtom,
-} from "./app-state/canadian-weather-state";
+import React, { useCallback } from "react";
+import { locationInfoAtom } from "./app-state/canadian-weather-state";
 import {
   auxSwitchoverTempCAtom,
   postalCodeAtom,
 } from "./app-state/config-state";
-import { selectedHeatpumpsAtom } from "./app-state/selected-heatpump-state";
 import {
   Center,
   Flex,
@@ -39,6 +25,10 @@ import {
   heatingSetPointCAtom,
 } from "./app-state/config-state";
 import { simulationsAtom } from "./app-state/simulations-state";
+import {
+  electricityPricePerKwhAtom,
+  naturalGasPricePerCubicMetreAtom,
+} from "./app-state/canadian-utilities-state";
 
 export const Main: React.FC<{}> = (props) => {
   const [floorSpaceSqFt, setFloorSpaceSqFt] = useAtom(floorSpaceSqFtAtom);
@@ -53,6 +43,11 @@ export const Main: React.FC<{}> = (props) => {
   );
 
   const simulations = useAtomValue(simulationsAtom);
+
+  const electricityPricePerKwh = useAtomValue(electricityPricePerKwhAtom);
+  const naturalGasPricePerCubicMetre = useAtomValue(
+    naturalGasPricePerCubicMetreAtom
+  );
 
   return (
     <Center mb={40}>
@@ -161,20 +156,26 @@ export const Main: React.FC<{}> = (props) => {
             </HStack>
           </Flex>
         </Flex>
-        {simulations && (
-          <>
-            <BillingView simulations={simulations} />
-            <TemperaturesView
-              heatingSetPointC={heatingSetPointC}
-              coolingSetPointC={coolingSetPointC}
-              simulationResult={simulations[0]}
-            />
-            {/*
+        {simulations &&
+          naturalGasPricePerCubicMetre != null &&
+          electricityPricePerKwh != null && (
+            <>
+              <BillingView
+                simulations={simulations}
+                pricePerCubicMetre={naturalGasPricePerCubicMetre}
+                pricePerKwh={electricityPricePerKwh}
+              />
+              <TemperaturesView
+                heatingSetPointC={heatingSetPointC}
+                coolingSetPointC={coolingSetPointC}
+                simulationResult={simulations[0]}
+              />
+              {/*
             // TODO(jlfwong): Create a toggle for this
             <PassiveLoadsView simulationResult={simulations[0]} />
             */}
-          </>
-        )}
+            </>
+          )}
       </Flex>
     </Center>
   );

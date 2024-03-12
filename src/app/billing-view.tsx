@@ -16,6 +16,8 @@ import { EnergyBill } from "../lib/billing";
 import { ChartGroup, ChartHeader } from "./chart";
 
 export const BillingView: React.FC<{
+  pricePerKwh: number;
+  pricePerCubicMetre: number;
   simulations: HVACSimulationResult[];
 }> = (props) => {
   const margin = { top: 10, right: 20, bottom: 40, left: 60 },
@@ -137,7 +139,10 @@ export const BillingView: React.FC<{
 
   return (
     <ChartGroup>
-      <ChartHeader>Energy Bills</ChartHeader>
+      <ChartHeader>
+        Energy Bills ({props.pricePerKwh.toFixed(2)}/kWh, $
+        {props.pricePerCubicMetre.toFixed(2)}/m<sup>3</sup>)
+      </ChartHeader>
       <svg
         width={width + margin.left + margin.right}
         height={height + margin.top + margin.bottom}

@@ -4,10 +4,16 @@ import { systemsToSimulateAtom } from "./hvac-systems-state";
 import { locationInfoAtom, weatherInfoAtom } from "./canadian-weather-state";
 import { DateTime } from "luxon";
 import { simulateBuildingHVAC } from "../../lib/simulate";
+
 import {
-  electricalUtilityForProvince,
-  gasUtilityForProvince,
-} from "../canadian-utility-plans";
+  SimpleElectricalUtilityPlan,
+  SimpleNaturalGasUtilityPlan,
+} from "../../lib/billing";
+import { CUBIC_METER_PER_CCF } from "../../lib/units";
+import {
+  electricityPricePerKwhAtom,
+  naturalGasPricePerCubicMetreAtom,
+} from "./canadian-utilities-state";
 
 export const simulationsAtom = atom((get) => {
   const loadSources = get(loadSourcesAtom);
@@ -15,13 +21,17 @@ export const simulationsAtom = atom((get) => {
   const locationInfo = get(locationInfoAtom);
   const weatherInfo = get(weatherInfoAtom);
   const buildingGeometry = get(buildingGeometryAtom);
+  const naturalGasPricePerCubicMetre = get(naturalGasPricePerCubicMetreAtom);
+  const electricityPricePerKwh = get(electricityPricePerKwhAtom);
 
   if (
     !loadSources ||
     !systems ||
     !locationInfo ||
     !weatherInfo ||
-    !buildingGeometry
+    !buildingGeometry ||
+    !naturalGasPricePerCubicMetre ||
+    !electricityPricePerKwh
   ) {
     return null;
   }
@@ -46,8 +56,16 @@ export const simulationsAtom = atom((get) => {
   ).endOf("day");
 
   const utilityPlans = {
-    electrical: () => electricalUtilityForProvince(locationInfo.provinceCode),
-    naturalGas: () => gasUtilityForProvince(locationInfo.provinceCode),
+    electrical: () =>
+      new SimpleElectricalUtilityPlan({
+        fixedCostPerMonth: 0,
+        costPerKwh: electricityPricePerKwh,
+      }),
+    naturalGas: () =>
+      new SimpleNaturalGasUtilityPlan({
+        fixedCostPerMonth: 0,
+        costPerCcf: naturalGasPricePerCubicMetre * CUBIC_METER_PER_CCF,
+      }),
   };
 
   return systems.map((hvacSystem) =>
