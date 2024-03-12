@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 import { WeatherSnapshot } from "./types";
 import { interpolate } from "./math";
 
@@ -9,6 +9,10 @@ export interface WeatherSource {
 export interface JSONWeatherEntry extends WeatherSnapshot {
   datetime: string;
 }
+
+// We create this object once to avoid the construction cost
+// on every call to .plus below
+const oneHour = Duration.fromObject({ hours: 1 });
 
 export class BinnedTemperatures {
   private hoursByTempF = new Map<number, number>();
@@ -75,7 +79,7 @@ export class JSONBackedHourlyWeatherSource implements WeatherSource {
     // We use hour plus one rather than .endOf("hour") here because
     // the end of the hour gives :59:59.99. If you ask for the hourKey
     // for that time, you get the same key as the startOfHour.
-    const endOfHour = startOfHour.plus({ hours: 1 });
+    const endOfHour = startOfHour.plus(oneHour);
 
     const startWeather = this.getWeatherForHour(startOfHour);
     if (localTime.equals(startOfHour)) {

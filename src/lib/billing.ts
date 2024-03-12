@@ -111,7 +111,8 @@ class SimpleMonthlyUsageTracker {
   } = {};
 
   private monthKeyFor(localTime: DateTime): string {
-    return localTime.toFormat("YYYY-MM");
+    // We could use luxon's DateTime.toFormat here, but this is much much faster
+    return `${localTime.year}-${localTime.month}`;
   }
 
   recordUsage(amount: number, localTime: DateTime): void {
@@ -272,7 +273,8 @@ export class TimeOfUseElectricalUtilityPlan implements ElectricalUtilityPlan {
   } = {};
 
   private monthKeyFor(localTime: DateTime): string {
-    return localTime.toFormat("YYYY-MM");
+    // We could use luxon's DateTime.toFormat here, but this is much much faster
+    return `${localTime.year}-${localTime.month}`;
   }
 
   private timeOfUsePeriodFor(localTime: DateTime): TimeOfUsePeriod {

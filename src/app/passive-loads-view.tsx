@@ -9,6 +9,7 @@ import { schemeSet1 } from "d3-scale-chromatic";
 import { ChartGroup, ChartHeader } from "./chart";
 import { LegendOrdinal } from "@visx/legend";
 import { GridRows } from "@visx/grid";
+import { Duration } from "luxon";
 
 export const PassiveLoadsView: React.FC<{
   simulationResult: HVACSimulationResult;
@@ -27,6 +28,7 @@ export const PassiveLoadsView: React.FC<{
 
   // Data transformation
   const tzOffsetMinutes = simulationResult.timeSteps[0].localTime.offset;
+  const tzOffsetMs = tzOffsetMinutes * 60 * 1000;
 
   const data = simulationResult.timeSteps.map((snapshot) => ({
     // Because we're using scaleUTC, dates will be formatted as UTC. What we
@@ -40,10 +42,7 @@ export const PassiveLoadsView: React.FC<{
     // This is a hack, and doesn't correctly account for DST or other
     // single-location variations in timezone offset, but it's still much more
     // intuitively accurate than displaying UTC or browse local time.
-    date: snapshot.localTime
-      .toUTC()
-      .plus({ minutes: tzOffsetMinutes })
-      .toJSDate(),
+    date: new Date(snapshot.localTime.toMillis() + tzOffsetMs),
 
     loads: snapshot.passiveLoads.reduce<{ [name: string]: number }>(
       (acc, v) => {

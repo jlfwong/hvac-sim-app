@@ -152,6 +152,9 @@ function getTimeSteps(
   // We operate in UTC rather than local time because it makes the date math run
   // more efficiently since it avoids the need to reconcile timezones after each
   // operation, because e.g. DST might kick in across an addition boundary.
+  //
+  // Confusingly, this is faster *even though* we use DateTime.setZone to retrieve
+  // the local time in each iteration.
   let utcTime: DateTime = localStartTime.toUTC();
   const endTimeMillis: number = localEndTime.toMillis();
 

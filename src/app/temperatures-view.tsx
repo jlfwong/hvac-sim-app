@@ -8,6 +8,7 @@ import { HVACSimulationResult } from "../lib/simulate";
 import { fahrenheitToCelcius } from "../lib/units";
 import { ChartGroup, ChartHeader } from "./chart";
 import { LegendOrdinal } from "@visx/legend";
+import { Duration } from "luxon";
 
 export const TemperaturesView: React.FC<{
   heatingSetPointC: number;
@@ -28,6 +29,7 @@ export const TemperaturesView: React.FC<{
 
   // Data transformation
   const tzOffsetMinutes = props.simulationResult.timeSteps[0].localTime.offset;
+  const tzOffsetMs = tzOffsetMinutes * 60 * 1000;
 
   let minTempC = 1000;
   let maxTempC = -1000;
@@ -52,11 +54,8 @@ export const TemperaturesView: React.FC<{
       //
       // This is a hack, and doesn't correctly account for DST or other
       // single-location variations in timezone offset, but it's still much more
-      // intuitively accurate than displaying UTC or browse local time.
-      date: snapshot.localTime
-        .toUTC()
-        .plus({ minutes: tzOffsetMinutes })
-        .toJSDate(),
+      // intuitively accurate than displaying UTC or browser local time.
+      date: new Date(snapshot.localTime.toMillis() + tzOffsetMs),
 
       insideAirTempC: fahrenheitToCelcius(snapshot.insideAirTempF),
       outsideAirTempC: fahrenheitToCelcius(snapshot.weather.outsideAirTempF),
