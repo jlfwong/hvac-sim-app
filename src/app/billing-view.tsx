@@ -135,9 +135,7 @@ export const BillingView: React.FC<{
       year,
       month,
       day: 1,
-    }).format({
-      month: "long",
-    });
+    }).format("MMMM");
   };
 
   return (

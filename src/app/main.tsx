@@ -72,8 +72,8 @@ export const Main: React.FC<{}> = (props) => {
     const localEndTime = DateTime.fromObject({
       timeZoneName: weatherInfo.timezoneName,
       year: 2023,
-      month: 1,
-      day: 7,
+      month: 12,
+      day: 31,
     }).endOfDay();
 
     const utilityPlans = {
