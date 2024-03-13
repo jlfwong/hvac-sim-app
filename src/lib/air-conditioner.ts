@@ -92,8 +92,14 @@ export class AirConditioner implements CoolingAppliance {
     const baselineCOPAdjustment = 0.7034;
     const dCOPdTempF = -0.0746;
 
-    const coefficientOfPerformance =
+    let coefficientOfPerformance =
       nameplaceCOP + baselineCOPAdjustment + deltaTempF * dCOPdTempF;
+
+    if (coefficientOfPerformance < 0) {
+      // This can happen if given temperature inputs that are outrageous
+      // or non-sensical.
+      coefficientOfPerformance = 0.01;
+    }
 
     return derateHeatPumpForElevation(
       {
@@ -117,7 +123,9 @@ export class AirConditioner implements CoolingAppliance {
 
     if (kWNeeded < 0) {
       throw new Error(
-        "Reported a negative power demand from an air conditioner"
+        `Reported a negative power demand from an air conditioner. Arguments: ${JSON.stringify(
+          options
+        )}, rating; ${JSON.stringify(rating)}`
       );
     }
 

@@ -1,6 +1,6 @@
 import { BillingView } from "./billing-view";
 import { TemperaturesView } from "./temperatures-view";
-import React, { useCallback } from "react";
+import React, { useState, createRef, useCallback } from "react";
 import { locationInfoAtom } from "./app-state/canadian-weather-state";
 import {
   auxSwitchoverTempCAtom,
@@ -13,12 +13,24 @@ import {
   FormControl,
   FormLabel,
   Heading,
-  StackDivider,
   Input,
   Box,
   chakra,
+  NumberInput,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInputField,
+  NumberInputStepper,
+  type InputProps,
 } from "@chakra-ui/react";
-import { useAtom, useAtomValue } from "jotai";
+import {
+  useAtom,
+  useAtomValue,
+  type Atom,
+  type WritableAtom,
+  type PrimitiveAtom,
+  useSetAtom,
+} from "jotai";
 import {
   coolingSetPointCAtom,
   floorSpaceSqFtAtom,
@@ -50,15 +62,14 @@ export const Main: React.FC<{}> = (props) => {
   );
 
   return (
-    <Center mb={40}>
-      <Flex direction="column" gap={40} width={860} maxWidth={"100vw"}>
+    <Center mb={"40px"}>
+      <Flex direction="column" gap={"40px"} width={"860px"} maxWidth={"100vw"}>
         <Flex direction="column">
-          <Heading as="h1" size="4xl">
+          <Heading as="h1" size="4xl" mb={"20px"}>
             Heat Pump Calculator
           </Heading>
-          <StackDivider />
-          <Flex direction="column" gap={20}>
-            <Flex direction="column">
+          <Flex direction="column" gap={"20px"}>
+            <Flex direction="column" gap={0}>
               <HStack>
                 <FullWidthFormControl>
                   <Flex justifyContent={"space-between"}>
@@ -83,78 +94,36 @@ export const Main: React.FC<{}> = (props) => {
                     }}
                   />
                 </FullWidthFormControl>
-                <FullWidthFormControl>
-                  <FormLabel>House square footage</FormLabel>
-                  <Input
-                    type="number"
-                    value={floorSpaceSqFt}
-                    onChange={(ev) => {
-                      const switchoverTempC = parseFloat(ev.target.value);
-                      setFloorSpaceSqFt(switchoverTempC);
-                    }}
-                  />
-                </FullWidthFormControl>
+                <NumericFormControl
+                  label="House square footage"
+                  atom={floorSpaceSqFtAtom}
+                  minValue={250}
+                  maxValue={100000}
+                  step={250}
+                />
               </HStack>
               <HStack>
                 Switch to:
-                <LocationLink
-                  setPostalCode={setPostalCode}
-                  postalCode="K2A 2Y3"
-                  placeName="Ottawa"
-                />
-                <LocationLink
-                  setPostalCode={setPostalCode}
-                  postalCode="V5K 0A1"
-                  placeName="Vancouver"
-                />
-                <LocationLink
-                  setPostalCode={setPostalCode}
-                  postalCode="H3H 2H9"
-                  placeName="Montreal"
-                />
-                <LocationLink
-                  setPostalCode={setPostalCode}
-                  postalCode="R3T 2N2"
-                  placeName="Winnipeg"
-                />
-                <LocationLink
-                  setPostalCode={setPostalCode}
-                  postalCode="T6G 2R3"
-                  placeName="Edmonton"
-                />
+                <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
+                <LocationLink postalCode="V5K 0A1" placeName="Vancouver" />
+                <LocationLink postalCode="H3H 2H9" placeName="Montreal" />
+                <LocationLink postalCode="R3T 2N2" placeName="Winnipeg" />
+                <LocationLink postalCode="T6G 2R3" placeName="Edmonton" />
               </HStack>
             </Flex>
             <HStack>
-              <FullWidthFormControl>
-                <FormLabel>Heat when colder than (°C)</FormLabel>
-                <Input
-                  type="number"
-                  value={heatingSetPointC}
-                  onChange={(ev) => {
-                    setHeatingSetPointC(parseFloat(ev.target.value));
-                  }}
-                />
-              </FullWidthFormControl>
-              <FullWidthFormControl>
-                <FormLabel>Cool when hotter than (°C)</FormLabel>
-                <Input
-                  type="number"
-                  value={coolingSetPointC}
-                  onChange={(ev) => {
-                    setCoolingSetPointC(parseFloat(ev.target.value));
-                  }}
-                />
-              </FullWidthFormControl>
-              <FullWidthFormControl>
-                <FormLabel>Switch to backup heat when below (°C)</FormLabel>
-                <Input
-                  type="number"
-                  value={auxSwitchoverTempC}
-                  onChange={(ev) => {
-                    setAuxSwitchoverTempC(parseFloat(ev.target.value));
-                  }}
-                />
-              </FullWidthFormControl>
+              <TemperatureControl
+                label="Heat when colder than (°C)"
+                atom={heatingSetPointCAtom}
+              />
+              <TemperatureControl
+                label="Cool when hotter than (°C)"
+                atom={coolingSetPointCAtom}
+              />
+              <TemperatureControl
+                label="Switch to backup heat below (°C)"
+                atom={auxSwitchoverTempCAtom}
+              />
             </HStack>
           </Flex>
         </Flex>
@@ -192,20 +161,95 @@ const FullWidthFormControl = chakra(FormControl, {
 });
 
 const LocationLink: React.FC<{
-  setPostalCode: (postalCode: string) => void;
   postalCode: string;
   placeName: string;
 }> = (props) => {
+  const setPostalCode = useSetAtom(postalCodeAtom);
+
   const onClick: React.EventHandler<React.MouseEvent> = useCallback(
     (ev) => {
-      props.setPostalCode(props.postalCode);
+      setPostalCode(props.postalCode);
       ev.preventDefault();
     },
-    [props.setPostalCode, props.postalCode]
+    [setPostalCode, props.postalCode]
   );
   return (
-    <a href="#" onClick={onClick}>
+    <Box as="a" href="#" onClick={onClick} textDecoration={"underline"}>
       {props.placeName} ({props.postalCode})
-    </a>
+    </Box>
+  );
+};
+
+const TemperatureControl: React.FC<{
+  atom: PrimitiveAtom<number>;
+  label: string;
+}> = (props) => {
+  return (
+    <NumericFormControl
+      atom={props.atom}
+      label={props.label}
+      minValue={-50}
+      maxValue={50}
+      step={1}
+    />
+  );
+};
+
+const NumericFormControl: React.FC<
+  {
+    atom: PrimitiveAtom<number>;
+    label: string;
+    minValue: number;
+    maxValue: number;
+    step?: number;
+  } & InputProps
+> = (props) => {
+  const [atomValue, setAtomValue] = useAtom(props.atom);
+
+  const [internalValue, setInternalValue] = useState(atomValue.toString());
+
+  function isValid(numeric: number) {
+    if (
+      isNaN(numeric) ||
+      numeric < props.minValue ||
+      numeric > props.maxValue
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  const isInvalid = !isValid(parseInt(internalValue, 10));
+
+  return (
+    <FullWidthFormControl isInvalid={isInvalid}>
+      <FormLabel>{props.label}</FormLabel>
+      <Input
+        type="number"
+        value={internalValue}
+        min={props.minValue}
+        max={props.maxValue}
+        step={props.step ?? 1}
+        /*
+        // Unfortunately, there's no styling for both invalid & focused, and focus
+        // takes precedences. IMO this is a design oversight, though perhaps it's
+        // intentional.
+        //
+        // https://github.com/chakra-ui/chakra-ui/pull/2741
+        */
+        _focusVisible={isInvalid ? { borderWidth: 0 } : {}}
+        onChange={(ev) => {
+          const value = ev.target.value;
+          setInternalValue(value);
+          const numericValue = parseInt(value, 10);
+          if (isValid(numericValue)) {
+            setAtomValue(numericValue);
+          }
+        }}
+        onBlur={() => {
+          setInternalValue(atomValue.toString());
+        }}
+      />
+    </FullWidthFormControl>
   );
 };
