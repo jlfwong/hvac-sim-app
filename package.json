@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "serve": "esbuild src/app/app.tsx --watch --bundle --servedir=static --outdir=static/js"
+    "serve": "esbuild src/app/app.tsx --watch --bundle --servedir=static --outdir=static/js",
+    "build": "esbuild src/app/app.tsx --bundle --minify --outdir=dist/js",
+    "deploy": "deploy.sh"
   },
   "jest": {
     "transform": {
