@@ -76,6 +76,8 @@ export const Main: React.FC<{}> = (props) => {
                   <Input
                     id="postal-code-input"
                     value={postalCode}
+                    disabled={true}
+                    title="Arbitrary postal code input coming soon!"
                     onChange={(ev) => {
                       setPostalCode(ev.target.value);
                     }}
