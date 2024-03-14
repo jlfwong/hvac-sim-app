@@ -1,6 +1,5 @@
 import { HeatingAppliance, HVACApplianceResponse } from "./types";
-
-const BTU_PER_CCF_NATURAL_GAS = 103700;
+import { BTU_PER_CCF_NATURAL_GAS } from "./units";
 
 export class GasFurnace implements HeatingAppliance {
   private deratedCapacityBtusPerHour: number;

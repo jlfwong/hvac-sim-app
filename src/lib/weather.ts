@@ -16,6 +16,7 @@ const oneHour = Duration.fromObject({ hours: 1 });
 
 export class BinnedTemperatures {
   private hoursByTempF = new Map<number, number>();
+  private sortedBins: { outsideAirTempF: number; hourCount: number }[] = [];
   private sortedTempF: number[] = [];
 
   constructor(entries: JSONWeatherEntry[]) {
@@ -27,6 +28,12 @@ export class BinnedTemperatures {
       );
     }
     this.sortedTempF.sort();
+
+    const binEntries = Array.from(this.hoursByTempF.entries());
+    binEntries.sort((a, b) => a[0] - b[0]);
+    for (let [outsideAirTempF, hourCount] of binEntries) {
+      this.sortedBins.push({ outsideAirTempF, hourCount });
+    }
   }
 
   getTempAtPercentile(percentile: number) {
@@ -37,9 +44,7 @@ export class BinnedTemperatures {
   forEachBin(
     cb: (bin: { outsideAirTempF: number; hourCount: number }) => void
   ) {
-    for (let [outsideAirTempF, hourCount] of this.hoursByTempF.entries()) {
-      cb({ outsideAirTempF, hourCount });
-    }
+    this.sortedBins.forEach(cb);
   }
 }
 

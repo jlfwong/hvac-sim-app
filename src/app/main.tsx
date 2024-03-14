@@ -1,5 +1,5 @@
-import { BillingView } from "./billing-view";
-import { TemperaturesView } from "./temperatures-view";
+import { BillingView } from "./views/billing-view";
+import { TemperaturesView } from "./views/temperatures-view";
 import React, { useState, createRef, useCallback } from "react";
 import { locationInfoAtom } from "./app-state/canadian-weather-state";
 import {
@@ -41,18 +41,13 @@ import {
   electricityPricePerKwhAtom,
   naturalGasPricePerCubicMetreAtom,
 } from "./app-state/canadian-utilities-state";
+import { EquipmentEfficiencyView } from "./views/equipment-efficiency-view";
 
 export const Main: React.FC<{}> = (props) => {
-  const [floorSpaceSqFt, setFloorSpaceSqFt] = useAtom(floorSpaceSqFtAtom);
-
   const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
-  const [coolingSetPointC, setCoolingSetPointC] = useAtom(coolingSetPointCAtom);
-  const [heatingSetPointC, setHeatingSetPointC] = useAtom(heatingSetPointCAtom);
-
-  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useAtom(
-    auxSwitchoverTempCAtom
-  );
+  const [coolingSetPointC] = useAtom(coolingSetPointCAtom);
+  const [heatingSetPointC] = useAtom(heatingSetPointCAtom);
 
   const simulations = useAtomValue(simulationsAtom);
 
@@ -141,6 +136,7 @@ export const Main: React.FC<{}> = (props) => {
                 coolingSetPointC={coolingSetPointC}
                 simulationResult={simulations[0]}
               />
+              <EquipmentEfficiencyView />
               {/*
             // TODO(jlfwong): Create a toggle for this
             <PassiveLoadsView simulationResult={simulations[0]} />

@@ -3,10 +3,8 @@ import { AirConditioner } from "../../lib/air-conditioner";
 import { ElectricFurnace } from "../../lib/electric-furnace";
 import { GasFurnace } from "../../lib/gas-furnace";
 import { elevationFeetAtom } from "./canadian-weather-state";
-import { AirSourceHeatPump } from "../../lib/heatpump";
-import { selectedHeatpumpsAtom } from "./selected-heatpumps-state";
 
-export const acAtom = atom<AirConditioner | null>((get) => {
+export const airConditionerAtom = atom<AirConditioner | null>((get) => {
   const elevationFeet = get(elevationFeetAtom);
   if (!elevationFeet) return null;
 
