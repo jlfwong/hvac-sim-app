@@ -117,6 +117,8 @@ function derateCapacityPerformanceRating(
   const t2 = t * t;
 
   // TODO(jlfwong): Ask Baker & Calvin where these numbers come from
+  // Unsurprisingly, these create some weird non-monotonicity in the
+  // efficiency curves
   if (t < 25) {
     defrostFactor = -0.0002022 * t2 + 0.004177 * t + 0.9606;
   } else {
