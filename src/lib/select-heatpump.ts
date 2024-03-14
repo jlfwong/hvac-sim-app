@@ -177,7 +177,7 @@ export function selectHeatpump(options: {
         outsideAirTempF < options.designHeatingOutsideAirTempF
           ? options.designHeatingOutsideAirTempF
           : options.designCoolingOutsideAirTempF;
-      const btusPerHourNeeded = worstCaseThermalLoadBtusPerHour({
+      const btusPerHourNeeded = -worstCaseThermalLoadBtusPerHour({
         insideAirTempF,
         outsideAirTempF,
         loadSources: options.loadSources,
@@ -207,7 +207,7 @@ export function selectHeatpump(options: {
       }
 
       // We weight based on # of btus, instead of # of hours
-      const weight = hourCount * btusPerHourNeeded;
+      const weight = hourCount * Math.abs(btusPerHourNeeded);
 
       totalSum += rating.coefficientOfPerformance * weight;
       totalWeight += weight;
