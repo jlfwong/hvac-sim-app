@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import {
-  DualFuelTwoStageHVACSystem,
+  TwoStageHeatPumpWithAuxHeating,
   SimpleHVACSystem,
 } from "../../lib/hvac-system";
 import {
@@ -15,6 +15,7 @@ import {
 } from "./equipment-state";
 import { HVACSystem } from "../../lib/types";
 import { selectedHeatpumpsAtom } from "./selected-heatpumps-state";
+import type { DateTime } from "luxon";
 
 export const gasFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
   const gasFurnace = get(gasFurnaceAtom);
@@ -49,13 +50,14 @@ export const electricFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
 export const dualFuelSystemAtom = atom<HVACSystem[] | null>((get) => {
   const candidates = get(selectedHeatpumpsAtom);
   const gasFurnace = get(gasFurnaceAtom);
+  const auxSwitchoverTempF = get(auxSwitchoverTempFAtom);
 
   if (!candidates || !gasFurnace) return null;
 
   return candidates.map((c) => {
     const heatpump = c.heatpump;
-    return new DualFuelTwoStageHVACSystem(
-      `Dual Fuel Two Stage (${heatpump.name} + ${gasFurnace.name})`,
+    return new TwoStageHeatPumpWithAuxHeating(
+      `Heat Pump with Gas Backup (${heatpump.name} + ${gasFurnace.name})`,
       {
         coolingSetPointF: get(coolingSetPointFAtom),
         coolingAppliance: heatpump,
@@ -63,8 +65,14 @@ export const dualFuelSystemAtom = atom<HVACSystem[] | null>((get) => {
         heatingSetPointF: get(heatingSetPointFAtom),
         heatingAppliance: heatpump,
 
-        auxSwitchoverTempF: get(auxSwitchoverTempFAtom),
         auxHeatingAppliance: gasFurnace,
+        shouldEngageAuxHeating: (options: {
+          localTime: DateTime;
+          insideAirTempF: number;
+          outsideAirTempF: number;
+        }) => {
+          return options.outsideAirTempF <= auxSwitchoverTempF;
+        },
 
         // Like the "Compressor Stage 1 Max Runtime" setting in
         // ecobee
@@ -78,16 +86,73 @@ export const dualFuelSystemAtom = atom<HVACSystem[] | null>((get) => {
   });
 });
 
+export const heatPumpWithElectricBackupSystemAtom = atom<HVACSystem[] | null>(
+  (get) => {
+    const candidates = get(selectedHeatpumpsAtom);
+    const electricFurnace = get(electricFurnaceAtom);
+    const heatingSetPointF = get(heatingSetPointFAtom);
+
+    if (!candidates || !electricFurnace) return null;
+
+    return candidates.map((c) => {
+      const heatpump = c.heatpump;
+      return new TwoStageHeatPumpWithAuxHeating(
+        `Heat Pump with Electric Backup (${heatpump.name} + ${electricFurnace.name})`,
+        {
+          coolingSetPointF: get(coolingSetPointFAtom),
+          coolingAppliance: heatpump,
+
+          heatingSetPointF: heatingSetPointF,
+          heatingAppliance: heatpump,
+
+          auxHeatingAppliance: electricFurnace,
+          shouldEngageAuxHeating: (options: {
+            localTime: DateTime;
+            insideAirTempF: number;
+            outsideAirTempF: number;
+          }) => {
+            // For electric backup, we only ever use the aux backup when
+            // absolutely necessary, since it will always be more expensive than
+            // running the heatpump.
+            //
+            // To detect this, we see if the inside air temp has drifted too far
+            // below the target temperature. The value of 2.6F corresponds to the
+            // "balanced" option for the ecobee with automatic staging.
+            return options.insideAirTempF < heatingSetPointF - 2.6;
+          },
+
+          // Like the "Compressor Stage 1 Max Runtime" setting in
+          // ecobee
+          stage1MaxDurationMinutes: 120,
+
+          // Like the "Compressor Stage 2 Temperature Delta" setting
+          // in ecobee
+          stage2TemperatureDeltaF: 1,
+        }
+      );
+    });
+  }
+);
+
 export const systemsToSimulateAtom = atom<HVACSystem[] | null>((get) => {
   const dualFuelSystem = get(dualFuelSystemAtom);
   const gasFurnaceSystem = get(gasFurnaceSystemAtom);
+  const heatPumpWithElectricBackupSystem = get(
+    heatPumpWithElectricBackupSystemAtom
+  );
   const electricFurnaceSystem = get(electricFurnaceSystemAtom);
 
-  if (!dualFuelSystem || !gasFurnaceSystem || !electricFurnaceSystem) {
+  if (
+    !dualFuelSystem ||
+    !gasFurnaceSystem ||
+    !electricFurnaceSystem ||
+    !heatPumpWithElectricBackupSystem
+  ) {
     return null;
   }
 
   return dualFuelSystem
     .slice(0, 1)
+    .concat(heatPumpWithElectricBackupSystem.slice(0, 1))
     .concat([gasFurnaceSystem, electricFurnaceSystem]);
 });

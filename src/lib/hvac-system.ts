@@ -76,7 +76,7 @@ export class SimpleHVACSystem implements HVACSystem {
   }
 }
 
-export class DualFuelTwoStageHVACSystem implements HVACSystem {
+export class TwoStageHeatPumpWithAuxHeating implements HVACSystem {
   private stage1MaxDurationMs: number;
   private mode: "heating" | "cooling" | "off" = "off";
   private heatingModeStartTimestamp: number = 0;
@@ -91,7 +91,11 @@ export class DualFuelTwoStageHVACSystem implements HVACSystem {
       heatingSetPointF: number;
 
       auxHeatingAppliance: HeatingAppliance;
-      auxSwitchoverTempF: number;
+      shouldEngageAuxHeating: (options: {
+        localTime: DateTime;
+        insideAirTempF: number;
+        outsideAirTempF: number;
+      }) => boolean;
 
       stage1MaxDurationMinutes: number;
       stage2TemperatureDeltaF: number;
@@ -135,7 +139,7 @@ export class DualFuelTwoStageHVACSystem implements HVACSystem {
     }
 
     if (this.mode === "heating") {
-      if (options.outsideAirTempF < this.options.auxSwitchoverTempF) {
+      if (this.options.shouldEngageAuxHeating(options)) {
         return this.options.auxHeatingAppliance.getHeatingPerformanceInfo({
           insideAirTempF: options.insideAirTempF,
           outsideAirTempF: options.outsideAirTempF,

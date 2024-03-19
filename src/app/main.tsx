@@ -117,7 +117,7 @@ export const Main: React.FC<{}> = (props) => {
                 atom={coolingSetPointCAtom}
               />
               <TemperatureControl
-                label="Switch to backup heat below (°C)"
+                label="Switch to gas heating below (°C)"
                 atom={auxSwitchoverTempCAtom}
               />
             </HStack>
