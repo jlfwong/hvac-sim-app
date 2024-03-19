@@ -140,8 +140,8 @@ export const BillingView: React.FC<{
   return (
     <ChartGroup>
       <ChartHeader>
-        Energy Bills (${props.pricePerKwh.toFixed(2)}/kWh, $
-        {props.pricePerCubicMetre.toFixed(2)}/m<sup>3</sup>)
+        Energy Bills (Electricity @ ${props.pricePerKwh.toFixed(2)}/kWh, Natural
+        Gas @ ${props.pricePerCubicMetre.toFixed(2)}/m<sup>3</sup>)
       </ChartHeader>
       <svg
         width={width + margin.left + margin.right}

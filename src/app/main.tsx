@@ -42,6 +42,7 @@ import {
   naturalGasPricePerCubicMetreAtom,
 } from "./app-state/canadian-utilities-state";
 import { EquipmentEfficiencyView } from "./views/equipment-efficiency-view";
+import { PassiveLoadsView } from "./views/passive-loads-view";
 
 export const Main: React.FC<{}> = (props) => {
   const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
@@ -136,11 +137,10 @@ export const Main: React.FC<{}> = (props) => {
                 coolingSetPointC={coolingSetPointC}
                 simulationResult={simulations[0]}
               />
+              {/* Advanced views that we'll hide for now
               <EquipmentEfficiencyView />
-              {/*
-            // TODO(jlfwong): Create a toggle for this
-            <PassiveLoadsView simulationResult={simulations[0]} />
-            */}
+              <PassiveLoadsView simulationResult={simulations[0]} />
+              */}
             </>
           )}
       </Flex>

@@ -175,7 +175,7 @@ export const EquipmentEfficiencyView: React.FC<{}> = () => {
     })
     .filter(notEmpty);
 
-  const heatpumps = selectedHeatpumps.slice(0, 3);
+  const heatpumps = selectedHeatpumps.slice(0, 1);
 
   const heatpumpCostsByTemperature = heatpumps.map<EfficiencyDatum[]>((hp) => {
     const { heatpump } = hp;
@@ -278,7 +278,6 @@ export const EquipmentEfficiencyView: React.FC<{}> = () => {
               />
             );
           })}
-          {/* TODO(jlfwong): Change scale to celcius */}
           <AxisBottom
             scale={xScale}
             top={height}
