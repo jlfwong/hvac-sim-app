@@ -8,13 +8,17 @@ import {
   coolingSetPointFAtom,
   heatingSetPointFAtom,
 } from "./config-state";
-import { gasFurnaceAtom, acAtom, electricFurnaceAtom } from "./equipment-state";
+import {
+  gasFurnaceAtom,
+  airConditionerAtom,
+  electricFurnaceAtom,
+} from "./equipment-state";
 import { HVACSystem } from "../../lib/types";
 import { selectedHeatpumpsAtom } from "./selected-heatpumps-state";
 
 export const gasFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
   const gasFurnace = get(gasFurnaceAtom);
-  const ac = get(acAtom);
+  const ac = get(airConditionerAtom);
 
   if (!gasFurnace || !ac) return null;
 
@@ -29,7 +33,7 @@ export const gasFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
 
 export const electricFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
   const electricFurnace = get(electricFurnaceAtom);
-  const ac = get(acAtom);
+  const ac = get(airConditionerAtom);
 
   if (!electricFurnace || !ac) return null;
 

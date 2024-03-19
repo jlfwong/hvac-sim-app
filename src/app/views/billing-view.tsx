@@ -10,10 +10,10 @@ import { LegendOrdinal } from "@visx/legend";
 import { scaleBand, scaleLinear, scaleOrdinal } from "@visx/scale";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { GridRows } from "@visx/grid";
-import { HVACSimulationResult } from "../lib/simulate";
+import { HVACSimulationResult } from "../../lib/simulate";
 import { DateTime } from "luxon";
-import { EnergyBill } from "../lib/billing";
-import { ChartGroup, ChartHeader } from "./chart";
+import { EnergyBill } from "../../lib/billing";
+import { ChartGroup, ChartHeader } from "../chart";
 
 export const BillingView: React.FC<{
   pricePerKwh: number;
@@ -89,7 +89,7 @@ export const BillingView: React.FC<{
     range: [height, 0],
   }).nice();
 
-  const color = scaleOrdinal<string>()
+  const color = scaleOrdinal<string, string>()
     .domain(props.simulations.map((s) => s.name))
     .range(schemeSet1);
 
@@ -140,8 +140,8 @@ export const BillingView: React.FC<{
   return (
     <ChartGroup>
       <ChartHeader>
-        Energy Bills ({props.pricePerKwh.toFixed(2)}/kWh, $
-        {props.pricePerCubicMetre.toFixed(2)}/m<sup>3</sup>)
+        Energy Bills (Electricity @ ${props.pricePerKwh.toFixed(2)}/kWh, Natural
+        Gas @ ${props.pricePerCubicMetre.toFixed(2)}/m<sup>3</sup>)
       </ChartHeader>
       <svg
         width={width + margin.left + margin.right}

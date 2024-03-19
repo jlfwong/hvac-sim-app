@@ -4,9 +4,9 @@ import { LinePath, Bar } from "@visx/shape";
 import { scaleUtc, scaleLinear, scaleOrdinal } from "@visx/scale";
 import { AxisLeft, AxisBottom } from "@visx/axis";
 import { GridRows } from "@visx/grid";
-import { HVACSimulationResult } from "../lib/simulate";
-import { fahrenheitToCelcius } from "../lib/units";
-import { ChartGroup, ChartHeader } from "./chart";
+import { HVACSimulationResult } from "../../lib/simulate";
+import { fahrenheitToCelcius } from "../../lib/units";
+import { ChartGroup, ChartHeader } from "../chart";
 import { LegendOrdinal } from "@visx/legend";
 
 export const TemperaturesView: React.FC<{

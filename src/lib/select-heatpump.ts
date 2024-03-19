@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { AirSourceHeatPump } from "./heatpump";
 import { ThermalLoadSource } from "./thermal-loads";
 import { BinnedTemperatures } from "./weather";
+import type { WeatherSnapshot } from "./types";
 
 // TODO: The python codebase looks like it uses the 99%-ile and 1%-ile for
 // pre-selection, but then still requires 100% coverage, which will include
@@ -12,6 +13,66 @@ export interface HeatpumpSelectionResult {
   averageCoefficientOfPerformance: number;
   underCapacityHeatingHours: number;
   underCapacityCoolingHours: number;
+}
+
+function worstCaseWeatherConditions(
+  insideAirTempF: number,
+  outsideAirTempF: number
+): WeatherSnapshot {
+  const colderOutside = insideAirTempF > outsideAirTempF;
+
+  return {
+    outsideAirTempF,
+    windSpeedMph: 0,
+
+    // TODO(jlfwong): Choose sane values for humidity.
+    relativeHumidityPercent: colderOutside ? 20 : 90,
+
+    cloudCoverPercent: colderOutside ? 100 : 0,
+
+    solarIrradiance: colderOutside
+      ? {
+          wattsPerSquareMeter: 0,
+          altitudeDegrees: -90,
+        }
+      : {
+          // TODO(jlfwong): Ideally this would be based on the maximum
+          // solar irradiance experienced at the given latitude.
+          wattsPerSquareMeter: 850,
+          altitudeDegrees: 58,
+        },
+  };
+}
+
+export function worstCaseThermalLoadBtusPerHour(options: {
+  insideAirTempF: number;
+  outsideAirTempF: number;
+  loadSources: ThermalLoadSource[];
+}): number {
+  // We're looking for worst case scenarios, so we'll make assumptions for
+  // weather based on that.
+  let colderOutside = options.insideAirTempF < options.outsideAirTempF;
+
+  const dateTime = DateTime.fromObject({
+    year: 2023,
+    month: 1,
+    day: 1,
+    hour: colderOutside ? 2 : 14,
+  });
+
+  const loads = options.loadSources.map<number>((source) => {
+    return source.getBtusPerHour(
+      dateTime,
+      options.insideAirTempF,
+      worstCaseWeatherConditions(
+        options.insideAirTempF,
+        options.outsideAirTempF
+      )
+    );
+  });
+
+  const totalLoad = loads.reduce((acc, x) => acc + x, 0);
+  return totalLoad;
 }
 
 export function selectHeatpump(options: {
@@ -39,59 +100,22 @@ export function selectHeatpump(options: {
   // temperatures as an optimization.
   binnedTemperatures: BinnedTemperatures;
 }): HeatpumpSelectionResult[] {
-  function getBtusPerHourLoad(insideAirTempF: number, outsideAirTempF: number) {
-    // We're looking for worst case scenarios, so we'll make assumptions for
-    // weather based on that.
-    let colderOutside = insideAirTempF < outsideAirTempF;
-
-    const dateTime = DateTime.fromObject({
-      year: 2023,
-      month: 1,
-      day: 1,
-      hour: colderOutside ? 2 : 14,
-    });
-
-    return options.loadSources
-      .map<number>((source) => {
-        return source.getBtusPerHour(dateTime, insideAirTempF, {
-          outsideAirTempF,
-          windSpeedMph: 0,
-
-          // TODO(jlfwong): Choose sane values for humidity.
-          relativeHumidityPercent: 90,
-
-          cloudCoverPercent: colderOutside ? 100 : 0,
-
-          solarIrradiance: colderOutside
-            ? {
-                wattsPerSquareMeter: 0,
-                altitudeDegrees: -90,
-              }
-            : {
-                // TODO(jlfwong): Ideally this would be based on the maximum
-                // solar irradiance experienced at the given latitude.
-                wattsPerSquareMeter: 850,
-                altitudeDegrees: 58,
-              },
-        });
-      })
-      .reduce((acc, x) => acc + x, 0);
-  }
-
   const btusPerHourNeededHeating = Math.max(
     0,
-    -getBtusPerHourLoad(
-      options.heatingSetPointInsideTempF,
-      options.designHeatingOutsideAirTempF
-    )
+    -worstCaseThermalLoadBtusPerHour({
+      insideAirTempF: options.heatingSetPointInsideTempF,
+      outsideAirTempF: options.designHeatingOutsideAirTempF,
+      loadSources: options.loadSources,
+    })
   );
 
   const btusPerHourNeededCooling = Math.min(
     0,
-    -getBtusPerHourLoad(
-      options.coolingSetPointInsideTempF,
-      options.designCoolingOutsideAirTempF
-    )
+    -worstCaseThermalLoadBtusPerHour({
+      insideAirTempF: options.coolingSetPointInsideTempF,
+      outsideAirTempF: options.designCoolingOutsideAirTempF,
+      loadSources: options.loadSources,
+    })
   );
 
   // Step 1: Filter out heat pumps which lack the capacity for the design
@@ -153,10 +177,20 @@ export function selectHeatpump(options: {
         outsideAirTempF < options.designHeatingOutsideAirTempF
           ? options.designHeatingOutsideAirTempF
           : options.designCoolingOutsideAirTempF;
-      const btusPerHourNeeded = getBtusPerHourLoad(
+      const btusPerHourNeeded = -worstCaseThermalLoadBtusPerHour({
         insideAirTempF,
-        outsideAirTempF
-      );
+        outsideAirTempF,
+        loadSources: options.loadSources,
+      });
+
+      if (mode === "heating" && btusPerHourNeeded < 0) {
+        // There are situations where it's colder outside than inside, but the
+        // thermal load on the house is still positive. Ignore these cases for
+        // the purposes of calibrating the heat pump, since we're unlikely to
+        // actually turn on the heat pump in that case.
+        return;
+      }
+
       const rating = pump.getEstimatedPerformanceRating({
         power: { type: "btus", btusPerHourNeeded },
         mode,
@@ -166,14 +200,14 @@ export function selectHeatpump(options: {
 
       if (Math.abs(rating.btusPerHour) < Math.abs(btusPerHourNeeded)) {
         if (insideAirTempF > outsideAirTempF) {
-          underCapacityCoolingHours += 1;
+          underCapacityCoolingHours += hourCount;
         } else {
-          underCapacityHeatingHours += 1;
+          underCapacityHeatingHours += hourCount;
         }
       }
 
       // We weight based on # of btus, instead of # of hours
-      const weight = hourCount * btusPerHourNeeded;
+      const weight = hourCount * Math.abs(btusPerHourNeeded);
 
       totalSum += rating.coefficientOfPerformance * weight;
       totalWeight += weight;
