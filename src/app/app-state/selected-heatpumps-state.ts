@@ -141,7 +141,10 @@ export const selectedHeatpumpsAtom = atom<HeatpumpSelectionResult[] | null>(
 
     let designHeatingOutsideAirTempF =
       weatherInfo.binnedTemperatures.getTempAtPercentile(1);
+
     if (designHeatingOutsideAirTempF && auxSwitchoverTempF != null) {
+      // TOOD(jlfwong): This optimization doesn't make sense for the full
+      // electric option.
       designHeatingOutsideAirTempF = Math.max(
         designHeatingOutsideAirTempF,
         auxSwitchoverTempF

@@ -41,10 +41,11 @@ export const naturalGasPricePerCubicMetreAtom = atom<number | null>((get) => {
 /*
 Sources
 - [comparison-electricity-prices](https://www.hydroquebec.com/data/documents-donnees/pdf/comparison-electricity-prices.pdf)
-- These rates are heavily skewed for Alberta. See e.g. [Regulated Rate Option \(RRO\)](https://www1.enmax.com/rro)
+- The rate for Alberta specifically is overidden because the data from Hydro Quebec represents a historic and temporary high.
+  The rates for Alberta instead come from an average of 2023 rates on https://www1.enmax.com/rro
 
 * Quebec (QC): 7.81 c/kWh
-* Alberta (AB): (29.80 + 27.78) / 2 = 28.79 c/kWh
+* Alberta (AB): 19 c/kWh
 * Prince Edward Island (PE): 17.78 c/kWh
 * Nova Scotia (NS): 18.27 c/kWh
 * New Brunswick (NB): 14.61 c/kWh
@@ -56,7 +57,7 @@ Sources
 */
 const electricityPricePerKwhByProvince: { [key: string]: number } = {
   QC: 0.0781,
-  AB: 0.2879,
+  AB: 0.19,
   PE: 0.1778,
   NS: 0.1827,
   NB: 0.1461,

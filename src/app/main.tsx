@@ -1,6 +1,6 @@
 import { BillingView } from "./views/billing-view";
 import { TemperaturesView } from "./views/temperatures-view";
-import React, { useState, createRef, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { locationInfoAtom } from "./app-state/canadian-weather-state";
 import {
   auxSwitchoverTempCAtom,
@@ -16,21 +16,9 @@ import {
   Input,
   Box,
   chakra,
-  NumberInput,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInputField,
-  NumberInputStepper,
   type InputProps,
 } from "@chakra-ui/react";
-import {
-  useAtom,
-  useAtomValue,
-  type Atom,
-  type WritableAtom,
-  type PrimitiveAtom,
-  useSetAtom,
-} from "jotai";
+import { useAtom, useAtomValue, type PrimitiveAtom, useSetAtom } from "jotai";
 import {
   coolingSetPointCAtom,
   floorSpaceSqFtAtom,
@@ -41,8 +29,6 @@ import {
   electricityPricePerKwhAtom,
   naturalGasPricePerCubicMetreAtom,
 } from "./app-state/canadian-utilities-state";
-import { EquipmentEfficiencyView } from "./views/equipment-efficiency-view";
-import { PassiveLoadsView } from "./views/passive-loads-view";
 
 export const Main: React.FC<{}> = (props) => {
   const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
@@ -123,6 +109,20 @@ export const Main: React.FC<{}> = (props) => {
             </HStack>
           </Flex>
         </Flex>
+        {simulations && (
+          <Box>
+            <ul>
+              {simulations.map((s) => {
+                return (
+                  <li>
+                    <strong>{s.name}: </strong>
+                    {(s.emissionsGramsCO2e / 1e6).toFixed(1)} tons CO2e/year
+                  </li>
+                );
+              })}
+            </ul>
+          </Box>
+        )}
         {simulations &&
           naturalGasPricePerCubicMetre != null &&
           electricityPricePerKwh != null && (
