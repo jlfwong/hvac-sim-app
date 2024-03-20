@@ -59,7 +59,7 @@ const kelvinHeatPumpCandidatesAtom = atom<AirSourceHeatPump[] | null>((get) => {
 });
 
 const topRatedJsonAtom = asyncAtomOrNull<any>((get, { signal }) => {
-  return fetchJSON<any>(`./data/equipment/top_rated.json`);
+  return fetchJSON<any>(`./data/equipment/top_rated_ca.json`);
 });
 
 const topRatedHeatPumpCandidatesAtom = atom<AirSourceHeatPump[] | null>(
