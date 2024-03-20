@@ -151,12 +151,9 @@ export const systemsToSimulateAtom = atom<HVACSystem[] | null>((get) => {
     return null;
   }
 
-  // TODO(jlfwong): Clean this up so there isn't code commented out without
-  // explanation
-  return (
-    dualFuelSystem
-      .slice(0, 1)
-      /*.concat(heatPumpWithElectricBackupSystem.slice(0, 1))*/
-      .concat([gasFurnaceSystem /*electricFurnaceSystem*/])
-  );
+  // TODO(jlfwong): Add support for using electric furnace as reference, and for
+  // selecting a gas backup instead of an electric backup.
+  return heatPumpWithElectricBackupSystem
+    .slice(0, 1)
+    .concat([gasFurnaceSystem]);
 });
