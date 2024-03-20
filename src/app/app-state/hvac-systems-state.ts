@@ -151,8 +151,12 @@ export const systemsToSimulateAtom = atom<HVACSystem[] | null>((get) => {
     return null;
   }
 
-  return dualFuelSystem
-    .slice(0, 1)
-    .concat(heatPumpWithElectricBackupSystem.slice(0, 1))
-    .concat([gasFurnaceSystem, electricFurnaceSystem]);
+  // TODO(jlfwong): Clean this up so there isn't code commented out without
+  // explanation
+  return (
+    dualFuelSystem
+      .slice(0, 1)
+      /*.concat(heatPumpWithElectricBackupSystem.slice(0, 1))*/
+      .concat([gasFurnaceSystem /*electricFurnaceSystem*/])
+  );
 });

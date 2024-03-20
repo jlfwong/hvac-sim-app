@@ -44,6 +44,60 @@ import {
 import { EquipmentEfficiencyView } from "./views/equipment-efficiency-view";
 import { PassiveLoadsView } from "./views/passive-loads-view";
 
+const Paragraphs = chakra(Flex, {
+  baseStyle: {
+    flexDirection: "column",
+    marginTop: "20px",
+    marginBottom: "20px",
+    fontSize: "25px",
+    fontFamily: "Averia Serif Libre",
+    lineHeight: "150%",
+    gap: "1em",
+  },
+});
+
+export const HeroMessaging: React.FC<{}> = (props) => {
+  return (
+    <Paragraphs>
+      <p>
+        To end climate change, we Canadians need to stop burning fossil fuels
+        inside our homes. But for all of us with gas furnaces in our homes, what
+        are we supposed to do?{" "}
+        <strong style={{ color: "#1D82F8" }}>Freeze</strong>?
+      </p>
+
+      <p>
+        No, of course not. Thankfully, we have a modern solution to{" "}
+        <strong style={{ color: "#89C606" }}>all-electric</strong> heating
+        that’s way more cost-efficient than baseboard heaters. They’re called{" "}
+        <strong style={{ color: "#F8861D" }}>heat pumps</strong>.
+      </p>
+
+      <img src="/images/heatpump-hero.webp" />
+
+      <p>
+        In the last decade, heat pumps have gotten way more efficient in cold
+        climates. They're ready for the Canadian winters—6% of Canadian homes
+        already use them.
+      </p>
+
+      <p>
+        Replacing a gas furnace with a heat pump in your home is one of the most
+        effective ways of reducing your emissions, and in many parts of Canada,
+        you’ll save $$$ when you do it.
+      </p>
+
+      <p>
+        Want to estimate utility bills for your own house? Calculating utility
+        bills for heat pumps v.s. gas furnaces is tricky because it depends on
+        local climate data, the price of gas, and the price of electricity. To
+        help, we built a calculator for you. Enter in some basic information
+        about your home to try it out.
+      </p>
+    </Paragraphs>
+  );
+};
+
 export const Main: React.FC<{}> = (props) => {
   const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
@@ -61,9 +115,7 @@ export const Main: React.FC<{}> = (props) => {
     <Center mb={"40px"}>
       <Flex direction="column" gap={"40px"} width={"860px"} maxWidth={"100vw"}>
         <Flex direction="column">
-          <Heading as="h1" size="4xl" mb={"20px"}>
-            Heat Pump Calculator
-          </Heading>
+          <HeroMessaging />
           <Flex direction="column" gap={"20px"}>
             <Flex direction="column" gap={0}>
               <HStack>
@@ -99,7 +151,7 @@ export const Main: React.FC<{}> = (props) => {
                 />
               </HStack>
               <HStack>
-                Switch to:
+                <>Quick links:</>
                 <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
                 <LocationLink postalCode="V5K 0A1" placeName="Vancouver" />
                 <LocationLink postalCode="H3H 2H9" placeName="Montreal" />
@@ -107,6 +159,8 @@ export const Main: React.FC<{}> = (props) => {
                 <LocationLink postalCode="T6G 2R3" placeName="Edmonton" />
               </HStack>
             </Flex>
+            {/* TODO(jlfwong): Move this into assumptions */}
+            {/*
             <HStack>
               <TemperatureControl
                 label="Heat when colder than (°C)"
@@ -121,28 +175,47 @@ export const Main: React.FC<{}> = (props) => {
                 atom={auxSwitchoverTempCAtom}
               />
             </HStack>
+            */}
           </Flex>
         </Flex>
         {simulations &&
-          naturalGasPricePerCubicMetre != null &&
-          electricityPricePerKwh != null && (
-            <>
-              <BillingView
-                simulations={simulations}
-                pricePerCubicMetre={naturalGasPricePerCubicMetre}
-                pricePerKwh={electricityPricePerKwh}
-              />
-              <TemperaturesView
-                heatingSetPointC={heatingSetPointC}
-                coolingSetPointC={coolingSetPointC}
-                simulationResult={simulations[0]}
-              />
-              {/* Advanced views that we'll hide for now
+        naturalGasPricePerCubicMetre != null &&
+        electricityPricePerKwh != null ? (
+          <>
+            <BillingView
+              simulations={simulations}
+              pricePerCubicMetre={naturalGasPricePerCubicMetre}
+              pricePerKwh={electricityPricePerKwh}
+            />
+            {/* Advanced views that we'll hide for now
               <EquipmentEfficiencyView />
               <PassiveLoadsView simulationResult={simulations[0]} />
               */}
-            </>
-          )}
+            <Paragraphs>
+              <p>
+                <strong>Skeptical of the math?</strong> Read on to check our
+                assumptions, look at our sources, or if you’re feeling
+                particularly adventurous, read the{" "}
+                <a
+                  style={{ textDecoration: "underline" }}
+                  href="https://github.com/jlfwong/hvac-sim-app"
+                >
+                  full source code
+                </a>
+                .
+              </p>
+              <p>First, we pull hourly weather data for all of 2023.</p>
+            </Paragraphs>
+            <TemperaturesView
+              heatingSetPointC={heatingSetPointC}
+              coolingSetPointC={coolingSetPointC}
+              simulationResult={simulations[0]}
+            />
+          </>
+        ) : (
+          <Box height={"1400px"} />
+        )}
+        {/* TODO(jlfwong): Loading animation graphic instead of the 1400px box */}
       </Flex>
     </Center>
   );
@@ -171,7 +244,7 @@ const LocationLink: React.FC<{
   );
   return (
     <Box as="a" href="#" onClick={onClick} textDecoration={"underline"}>
-      {props.placeName} ({props.postalCode})
+      {props.placeName}
     </Box>
   );
 };
