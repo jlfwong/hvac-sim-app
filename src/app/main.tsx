@@ -1,4 +1,4 @@
-import { BillingView } from "./views/billing-view";
+import { BillingView } from "./views/monthly-billing-view";
 import { TemperaturesView } from "./views/temperatures-view";
 import React, { useState, useCallback } from "react";
 import { locationInfoAtom } from "./app-state/canadian-weather-state";
@@ -29,6 +29,9 @@ import {
   electricityPricePerKwhAtom,
   naturalGasPricePerCubicMetreAtom,
 } from "./app-state/canadian-utilities-state";
+import { EmissionsView } from "./views/emissions-view";
+import { AnnualBillingView } from "./views/annual-billing-view";
+import { PassiveLoadsView } from "./views/passive-loads-view";
 
 const Paragraphs = chakra(Flex, {
   baseStyle: {
@@ -85,6 +88,7 @@ export const HeroMessaging: React.FC<{}> = (props) => {
 export const Main: React.FC<{}> = (props) => {
   const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
+  const floorSpaceSqFt = useAtomValue(floorSpaceSqFtAtom);
   const [coolingSetPointC] = useAtom(coolingSetPointCAtom);
   const [heatingSetPointC] = useAtom(heatingSetPointCAtom);
 
@@ -162,32 +166,23 @@ export const Main: React.FC<{}> = (props) => {
             */}
           </Flex>
         </Flex>
-        {simulations && (
-          <Box>
-            <ul>
-              {simulations.map((s) => {
-                return (
-                  <li>
-                    <strong>{s.name}: </strong>
-                    {(s.emissionsGramsCO2e / 1e6).toFixed(1)} tons CO2e/year
-                  </li>
-                );
-              })}
-            </ul>
-          </Box>
+
+        {simulations && locationInfo && (
+          <Paragraphs>
+            <p>
+              Here are the results for a {floorSpaceSqFt} square foot home in{" "}
+              {locationInfo?.placeName.replace(/\s+\(.*\)$/g, "")}:
+            </p>
+          </Paragraphs>
         )}
+        <AnnualBillingView />
+        <EmissionsView />
         {simulations &&
         naturalGasPricePerCubicMetre != null &&
         electricityPricePerKwh != null ? (
           <>
-            <BillingView
-              simulations={simulations}
-              pricePerCubicMetre={naturalGasPricePerCubicMetre}
-              pricePerKwh={electricityPricePerKwh}
-            />
             {/* Advanced views that we'll hide for now
               <EquipmentEfficiencyView />
-              <PassiveLoadsView simulationResult={simulations[0]} />
               */}
             <Paragraphs>
               <p>
@@ -202,13 +197,49 @@ export const Main: React.FC<{}> = (props) => {
                 </a>
                 .
               </p>
-              <p>First, we pull hourly weather data for all of 2023.</p>
+              <p>
+                First, we retrieve location-specific hourly weather data for all
+                of 2023.
+              </p>
             </Paragraphs>
             <TemperaturesView
               heatingSetPointC={heatingSetPointC}
               coolingSetPointC={coolingSetPointC}
               simulationResult={simulations[0]}
             />
+            <Paragraphs>
+              <p>
+                Now we run a simulation. At each point in time, we use weather
+                information and the simulated internal temperature to calculate
+                the thermal loads on the house.
+              </p>
+            </Paragraphs>
+            <PassiveLoadsView simulationResult={simulations[0]} />
+            <Paragraphs>
+              <p>
+                Using a simulated thermostat, the simulation turns heating and
+                cooling appliances on and off. The passive thermal loads on the
+                house and the thermal loads from the heating and cooling
+                appliances are then used to update the internal air temperature.
+              </p>
+              <p>
+                As we&rsquo;re recording appliances turning on and off, we
+                record how much energy they&rsquo;re using. We use provincial
+                gas and electricity prices from 2023 to estimate costs.
+              </p>
+            </Paragraphs>
+            <BillingView
+              simulations={simulations}
+              pricePerCubicMetre={naturalGasPricePerCubicMetre}
+              pricePerKwh={electricityPricePerKwh}
+            />
+            <Paragraphs>
+              <p>
+                Once we have the total energy usage for the year, we can
+                calculate emissions information using regional information on
+                the carbon intensity of the electrical grid.
+              </p>
+            </Paragraphs>
           </>
         ) : (
           <Box height={"1400px"} />

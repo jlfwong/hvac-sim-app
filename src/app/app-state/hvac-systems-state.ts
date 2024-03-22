@@ -56,33 +56,30 @@ export const dualFuelSystemAtom = atom<HVACSystem[] | null>((get) => {
 
   return candidates.map((c) => {
     const heatpump = c.heatpump;
-    return new TwoStageHeatPumpWithAuxHeating(
-      `Heat Pump with Gas Backup (${heatpump.name} + ${gasFurnace.name})`,
-      {
-        coolingSetPointF: get(coolingSetPointFAtom),
-        coolingAppliance: heatpump,
+    return new TwoStageHeatPumpWithAuxHeating(`Heat Pump (Gas Backup)`, {
+      coolingSetPointF: get(coolingSetPointFAtom),
+      coolingAppliance: heatpump,
 
-        heatingSetPointF: get(heatingSetPointFAtom),
-        heatingAppliance: heatpump,
+      heatingSetPointF: get(heatingSetPointFAtom),
+      heatingAppliance: heatpump,
 
-        auxHeatingAppliance: gasFurnace,
-        shouldEngageAuxHeating: (options: {
-          localTime: DateTime;
-          insideAirTempF: number;
-          outsideAirTempF: number;
-        }) => {
-          return options.outsideAirTempF <= auxSwitchoverTempF;
-        },
+      auxHeatingAppliance: gasFurnace,
+      shouldEngageAuxHeating: (options: {
+        localTime: DateTime;
+        insideAirTempF: number;
+        outsideAirTempF: number;
+      }) => {
+        return options.outsideAirTempF <= auxSwitchoverTempF;
+      },
 
-        // Like the "Compressor Stage 1 Max Runtime" setting in
-        // ecobee
-        stage1MaxDurationMinutes: 120,
+      // Like the "Compressor Stage 1 Max Runtime" setting in
+      // ecobee
+      stage1MaxDurationMinutes: 120,
 
-        // Like the "Compressor Stage 2 Temperature Delta" setting
-        // in ecobee
-        stage2TemperatureDeltaF: 1,
-      }
-    );
+      // Like the "Compressor Stage 2 Temperature Delta" setting
+      // in ecobee
+      stage2TemperatureDeltaF: 1,
+    });
   });
 });
 
@@ -96,40 +93,37 @@ export const heatPumpWithElectricBackupSystemAtom = atom<HVACSystem[] | null>(
 
     return candidates.map((c) => {
       const heatpump = c.heatpump;
-      return new TwoStageHeatPumpWithAuxHeating(
-        `Heat Pump with Electric Backup (${heatpump.name} + ${electricFurnace.name})`,
-        {
-          coolingSetPointF: get(coolingSetPointFAtom),
-          coolingAppliance: heatpump,
+      return new TwoStageHeatPumpWithAuxHeating(`Heat Pump (Electric Backup)`, {
+        coolingSetPointF: get(coolingSetPointFAtom),
+        coolingAppliance: heatpump,
 
-          heatingSetPointF: heatingSetPointF,
-          heatingAppliance: heatpump,
+        heatingSetPointF: heatingSetPointF,
+        heatingAppliance: heatpump,
 
-          auxHeatingAppliance: electricFurnace,
-          shouldEngageAuxHeating: (options: {
-            localTime: DateTime;
-            insideAirTempF: number;
-            outsideAirTempF: number;
-          }) => {
-            // For electric backup, we only ever use the aux backup when
-            // absolutely necessary, since it will always be more expensive than
-            // running the heatpump.
-            //
-            // To detect this, we see if the inside air temp has drifted too far
-            // below the target temperature. The value of 2.6F corresponds to the
-            // "balanced" option for the ecobee with automatic staging.
-            return options.insideAirTempF < heatingSetPointF - 2.6;
-          },
+        auxHeatingAppliance: electricFurnace,
+        shouldEngageAuxHeating: (options: {
+          localTime: DateTime;
+          insideAirTempF: number;
+          outsideAirTempF: number;
+        }) => {
+          // For electric backup, we only ever use the aux backup when
+          // absolutely necessary, since it will always be more expensive than
+          // running the heatpump.
+          //
+          // To detect this, we see if the inside air temp has drifted too far
+          // below the target temperature. The value of 2.6F corresponds to the
+          // "balanced" option for the ecobee with automatic staging.
+          return options.insideAirTempF < heatingSetPointF - 2.6;
+        },
 
-          // Like the "Compressor Stage 1 Max Runtime" setting in
-          // ecobee
-          stage1MaxDurationMinutes: 120,
+        // Like the "Compressor Stage 1 Max Runtime" setting in
+        // ecobee
+        stage1MaxDurationMinutes: 120,
 
-          // Like the "Compressor Stage 2 Temperature Delta" setting
-          // in ecobee
-          stage2TemperatureDeltaF: 1,
-        }
-      );
+        // Like the "Compressor Stage 2 Temperature Delta" setting
+        // in ecobee
+        stage2TemperatureDeltaF: 1,
+      });
     });
   }
 );

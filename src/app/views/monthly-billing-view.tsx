@@ -66,6 +66,7 @@ export const BillingView: React.FC<{
   const xMajor = scaleBand<string>({
     domain: xAxisDomain,
     paddingInner: 0.2,
+    paddingOuter: 0.2,
     range: [0, width],
   });
 
