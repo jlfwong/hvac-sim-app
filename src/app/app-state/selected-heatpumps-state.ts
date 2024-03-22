@@ -69,8 +69,6 @@ const topRatedHeatPumpCandidatesAtom = atom<AirSourceHeatPump[] | null>(
 
     if (json == null || elevationFeet == null) return null;
 
-    console.log(json);
-
     const maxKey = Math.max(...Object.keys(json.brand).map((n) => parseInt(n)));
 
     const pumpInfo: {

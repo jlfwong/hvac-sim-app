@@ -123,8 +123,6 @@ export const Main: React.FC<{}> = (props) => {
                   <Input
                     id="postal-code-input"
                     value={postalCode}
-                    disabled={true}
-                    title="Arbitrary postal code input coming soon!"
                     onChange={(ev) => {
                       setPostalCode(ev.target.value);
                     }}
@@ -140,11 +138,14 @@ export const Main: React.FC<{}> = (props) => {
               </HStack>
               <HStack>
                 <>Quick links:</>
-                <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
-                <LocationLink postalCode="V5K 0A1" placeName="Vancouver" />
+                <LocationLink postalCode="M5V 0H8" placeName="Toronto" />
                 <LocationLink postalCode="H3H 2H9" placeName="Montreal" />
-                <LocationLink postalCode="R3T 2N2" placeName="Winnipeg" />
+                <LocationLink postalCode="T2P 0A9" placeName="Calgary" />
+                <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
                 <LocationLink postalCode="T6G 2R3" placeName="Edmonton" />
+                <LocationLink postalCode="V5K 0A1" placeName="Vancouver" />
+                <LocationLink postalCode="R3T 2N2" placeName="Winnipeg" />
+                <LocationLink postalCode="B3H 0A2" placeName="Halifax" />
               </HStack>
             </Flex>
             {/* TODO(jlfwong): Move this into assumptions */}
@@ -198,8 +199,8 @@ export const Main: React.FC<{}> = (props) => {
                 .
               </p>
               <p>
-                First, we retrieve location-specific hourly weather data for all
-                of 2023.
+                First, we retrieve location-specific historical hourly weather
+                data for all of 2023.
               </p>
             </Paragraphs>
             <TemperaturesView
@@ -210,8 +211,8 @@ export const Main: React.FC<{}> = (props) => {
             <Paragraphs>
               <p>
                 Now we run a simulation. At each point in time, we use weather
-                information and the simulated internal temperature to calculate
-                the thermal loads on the house.
+                information and the simulated temperature inside the house to
+                calculate the thermal loads on the house.
               </p>
             </Paragraphs>
             <PassiveLoadsView simulationResult={simulations[0]} />

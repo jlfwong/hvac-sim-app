@@ -48,12 +48,16 @@ export const locationInfoAtom = atom<LocationInfo | null>((get) => {
   }
 
   const forwardSortationArea = postalCode.substring(0, 3).toUpperCase();
+
+  if (!(forwardSortationArea in caPostalCodesJson)) {
+    return null;
+  }
+
   const info: LocationInfo = {
     ...caPostalCodesJson[forwardSortationArea],
     forwardSortationArea,
   };
 
-  if (!info) return null;
   return info;
 });
 
@@ -66,7 +70,7 @@ export const weatherInfoAtom = asyncAtomOrNull<WeatherInfo>(
     }
 
     const json = await fetchJSON<any>(
-      `./data/weather/2023-era5-${locationInfo.forwardSortationArea}.json`,
+      `https://hvac-sim-public.s3.amazonaws.com/weather/ca/era/2023-era5-${locationInfo.forwardSortationArea}.json`,
       { signal }
     );
 

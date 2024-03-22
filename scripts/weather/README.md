@@ -91,3 +91,41 @@ Postal code information is extracted from https://www.geonames.org/, in particul
 All python tool management is done via [rye](https://rye-up.com/)
 
 Project-relevant commands are specified in the `Makefile`, and run using `make`, e.g. `make server`.
+
+# S3 Upload
+
+Data is uploaded to a publicly available S3 bucket. Upload commands can be found in the ipython notebook.
+To make the data publicly accessible and available for download in-browser, the following policies are set:
+
+Bucket policy
+
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "PublicReadGetObject",
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::hvac-sim-public/*"
+            }
+        ]
+    }
+
+CORS policy
+
+    [
+        {
+            "AllowedHeaders": [
+                "*"
+            ],
+            "AllowedMethods": [
+                "GET"
+            ],
+            "AllowedOrigins": [
+                "*"
+            ],
+            "ExposeHeaders": [],
+            "MaxAgeSeconds": 3000
+        }
+    ]
