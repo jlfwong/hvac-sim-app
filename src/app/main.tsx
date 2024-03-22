@@ -61,8 +61,8 @@ export const HeroMessaging: React.FC<{}> = (props) => {
     <Paragraphs>
       <p>
         To end climate change, we Canadians need to stop burning fossil fuels
-        inside our homes. But for all of us with gas furnaces in our homes, what
-        are we supposed to do?{" "}
+        inside our homes. But for all of us that heat our homes with gas
+        furnaces, what are we supposed to do?{" "}
         <strong style={{ color: "#1D82F8" }}>Freeze</strong>?
       </p>
 
@@ -84,15 +84,13 @@ export const HeroMessaging: React.FC<{}> = (props) => {
       <p>
         Replacing a gas furnace with a heat pump in your home is one of the most
         effective ways of reducing your emissions, and in many parts of Canada,
-        you’ll save $$$ when you do it.
+        it'll save you $$$ too.
       </p>
 
       <p>
-        Want to estimate utility bills for your own house? Calculating utility
-        bills for heat pumps v.s. gas furnaces is tricky because it depends on
-        local climate data, the price of gas, and the price of electricity. To
-        help, we built a calculator for you. Enter in some basic information
-        about your home to try it out.
+        Want to estimate costs and emissions savings for your own home? Great!
+        We built a calculator for you to help. Just enter in some basic
+        information about your home:
       </p>
     </Paragraphs>
   );
