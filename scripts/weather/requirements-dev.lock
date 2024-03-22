@@ -5,123 +5,342 @@
 #   pre: false
 #   features: []
 #   all-features: false
+#   with-sources: false
 
 -e file:.
 anyio==4.3.0
+    # via httpx
+    # via jupyter-server
 appnope==0.1.4
+    # via ipykernel
+    # via ipython
 argon2-cffi==23.1.0
+    # via jupyter-server
 argon2-cffi-bindings==21.2.0
+    # via argon2-cffi
 arrow==1.3.0
+    # via isoduration
 asttokens==2.4.1
+    # via stack-data
 async-lru==2.0.4
+    # via jupyterlab
 attrs==23.2.0
+    # via jsonschema
+    # via referencing
 babel==2.14.0
+    # via jupyterlab-server
 backcall==0.2.0
+    # via ipython
 beautifulsoup4==4.12.3
+    # via nbconvert
 bleach==6.1.0
+    # via nbconvert
 cbor2==5.6.2
+    # via weather-server
 certifi==2024.2.2
+    # via httpcore
+    # via httpx
+    # via pyproj
+    # via requests
 cffi==1.16.0
+    # via argon2-cffi-bindings
 charset-normalizer==3.3.2
+    # via requests
 comm==0.2.1
+    # via ipykernel
+    # via ipywidgets
 debugpy==1.8.1
+    # via ipykernel
 decorator==5.1.1
+    # via ipython
 defusedxml==0.7.1
+    # via nbconvert
 exceptiongroup==1.2.0
+    # via anyio
 executing==2.0.1
+    # via stack-data
 fastjsonschema==2.19.1
+    # via nbformat
 fqdn==1.5.1
+    # via jsonschema
 geographiclib==2.0
+    # via geopy
 geopy==2.4.1
+    # via weather-server
 h11==0.14.0
+    # via httpcore
 httpcore==1.0.4
+    # via httpx
 httpx==0.27.0
+    # via jupyterlab
 idna==3.6
+    # via anyio
+    # via httpx
+    # via jsonschema
+    # via requests
 importlib-metadata==7.0.1
+    # via jupyter-client
+    # via jupyter-lsp
+    # via jupyterlab
+    # via jupyterlab-server
+    # via nbconvert
 importlib-resources==6.1.2
+    # via jsonschema
+    # via jsonschema-specifications
+    # via jupyterlab
 ipykernel==6.29.3
+    # via jupyter
+    # via jupyter-console
+    # via jupyterlab
+    # via qtconsole
 ipython==8.12.3
+    # via ipykernel
+    # via ipywidgets
+    # via jupyter-console
+    # via weather-server
 ipywidgets==8.1.2
+    # via jupyter
 isoduration==20.11.0
+    # via jsonschema
 jedi==0.19.1
+    # via ipython
 jinja2==3.1.3
+    # via jupyter-server
+    # via jupyterlab
+    # via jupyterlab-server
+    # via nbconvert
 json5==0.9.17
+    # via jupyterlab-server
 jsonpointer==2.4
+    # via jsonschema
 jsonschema==4.21.1
+    # via jupyter-events
+    # via jupyterlab-server
+    # via nbformat
 jsonschema-specifications==2023.12.1
+    # via jsonschema
 jupyter==1.0.0
+    # via weather-server
 jupyter-client==8.6.0
+    # via ipykernel
+    # via jupyter-console
+    # via jupyter-server
+    # via nbclient
+    # via qtconsole
 jupyter-console==6.6.3
+    # via jupyter
 jupyter-core==5.7.1
+    # via ipykernel
+    # via jupyter-client
+    # via jupyter-console
+    # via jupyter-server
+    # via jupyterlab
+    # via nbclient
+    # via nbconvert
+    # via nbformat
+    # via qtconsole
 jupyter-events==0.9.0
+    # via jupyter-server
 jupyter-lsp==2.2.3
+    # via jupyterlab
 jupyter-server==2.12.5
+    # via jupyter-lsp
+    # via jupyterlab
+    # via jupyterlab-server
+    # via notebook
+    # via notebook-shim
 jupyter-server-terminals==0.5.2
+    # via jupyter-server
 jupyterlab==4.1.2
+    # via notebook
 jupyterlab-pygments==0.3.0
+    # via nbconvert
 jupyterlab-server==2.25.3
+    # via jupyterlab
+    # via notebook
 jupyterlab-widgets==3.0.10
+    # via ipywidgets
 markupsafe==2.1.5
+    # via jinja2
+    # via nbconvert
 matplotlib-inline==0.1.6
+    # via ipykernel
+    # via ipython
 mistune==3.0.2
+    # via nbconvert
 msgpack==1.0.7
+    # via weather-server
 nbclient==0.9.0
+    # via nbconvert
 nbconvert==7.16.1
+    # via jupyter
+    # via jupyter-server
 nbformat==5.9.2
+    # via jupyter-server
+    # via nbclient
+    # via nbconvert
 nest-asyncio==1.6.0
+    # via ipykernel
 notebook==7.1.1
+    # via jupyter
 notebook-shim==0.2.4
+    # via jupyterlab
+    # via notebook
 numpy==1.24.4
+    # via pygrib
+    # via pysolar
 overrides==7.7.0
+    # via jupyter-server
 packaging==23.2
+    # via ipykernel
+    # via jupyter-server
+    # via jupyterlab
+    # via jupyterlab-server
+    # via nbconvert
+    # via qtconsole
+    # via qtpy
 pandocfilters==1.5.1
+    # via nbconvert
 parso==0.8.3
+    # via jedi
 pexpect==4.9.0
+    # via ipython
 pickleshare==0.7.5
+    # via ipython
 pkgutil-resolve-name==1.3.10
+    # via jsonschema
 platformdirs==4.2.0
+    # via jupyter-core
 prometheus-client==0.20.0
+    # via jupyter-server
 prompt-toolkit==3.0.43
+    # via ipython
+    # via jupyter-console
 psutil==5.9.8
+    # via ipykernel
 ptyprocess==0.7.0
+    # via pexpect
+    # via terminado
 pure-eval==0.2.2
+    # via stack-data
 pycparser==2.21
+    # via cffi
 pygments==2.17.2
+    # via ipython
+    # via jupyter-console
+    # via nbconvert
+    # via qtconsole
 pygrib==2.1.5
+    # via weather-server
 pyinstrument==4.6.2
+    # via weather-server
 pyproj==3.5.0
+    # via pygrib
 pysolar==0.11
+    # via weather-server
 python-dateutil==2.8.2
+    # via arrow
+    # via jupyter-client
 python-json-logger==2.0.7
+    # via jupyter-events
 pytz==2024.1
+    # via babel
+    # via weather-server
 pyyaml==6.0.1
+    # via jupyter-events
 pyzmq==25.1.2
+    # via ipykernel
+    # via jupyter-client
+    # via jupyter-console
+    # via jupyter-server
+    # via qtconsole
 qtconsole==5.5.1
+    # via jupyter
 qtpy==2.4.1
+    # via qtconsole
 referencing==0.33.0
+    # via jsonschema
+    # via jsonschema-specifications
+    # via jupyter-events
 requests==2.31.0
+    # via jupyterlab-server
+    # via weather-server
 rfc3339-validator==0.1.4
+    # via jsonschema
+    # via jupyter-events
 rfc3986-validator==0.1.1
+    # via jsonschema
+    # via jupyter-events
 rpds-py==0.18.0
+    # via jsonschema
+    # via referencing
 send2trash==1.8.2
-six==1.16.0
-sniffio==1.3.1
-soupsieve==2.5
-stack-data==0.6.3
-terminado==0.18.0
-tinycss2==1.2.1
-tomli==2.0.1
-tornado==6.4
-traitlets==5.14.1
-types-python-dateutil==2.8.19.20240106
-typing-extensions==4.10.0
-uri-template==1.3.0
-urllib3==2.2.1
-wcwidth==0.2.13
-webcolors==1.13
-webencodings==0.5.1
-websocket-client==1.7.0
-widgetsnbextension==4.0.10
-zipp==3.17.0
-# The following packages are considered to be unsafe in a requirements file:
+    # via jupyter-server
 setuptools==69.1.1
+    # via pygrib
+six==1.16.0
+    # via asttokens
+    # via bleach
+    # via python-dateutil
+    # via rfc3339-validator
+sniffio==1.3.1
+    # via anyio
+    # via httpx
+soupsieve==2.5
+    # via beautifulsoup4
+stack-data==0.6.3
+    # via ipython
+terminado==0.18.0
+    # via jupyter-server
+    # via jupyter-server-terminals
+tinycss2==1.2.1
+    # via nbconvert
+tomli==2.0.1
+    # via jupyterlab
+tornado==6.4
+    # via ipykernel
+    # via jupyter-client
+    # via jupyter-server
+    # via jupyterlab
+    # via notebook
+    # via terminado
+traitlets==5.14.1
+    # via comm
+    # via ipykernel
+    # via ipython
+    # via ipywidgets
+    # via jupyter-client
+    # via jupyter-console
+    # via jupyter-core
+    # via jupyter-events
+    # via jupyter-server
+    # via jupyterlab
+    # via matplotlib-inline
+    # via nbclient
+    # via nbconvert
+    # via nbformat
+    # via qtconsole
+types-python-dateutil==2.8.19.20240106
+    # via arrow
+typing-extensions==4.10.0
+    # via anyio
+    # via async-lru
+    # via ipython
+uri-template==1.3.0
+    # via jsonschema
+urllib3==2.2.1
+    # via requests
+wcwidth==0.2.13
+    # via prompt-toolkit
+webcolors==1.13
+    # via jsonschema
+webencodings==0.5.1
+    # via bleach
+    # via tinycss2
+websocket-client==1.7.0
+    # via jupyter-server
+widgetsnbextension==4.0.10
+    # via ipywidgets
+zipp==3.17.0
+    # via importlib-metadata
+    # via importlib-resources
