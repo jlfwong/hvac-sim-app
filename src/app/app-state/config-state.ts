@@ -17,4 +17,4 @@ export const auxSwitchoverTempFAtom = atom((get) =>
 
 export const floorSpaceSqFtAtom = atom(2500);
 
-export const postalCodeAtom = atom("K2A 2Y3");
+export const postalCodeAtom = atom("M5V 0H8");
