@@ -9,10 +9,14 @@ import { Big, Paragraphs } from "./utils";
 import { locationInfoAtom } from "../app-state/canadian-weather-state";
 import { AnnualBillingView } from "./annual-billing-view";
 import { EmissionsView } from "./emissions-view";
+import { emissionsForSimulationGramsCO2e } from "../../lib/emissions";
 
 function oneSigDig(num: number) {
   return num.toLocaleString("en-CA", { maximumSignificantDigits: 1 });
 }
+
+// Round trip flight emissions estimated using Google Flights
+const emissionsGramsCO2eRoundTripFlight = 275e3 + 275e3;
 
 const EmissionsComparison: React.FC<{
   systemComparison: SystemComparison;
@@ -48,6 +52,14 @@ const EmissionsComparison: React.FC<{
             tons of emissions per year.
           </strong>
         </Big>
+        <p>
+          This is roughly equivalent to{" "}
+          {oneSigDig(
+            props.systemComparison.annualEmissionsSavingGramsCo2e /
+              emissionsGramsCO2eRoundTripFlight
+          )}{" "}
+          round-trip flights between Toronto and Vancouver.
+        </p>
       </Paragraphs>
       <EmissionsView />
     </>
