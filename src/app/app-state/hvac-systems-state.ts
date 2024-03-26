@@ -47,7 +47,7 @@ export const electricFurnaceSystemAtom = atom<HVACSystem | null>((get) => {
   });
 });
 
-export const dualFuelSystemAtom = atom<HVACSystem[] | null>((get) => {
+export const heatPumpWithGasBackupSystemsAtom = atom<HVACSystem[] | null>((get) => {
   const candidates = get(selectedHeatpumpsAtom);
   const gasFurnace = get(gasFurnaceAtom);
   const auxSwitchoverTempF = get(auxSwitchoverTempFAtom);
@@ -83,7 +83,7 @@ export const dualFuelSystemAtom = atom<HVACSystem[] | null>((get) => {
   });
 });
 
-export const heatPumpWithElectricBackupSystemAtom = atom<HVACSystem[] | null>(
+export const heatPumpWithElectricBackupSystemsAtom = atom<HVACSystem[] | null>(
   (get) => {
     const candidates = get(selectedHeatpumpsAtom);
     const electricFurnace = get(electricFurnaceAtom);
@@ -127,27 +127,3 @@ export const heatPumpWithElectricBackupSystemAtom = atom<HVACSystem[] | null>(
     });
   }
 );
-
-export const systemsToSimulateAtom = atom<HVACSystem[] | null>((get) => {
-  const dualFuelSystem = get(dualFuelSystemAtom);
-  const gasFurnaceSystem = get(gasFurnaceSystemAtom);
-  const heatPumpWithElectricBackupSystem = get(
-    heatPumpWithElectricBackupSystemAtom
-  );
-  const electricFurnaceSystem = get(electricFurnaceSystemAtom);
-
-  if (
-    !dualFuelSystem ||
-    !gasFurnaceSystem ||
-    !electricFurnaceSystem ||
-    !heatPumpWithElectricBackupSystem
-  ) {
-    return null;
-  }
-
-  // TODO(jlfwong): Add support for using electric furnace as reference, and for
-  // selecting a gas backup instead of an electric backup.
-  return heatPumpWithElectricBackupSystem
-    .slice(0, 1)
-    .concat([gasFurnaceSystem]);
-});

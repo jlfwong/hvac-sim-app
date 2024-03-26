@@ -24,7 +24,6 @@ import {
   floorSpaceSqFtAtom,
   heatingSetPointCAtom,
 } from "./app-state/config-state";
-import { simulationsAtom } from "./app-state/simulations-state";
 import {
   electricityPricePerKwhAtom,
   naturalGasPricePerCubicMetreAtom,
@@ -32,18 +31,14 @@ import {
 import { EmissionsView } from "./views/emissions-view";
 import { AnnualBillingView } from "./views/annual-billing-view";
 import { PassiveLoadsView } from "./views/passive-loads-view";
-
-const Paragraphs = chakra(Flex, {
-  baseStyle: {
-    flexDirection: "column",
-    marginTop: "20px",
-    marginBottom: "20px",
-    fontSize: "25px",
-    fontFamily: "Averia Serif Libre",
-    lineHeight: "150%",
-    gap: "1em",
-  },
-});
+import {
+  bestHeatPumpSimulationResultAtom,
+  simulationsAtom,
+  statusQuoSimulationResultAtom,
+} from "./app-state/simulations-state";
+import { systemComparisonAtom } from "./app-state/system-comparison";
+import { Paragraphs } from "./views/utils";
+import { ComparisonSummary } from "./views/comparison-summary";
 
 export const HeroMessaging: React.FC<{}> = (props) => {
   return (
@@ -93,6 +88,7 @@ export const Main: React.FC<{}> = (props) => {
   const [heatingSetPointC] = useAtom(heatingSetPointCAtom);
 
   const simulations = useAtomValue(simulationsAtom);
+  const systemComparison = useAtomValue(systemComparisonAtom);
 
   const electricityPricePerKwh = useAtomValue(electricityPricePerKwhAtom);
   const naturalGasPricePerCubicMetre = useAtomValue(
@@ -140,12 +136,12 @@ export const Main: React.FC<{}> = (props) => {
                 <>Quick links:</>
                 <LocationLink postalCode="M5V 0H8" placeName="Toronto" />
                 <LocationLink postalCode="H3H 2H9" placeName="Montreal" />
-                <LocationLink postalCode="T2P 0A9" placeName="Calgary" />
-                <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
-                <LocationLink postalCode="T6G 2R3" placeName="Edmonton" />
                 <LocationLink postalCode="V5K 0A1" placeName="Vancouver" />
+                <LocationLink postalCode="T2P 0A9" placeName="Calgary" />
+                <LocationLink postalCode="T6G 2R3" placeName="Edmonton" />
+                <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
                 <LocationLink postalCode="R3T 2N2" placeName="Winnipeg" />
-                <LocationLink postalCode="B3H 0A2" placeName="Halifax" />
+                <LocationLink postalCode="G1R 1R5" placeName="Quebec City" />
               </HStack>
             </Flex>
             {/* TODO(jlfwong): Move this into assumptions */}
@@ -167,17 +163,7 @@ export const Main: React.FC<{}> = (props) => {
             */}
           </Flex>
         </Flex>
-
-        {simulations && locationInfo && (
-          <Paragraphs>
-            <p>
-              Here are the results for a {floorSpaceSqFt} square foot home in{" "}
-              {locationInfo?.placeName.replace(/\s+\(.*\)$/g, "")}:
-            </p>
-          </Paragraphs>
-        )}
-        <AnnualBillingView />
-        <EmissionsView />
+        <ComparisonSummary />
         {simulations &&
         naturalGasPricePerCubicMetre != null &&
         electricityPricePerKwh != null ? (

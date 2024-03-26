@@ -18,3 +18,7 @@ export const auxSwitchoverTempFAtom = atom((get) =>
 export const floorSpaceSqFtAtom = atom(2500);
 
 export const postalCodeAtom = atom("M5V 0H8");
+
+export const statusQuoFurnaceFuel = atom<"electric" | "gas">("gas");
+
+export const optimizeForAtom = atom<"cost" | "emissions">("emissions");

@@ -59,11 +59,7 @@ export const EmissionsView: React.FC<{}> = (props) => {
               />
             );
           })}
-          <AxisBottom
-            top={height}
-            scale={x}
-            tickFormat={(t) => `${t} tonnes`}
-          />
+          <AxisBottom top={height} scale={x} tickFormat={(t) => `${t} tons`} />
           <AxisLeft scale={y} />
         </Group>
       </svg>

@@ -18,8 +18,7 @@ export const AnnualBillingView: React.FC<{}> = (props) => {
     width = 860 - margin.left - margin.right,
     height = 120 - margin.top - margin.bottom;
 
-  const annualCost = (s: HVACSimulationResult) =>
-    s.bills.reduce((acc, b) => acc + b.getTotalCost(), 0);
+  const annualCost = (s: HVACSimulationResult) => s.billsTotalCost;
 
   const x = scaleLinear<number>({
     domain: [0, Math.max(...simulations.map((s) => annualCost(s)))],

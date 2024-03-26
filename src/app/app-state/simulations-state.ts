@@ -1,6 +1,5 @@
-import { atom } from "jotai";
+import { atom, type Getter } from "jotai";
 import { buildingGeometryAtom, loadSourcesAtom } from "./loads-state";
-import { systemsToSimulateAtom } from "./hvac-systems-state";
 import { locationInfoAtom, weatherInfoAtom } from "./canadian-weather-state";
 import { DateTime } from "luxon";
 import { HVACSimulationResult, simulateBuildingHVAC } from "../../lib/simulate";
@@ -16,87 +15,182 @@ import {
 } from "./canadian-utilities-state";
 import { emissionsForSimulationGramsCO2e } from "../../lib/emissions";
 import { gramsCO2ePerKwhAtom } from "./canadian-grid-emissions-state";
+import {
+  heatPumpWithGasBackupSystemsAtom,
+  electricFurnaceSystemAtom,
+  gasFurnaceSystemAtom,
+  heatPumpWithElectricBackupSystemsAtom,
+} from "./hvac-systems-state";
+import { optimizeForAtom, statusQuoFurnaceFuel } from "./config-state";
+import type { HVACSystem } from "../../lib/types";
 
 export interface HVACSimulationResultWithEmissions
   extends HVACSimulationResult {
   emissionsGramsCO2e: number;
 }
 
-export const simulationsAtom = atom<HVACSimulationResultWithEmissions[] | null>(
-  (get) => {
-    const loadSources = get(loadSourcesAtom);
-    const systems = get(systemsToSimulateAtom);
-    const locationInfo = get(locationInfoAtom);
-    const weatherInfo = get(weatherInfoAtom);
-    const buildingGeometry = get(buildingGeometryAtom);
-    const naturalGasPricePerCubicMetre = get(naturalGasPricePerCubicMetreAtom);
-    const electricityPricePerKwh = get(electricityPricePerKwhAtom);
-    const gramsCO2ePerKwh = get(gramsCO2ePerKwhAtom);
+export interface HVACSimulationComparison {
+  heatpump: HVACSimulationResultWithEmissions;
+  statusQuo: HVACSimulationResultWithEmissions;
+}
 
-    if (
-      !loadSources ||
-      !systems ||
-      !locationInfo ||
-      !weatherInfo ||
-      !buildingGeometry ||
-      !naturalGasPricePerCubicMetre ||
-      !electricityPricePerKwh ||
-      !gramsCO2ePerKwh
-    ) {
-      return null;
+type HVACSimulator = (system: HVACSystem) => HVACSimulationResultWithEmissions;
+
+const simulatorAtom = atom<HVACSimulator | null>((get) => {
+  const loadSources = get(loadSourcesAtom);
+  const locationInfo = get(locationInfoAtom);
+  const weatherInfo = get(weatherInfoAtom);
+  const buildingGeometry = get(buildingGeometryAtom);
+  const naturalGasPricePerCubicMetre = get(naturalGasPricePerCubicMetreAtom);
+  const electricityPricePerKwh = get(electricityPricePerKwhAtom);
+  const gramsCO2ePerKwh = get(gramsCO2ePerKwhAtom);
+
+  if (
+    !loadSources ||
+    !locationInfo ||
+    !weatherInfo ||
+    !buildingGeometry ||
+    !naturalGasPricePerCubicMetre ||
+    !electricityPricePerKwh ||
+    !gramsCO2ePerKwh
+  ) {
+    return null;
+  }
+
+  const dtOptions = { zone: weatherInfo.timezoneName };
+
+  const localStartTime = DateTime.fromObject(
+    {
+      year: 2023,
+      month: 1,
+      day: 1,
+    },
+    dtOptions
+  );
+  const localEndTime = DateTime.fromObject(
+    {
+      year: 2023,
+      month: 12,
+      day: 31,
+    },
+    dtOptions
+  ).endOf("day");
+
+  const utilityPlans = {
+    electrical: () =>
+      new SimpleElectricalUtilityPlan({
+        fixedCostPerMonth: 0,
+        costPerKwh: electricityPricePerKwh,
+      }),
+    naturalGas: () =>
+      new SimpleNaturalGasUtilityPlan({
+        fixedCostPerMonth: 0,
+        costPerCcf: naturalGasPricePerCubicMetre * CUBIC_METER_PER_CCF,
+      }),
+  };
+
+  return function (hvacSystem: HVACSystem): HVACSimulationResultWithEmissions {
+    const result = simulateBuildingHVAC({
+      localStartTime,
+      localEndTime,
+      initialInsideAirTempF: 72.5,
+      buildingGeometry,
+      hvacSystem,
+      loadSources,
+      weatherSource: weatherInfo!.weatherSource,
+      utilityPlans,
+    });
+
+    return {
+      ...result,
+      emissionsGramsCO2e: emissionsForSimulationGramsCO2e({
+        simulationResult: result,
+        gramsCO2ePerKwh: gramsCO2ePerKwh!,
+      }),
+    };
+  };
+});
+
+export const heatPumpSimulationResultsAtom = atom<
+  HVACSimulationResultWithEmissions[] | null
+>((get) => {
+  const heatPumpWithGasBackupSystems = get(heatPumpWithGasBackupSystemsAtom);
+  const heatPumpWithElectricBackupSystems = get(
+    heatPumpWithElectricBackupSystemsAtom
+  );
+
+  const simulator = get(simulatorAtom);
+
+  if (
+    !simulator ||
+    !heatPumpWithGasBackupSystems ||
+    !heatPumpWithElectricBackupSystems
+  ) {
+    return null;
+  }
+
+  return heatPumpWithGasBackupSystems
+    .slice(0, 3)
+    .concat(heatPumpWithElectricBackupSystems.slice(0, 3))
+    .map(simulator);
+});
+
+export const statusQuoSimulationResultAtom =
+  atom<HVACSimulationResultWithEmissions | null>((get) => {
+    const statusQuoSystem =
+      get(statusQuoFurnaceFuel) == "gas"
+        ? get(gasFurnaceSystemAtom)
+        : get(electricFurnaceSystemAtom);
+
+    const simulator = get(simulatorAtom);
+
+    if (!simulator || !statusQuoSystem) return null;
+
+    return simulator(statusQuoSystem);
+  });
+
+export const bestHeatPumpSimulationResultAtom =
+  atom<HVACSimulationResultWithEmissions | null>((get) => {
+    const heatPumpResults = get(heatPumpSimulationResultsAtom);
+    const optimizeFor = get(optimizeForAtom);
+
+    if (!heatPumpResults) return null;
+
+    let bestResult: HVACSimulationResultWithEmissions | null = null;
+
+    switch (optimizeFor) {
+      case "cost": {
+        for (let sim of heatPumpResults) {
+          if (!bestResult || sim.billsTotalCost < bestResult.billsTotalCost) {
+            bestResult = sim;
+          }
+        }
+        break;
+      }
+      case "emissions": {
+        for (let sim of heatPumpResults) {
+          if (
+            !bestResult ||
+            sim.emissionsGramsCO2e < bestResult.emissionsGramsCO2e
+          ) {
+            bestResult = sim;
+          }
+        }
+        break;
+      }
+      default: {
+        assertNever(optimizeFor);
+      }
     }
 
-    const dtOptions = { zone: weatherInfo.timezoneName };
+    return bestResult;
+  });
 
-    const localStartTime = DateTime.fromObject(
-      {
-        year: 2023,
-        month: 1,
-        day: 1,
-      },
-      dtOptions
-    );
-    const localEndTime = DateTime.fromObject(
-      {
-        year: 2023,
-        month: 12,
-        day: 31,
-      },
-      dtOptions
-    ).endOf("day");
-
-    const utilityPlans = {
-      electrical: () =>
-        new SimpleElectricalUtilityPlan({
-          fixedCostPerMonth: 0,
-          costPerKwh: electricityPricePerKwh,
-        }),
-      naturalGas: () =>
-        new SimpleNaturalGasUtilityPlan({
-          fixedCostPerMonth: 0,
-          costPerCcf: naturalGasPricePerCubicMetre * CUBIC_METER_PER_CCF,
-        }),
-    };
-
-    return systems.map((hvacSystem) => {
-      const result = simulateBuildingHVAC({
-        localStartTime,
-        localEndTime,
-        initialInsideAirTempF: 72.5,
-        buildingGeometry,
-        hvacSystem,
-        loadSources,
-        weatherSource: weatherInfo.weatherSource,
-        utilityPlans,
-      });
-
-      return {
-        ...result,
-        emissionsGramsCO2e: emissionsForSimulationGramsCO2e({
-          simulationResult: result,
-          gramsCO2ePerKwh,
-        }),
-      };
-    });
+export const simulationsAtom = atom<HVACSimulationResultWithEmissions[] | null>(
+  (get) => {
+    const bestHeatPump = get(bestHeatPumpSimulationResultAtom);
+    const statusQuo = get(statusQuoSimulationResultAtom);
+    if (!bestHeatPump || !statusQuo) return null;
+    return [bestHeatPump, statusQuo];
   }
 );

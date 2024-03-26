@@ -28,11 +28,7 @@ export interface HVACSimulationResult {
   name: string;
   timeSteps: SimulationStep[];
   bills: EnergyBill[];
-}
-
-// TODO(jlfwong): Move this to a utils file
-function assertNever(x: never): never {
-  throw new Error("Unexpected object: " + x);
+  billsTotalCost: number;
 }
 
 export class FuelBilling {
@@ -284,9 +280,12 @@ export function simulateBuildingHVAC(options: {
       options.buildingGeometry.btusPerDegreeF;
   }
 
+  const bills = billing.getBills(options.localStartTime, options.localEndTime);
+
   return {
     name: options.hvacSystem.name,
     timeSteps: results,
-    bills: billing.getBills(options.localStartTime, options.localEndTime),
+    bills,
+    billsTotalCost: bills.reduce((acc, b) => acc + b.getTotalCost(), 0),
   };
 }
