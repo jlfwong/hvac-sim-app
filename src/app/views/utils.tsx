@@ -1,4 +1,4 @@
-import { chakra, Flex } from "@chakra-ui/react";
+import { chakra, Flex, FormControl } from "@chakra-ui/react";
 
 export const Paragraphs = chakra(Flex, {
   baseStyle: {
@@ -15,5 +15,13 @@ export const Paragraphs = chakra(Flex, {
 export const Big = chakra("p", {
   baseStyle: {
     fontSize: "150%",
+  },
+});
+
+export const FullWidthFormControl = chakra(FormControl, {
+  baseStyle: {
+    display: "flex",
+    flex: 1,
+    flexDirection: "column",
   },
 });

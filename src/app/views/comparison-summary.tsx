@@ -79,8 +79,8 @@ const BillingComparison: React.FC<{
               ~${oneSigDig(-props.systemComparison.annualOpexCostSavings)} more
               per year
             </strong>{" "}
-            on energy bills. This tends to happen in areas where natural gas
-            prices are cheap and electricity is expensive.
+            on energy bills. This tends to happen in areas where natural gas is
+            cheap and electricity is expensive.
           </p>
         </Paragraphs>
         <AnnualBillingView />
