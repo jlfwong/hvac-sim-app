@@ -19,6 +19,14 @@ export const floorSpaceSqFtAtom = atom(2500);
 
 export const postalCodeAtom = atom("M5V 0H8");
 
-export const statusQuoFurnaceFuel = atom<"electric" | "gas">("gas");
+export const statusQuoFurnaceFuelAtom = atom<"electric" | "gas">("gas");
 
 export const optimizeForAtom = atom<"cost" | "emissions">("emissions");
+
+export const heatpumpInstallCostAtom = atom<number>(17000);
+
+export const gasFurnaceInstallCostAtom = atom<number>(6500);
+
+export const airConditionerInstallCostAtom = atom<number>(6000);
+
+export const electricFurnaceInstallCostAtom = atom<number>(6000);

@@ -38,7 +38,9 @@ export const AnnualBillingView: React.FC<{}> = (props) => {
 
   return (
     <ChartGroup>
-      <ChartHeader>Annual Energy Costs</ChartHeader>
+      <ChartHeader>
+        Total Annual Utility Bills for Heating and Cooling
+      </ChartHeader>
       <svg
         width={width + margin.left + margin.right}
         height={height + margin.top + margin.bottom}

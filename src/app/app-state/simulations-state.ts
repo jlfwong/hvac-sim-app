@@ -21,7 +21,7 @@ import {
   gasFurnaceSystemAtom,
   heatPumpWithElectricBackupSystemsAtom,
 } from "./hvac-systems-state";
-import { optimizeForAtom, statusQuoFurnaceFuel } from "./config-state";
+import { optimizeForAtom, statusQuoFurnaceFuelAtom } from "./config-state";
 import type { HVACSystem } from "../../lib/types";
 
 export interface HVACSimulationResultWithEmissions
@@ -138,7 +138,7 @@ export const heatPumpSimulationResultsAtom = atom<
 export const statusQuoSimulationResultAtom =
   atom<HVACSimulationResultWithEmissions | null>((get) => {
     const statusQuoSystem =
-      get(statusQuoFurnaceFuel) == "gas"
+      get(statusQuoFurnaceFuelAtom) == "gas"
         ? get(gasFurnaceSystemAtom)
         : get(electricFurnaceSystemAtom);
 

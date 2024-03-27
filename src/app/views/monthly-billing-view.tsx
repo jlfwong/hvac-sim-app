@@ -16,8 +16,6 @@ import { EnergyBill } from "../../lib/billing";
 import { ChartGroup, ChartHeader } from "../chart";
 
 export const BillingView: React.FC<{
-  pricePerKwh: number;
-  pricePerCubicMetre: number;
   simulations: HVACSimulationResult[];
 }> = (props) => {
   const margin = { top: 10, right: 20, bottom: 40, left: 60 },
@@ -140,10 +138,7 @@ export const BillingView: React.FC<{
 
   return (
     <ChartGroup>
-      <ChartHeader>
-        Energy Bills (Electricity @ ${props.pricePerKwh.toFixed(2)}/kWh, Natural
-        Gas @ ${props.pricePerCubicMetre.toFixed(2)}/m<sup>3</sup>)
-      </ChartHeader>
+      <ChartHeader>Monthly Utility Bills for Heating and Cooling</ChartHeader>
       <svg
         width={width + margin.left + margin.right}
         height={height + margin.top + margin.bottom}
@@ -188,11 +183,7 @@ export const BillingView: React.FC<{
                         y={rectY}
                         width={xMinor.bandwidth()}
                         height={y(0) - y(bill.getTotalCost())}
-                        fill={
-                          bill.getFuelType() == "electricity"
-                            ? fillColor
-                            : `url(#lines-${fillColor})`
-                        }
+                        fill={fillColor}
                       />
                     );
                   })}
@@ -209,19 +200,7 @@ export const BillingView: React.FC<{
         </Group>
       </svg>
       <div style={{ marginLeft: margin.left }}>
-        <LegendOrdinal
-          scale={color}
-          labelFormat={(name) => {
-            for (let sim of props.simulations) {
-              if (sim.name === name) {
-                const total = sim.bills
-                  .flatMap((b) => b.getTotalCost())
-                  .reduce((acc, x) => acc + x, 0);
-                return `${name} (Total: \$${total.toFixed(2)})`;
-              }
-            }
-          }}
-        />
+        <LegendOrdinal scale={color} />
       </div>
       {/* TODO(jlfwong): billing info is shown in CCFs, which won't be meaningful for Canadians */}
       {tooltipOpen && tooltipData && (

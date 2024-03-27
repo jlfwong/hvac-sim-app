@@ -38,7 +38,7 @@ import {
 } from "./app-state/simulations-state";
 import { systemComparisonAtom } from "./app-state/system-comparison";
 import { Paragraphs } from "./views/utils";
-import { ComparisonSummary } from "./views/comparison-summary";
+import { ComparisonSummaryView } from "./views/comparison-summary-view";
 import { HomeConfigurationView } from "./views/home-configuration-view";
 
 export const HeroMessaging: React.FC<{}> = (props) => {
@@ -118,7 +118,7 @@ export const Main: React.FC<{}> = (props) => {
             */}
           </Flex>
         </Flex>
-        <ComparisonSummary />
+        <ComparisonSummaryView />
         {simulations &&
         naturalGasPricePerCubicMetre != null &&
         electricityPricePerKwh != null ? (
@@ -170,11 +170,7 @@ export const Main: React.FC<{}> = (props) => {
                 gas and electricity prices from 2023 to estimate costs.
               </p>
             </Paragraphs>
-            <BillingView
-              simulations={simulations}
-              pricePerCubicMetre={naturalGasPricePerCubicMetre}
-              pricePerKwh={electricityPricePerKwh}
-            />
+            <BillingView simulations={simulations} />
             <Paragraphs>
               <p>
                 Once we have the total energy usage for the year, we can

@@ -41,7 +41,7 @@ export const EmissionsView: React.FC<{}> = (props) => {
 
   return (
     <ChartGroup>
-      <ChartHeader>Annual Emissions</ChartHeader>
+      <ChartHeader>Annual Emissions from Heating and Cooling</ChartHeader>
       <svg
         width={width + margin.left + margin.right}
         height={height + margin.top + margin.bottom}

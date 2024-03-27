@@ -5,9 +5,15 @@ import {
   Input,
   Box,
   type InputProps,
+  Select,
+  Spacer,
 } from "@chakra-ui/react";
 import React, { useCallback, useState } from "react";
-import { floorSpaceSqFtAtom, postalCodeAtom } from "../app-state/config-state";
+import {
+  floorSpaceSqFtAtom,
+  optimizeForAtom,
+  postalCodeAtom,
+} from "../app-state/config-state";
 import { useAtom, useAtomValue, useSetAtom, type PrimitiveAtom } from "jotai";
 import { FullWidthFormControl } from "./utils";
 import { locationInfoAtom } from "../app-state/canadian-weather-state";
@@ -110,6 +116,7 @@ const NumericFormControl: React.FC<
 export const HomeConfigurationView: React.FC<{}> = (props) => {
   const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
+  const [optimizeFor, setOptimizeFor] = useAtom(optimizeForAtom);
 
   return (
     <Flex
@@ -117,46 +124,73 @@ export const HomeConfigurationView: React.FC<{}> = (props) => {
       padding={"20px"}
       outline={"1px dashed #D3E3FD"}
       backgroundColor={"#D3E3FD"}
-      gap={0}
+      gap={"20px"}
     >
+      <Flex gap={0} direction="column">
+        <HStack>
+          <FullWidthFormControl>
+            <Flex justifyContent={"space-between"}>
+              <FormLabel htmlFor="postal-code-input">Postal Code</FormLabel>
+              {/* Replace parentheticals to prevent confusion */}
+              <Box color={"grey"}>
+                {`(${
+                  locationInfo?.placeName.replace(/\s+\(.*\)$/g, "") ||
+                  "Unknown"
+                })`}
+              </Box>
+            </Flex>
+            <Input
+              id="postal-code-input"
+              value={postalCode}
+              backgroundColor={"white"}
+              onChange={(ev) => {
+                setPostalCode(ev.target.value);
+              }}
+            />
+          </FullWidthFormControl>
+          <NumericFormControl
+            label="House square footage"
+            atom={floorSpaceSqFtAtom}
+            minValue={250}
+            maxValue={100000}
+            step={250}
+          />
+        </HStack>
+        <HStack>
+          <>Quick links:</>
+          <LocationLink postalCode="M5V 0H8" placeName="Toronto" />
+          <LocationLink postalCode="H3H 2H9" placeName="Montreal" />
+          <LocationLink postalCode="V5K 0A1" placeName="Vancouver" />
+          <LocationLink postalCode="T2P 0A9" placeName="Calgary" />
+          <LocationLink postalCode="T6G 2R3" placeName="Edmonton" />
+          <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
+          <LocationLink postalCode="R3T 2N2" placeName="Winnipeg" />
+          <LocationLink postalCode="G1R 1R5" placeName="Quebec City" />
+        </HStack>
+      </Flex>
       <HStack>
         <FullWidthFormControl>
-          <Flex justifyContent={"space-between"}>
-            <FormLabel htmlFor="postal-code-input">Postal Code</FormLabel>
-            {/* Replace parentheticals to prevent confusion */}
-            <Box color={"grey"}>
-              {`(${
-                locationInfo?.placeName.replace(/\s+\(.*\)$/g, "") || "Unknown"
-              })`}
-            </Box>
-          </Flex>
-          <Input
-            id="postal-code-input"
-            value={postalCode}
-            backgroundColor={"white"}
+          <FormLabel>Optimize for</FormLabel>
+          <Select
+            background={"white"}
+            value={optimizeFor}
             onChange={(ev) => {
-              setPostalCode(ev.target.value);
+              switch (ev.currentTarget.value) {
+                case "cost": {
+                  setOptimizeFor("cost");
+                  break;
+                }
+                case "emissions": {
+                  setOptimizeFor("emissions");
+                  break;
+                }
+              }
             }}
-          />
+          >
+            <option value="cost">Cost Savings</option>
+            <option value="emissions">Emissions Reduction</option>
+          </Select>
         </FullWidthFormControl>
-        <NumericFormControl
-          label="House square footage"
-          atom={floorSpaceSqFtAtom}
-          minValue={250}
-          maxValue={100000}
-          step={250}
-        />
-      </HStack>
-      <HStack>
-        <>Quick links:</>
-        <LocationLink postalCode="M5V 0H8" placeName="Toronto" />
-        <LocationLink postalCode="H3H 2H9" placeName="Montreal" />
-        <LocationLink postalCode="V5K 0A1" placeName="Vancouver" />
-        <LocationLink postalCode="T2P 0A9" placeName="Calgary" />
-        <LocationLink postalCode="T6G 2R3" placeName="Edmonton" />
-        <LocationLink postalCode="K2A 2Y3" placeName="Ottawa" />
-        <LocationLink postalCode="R3T 2N2" placeName="Winnipeg" />
-        <LocationLink postalCode="G1R 1R5" placeName="Quebec City" />
       </HStack>
     </Flex>
   );
