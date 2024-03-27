@@ -21,7 +21,7 @@ export const postalCodeAtom = atom("M5V 0H8");
 
 export const statusQuoFurnaceFuelAtom = atom<"electric" | "gas">("gas");
 
-export const optimizeForAtom = atom<"cost" | "emissions">("emissions");
+export const optimizeForAtom = atom<"cost" | "emissions">("cost");
 
 export const heatpumpInstallCostAtom = atom<number>(17000);
 
