@@ -159,10 +159,10 @@ const PaybackPeriodView: React.FC<{
       let paybackPeriod = props.systemComparison.paybackPeriod;
       headerMessage = `A heat pump can pay for itself in ${paybackPeriod.toFixed(
         0
-      )} years`;
+      )} years.`;
       explanationMessage = `This means after ${paybackPeriod.toFixed(
         0
-      )} years, you'll pay off the extra up-front costs for the heat pump and benefit from the reduced utility bills.`;
+      )} years, you'll pay off the extra up-front costs for the heat pump and benefit from the reduced utility bills. For reference, heating and cooling equipment typically has a ${equipmentLifetimeYears} year lifespan.`;
     }
   }
 
