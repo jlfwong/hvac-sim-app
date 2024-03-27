@@ -216,9 +216,9 @@ export const ComparisonSummaryView: React.FC<{}> = (props) => {
             {locationInfo?.placeName.replace(/\s+\(.*\)$/g, "")}:
           </p>
         </Paragraphs>
+        <EmissionsComparisonView systemComparison={systemComparison} />
         <BillingComparisonView systemComparison={systemComparison} />
         <PaybackPeriodView systemComparison={systemComparison} />
-        <EmissionsComparisonView systemComparison={systemComparison} />
       </>
     );
   }
