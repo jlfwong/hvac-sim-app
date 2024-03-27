@@ -18,6 +18,7 @@ type PaybackPeriod = number | "immediately" | "never";
 export interface SystemComparison {
   annualOpexCostSavings: number;
   annualEmissionsSavingGramsCo2e: number;
+  lifetimeCostSavings: number;
   excessCapexCost: number;
   paybackPeriod: PaybackPeriod;
 }
@@ -39,6 +40,9 @@ export const systemComparisonAtom = atom<SystemComparison | null>((get) => {
   const annualOpexCostSavings =
     statusQuoSimulationResult.billsTotalCost -
     bestHeatPumpSimulationResult.billsTotalCost;
+
+  const lifetimeCostSavings =
+    annualOpexCostSavings * equipmentLifetimeYears - heatpumpExcessInstallCost;
 
   let paybackPeriod: PaybackPeriod;
 
@@ -67,6 +71,7 @@ export const systemComparisonAtom = atom<SystemComparison | null>((get) => {
       statusQuoSimulationResult.emissionsGramsCO2e -
       bestHeatPumpSimulationResult.emissionsGramsCO2e,
     excessCapexCost: heatpumpExcessInstallCost,
+    lifetimeCostSavings,
     paybackPeriod,
   };
 });

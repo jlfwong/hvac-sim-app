@@ -65,8 +65,9 @@ const EmissionsComparisonView: React.FC<{
               props.systemComparison.annualEmissionsSavingGramsCo2e / 1e6,
               2
             )}{" "}
-            tons of emissions per year by installing a heat pump.
-          </strong>
+            tons of emissions per year
+          </strong>{" "}
+          by installing a heat pump.
         </Big>
         <p>
           This is roughly equivalent to{" "}
@@ -146,7 +147,7 @@ const PaybackPeriodView: React.FC<{
     case "never": {
       headerMessage =
         "A heat pump is unlikely to pay for itself in its lifespan.";
-      explanationMessage = `The heat pump will cost more to install, and there aren't enough cost savings to cover those up-front costs within its ${equipmentLifetimeYears} year lifespan.`;
+      explanationMessage = `The heat pump will cost more to install, and there aren't enough cost savings to cover those up-front costs.`;
       break;
     }
     case "immediately": {
@@ -162,9 +163,16 @@ const PaybackPeriodView: React.FC<{
       )} years.`;
       explanationMessage = `This means after ${paybackPeriod.toFixed(
         0
-      )} years, you'll pay off the extra up-front costs for the heat pump and benefit from the reduced utility bills. For reference, heating and cooling equipment typically has a ${equipmentLifetimeYears} year lifespan.`;
+      )} years, you'll pay off the extra up-front costs for the heat pump and benefit from the reduced utility bills.`;
     }
   }
+
+  explanationMessage += ` Over its ${equipmentLifetimeYears} year lifespan, a heat pump could cost \$${sigDigs(
+    Math.abs(props.systemComparison.lifetimeCostSavings),
+    2
+  )} ${
+    props.systemComparison.lifetimeCostSavings > 0 ? "less" : "more"
+  } to own.`;
 
   return (
     <>
