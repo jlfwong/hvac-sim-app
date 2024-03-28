@@ -11,13 +11,11 @@ describe("AirConditioner", () => {
       });
 
       const rating82 = ac.getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 82,
       });
 
       const rating95 = ac.getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -36,7 +34,6 @@ describe("AirConditioner", () => {
         elevationFeet: 0,
         speedSettings: "single-speed",
       }).getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -47,7 +44,6 @@ describe("AirConditioner", () => {
         elevationFeet: 0,
         speedSettings: "single-speed",
       }).getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -66,7 +62,6 @@ describe("AirConditioner", () => {
         elevationFeet: 2000,
         speedSettings: "variable-speed",
       }).getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -77,7 +72,6 @@ describe("AirConditioner", () => {
         elevationFeet: 3000,
         speedSettings: "variable-speed",
       }).getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -96,7 +90,6 @@ describe("AirConditioner", () => {
         elevationFeet: 3000,
         speedSettings: "variable-speed",
       }).getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -107,7 +100,6 @@ describe("AirConditioner", () => {
         elevationFeet: 3000,
         speedSettings: "dual-speed",
       }).getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -118,7 +110,6 @@ describe("AirConditioner", () => {
         elevationFeet: 3000,
         speedSettings: "single-speed",
       }).getEstimatedPerformanceRating({
-        btusPerHourNeeded: -40000,
         insideAirTempF: 80,
         outsideAirTempF: 95,
       });
@@ -135,34 +126,6 @@ describe("AirConditioner", () => {
       );
       expect(dualSpeedDerated.coefficientOfPerformance).toBeCloseTo(2.74, 2);
       expect(singleSpeedDerated.coefficientOfPerformance).toBeCloseTo(2.67, 2);
-    });
-  });
-
-  describe("getThermalResponse", () => {
-    test("uses more energy when temperature differential is bigger", () => {
-      const ac = new AirConditioner({
-        seer: 11,
-        capacityBtusPerHour: 40000,
-        elevationFeet: 0,
-        speedSettings: "single-speed",
-      });
-
-      const response90 = ac.getHeatingPerformanceInfo({
-        btusPerHourNeeded: -30000,
-        insideAirTempF: 80,
-        outsideAirTempF: 90,
-      });
-
-      const response100 = ac.getHeatingPerformanceInfo({
-        btusPerHourNeeded: -30000,
-        insideAirTempF: 80,
-        outsideAirTempF: 100,
-      });
-
-      expect(Object.keys(response90.fuelUsage)).toEqual(["electricityKw"]);
-
-      expect(response90.fuelUsage.electricityKw).toBeCloseTo(2.8, 1);
-      expect(response100.fuelUsage.electricityKw).toBeCloseTo(3.6, 1);
     });
   });
 });

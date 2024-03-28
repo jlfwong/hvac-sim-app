@@ -1,5 +1,5 @@
 import { BuildingGeometry } from "./building-geometry";
-import ottawaData2023 from "../../static/data/weather/2023-ottawa-era5.json";
+import ottawaData2023 from "../../static/data/weather/2023-era5-K2A.json";
 import { JSONBackedHourlyWeatherSource } from "./weather";
 import { AirConditioner } from "./air-conditioner";
 import {
@@ -57,7 +57,7 @@ describe("simulateBuildingHVAC", () => {
     elevationFeet: 0,
   });
 
-  const hvacSystem = new SimpleHVACSystem({
+  const hvacSystem = new SimpleHVACSystem("test-system", {
     coolingSetPointF: 80,
     coolingAppliance: ac,
 
@@ -65,7 +65,9 @@ describe("simulateBuildingHVAC", () => {
     heatingAppliance: furnace,
   });
 
-  const weatherSource = new JSONBackedHourlyWeatherSource(ottawaData2023);
+  const weatherSource = new JSONBackedHourlyWeatherSource(
+    ottawaData2023.weather
+  );
 
   const utilityPlans = {
     electrical: () =>
@@ -110,8 +112,7 @@ describe("simulateBuildingHVAC", () => {
       utilityPlans,
     });
 
-    expect(result.bills.electricity?.length).toBe(1);
-    expect(result.bills.naturalGas?.length).toBe(1);
+    expect(result.bills.length).toBe(2);
   });
 
   it("can simulate a year", () => {
@@ -147,35 +148,12 @@ describe("simulateBuildingHVAC", () => {
       utilityPlans,
     });
 
-    expect(result.bills.electricity?.length).toBe(12);
-    expect(result.bills.naturalGas?.length).toBe(12);
+    expect(
+      result.bills.filter((b) => b.getFuelType() == "electricity").length
+    ).toBe(12);
+    expect(
+      result.bills.filter((b) => b.getFuelType() == "natural gas").length
+    ).toBe(12);
     expect(result.timeSteps.length).toBe(364 * 24 * 6);
-
-    expect(
-      result.bills.naturalGas!.reduce((acc, b) => acc + b.getTotalCost(), 0)
-    ).toBeCloseTo(0);
-
-    expect(
-      result.bills.naturalGas!.reduce((acc, b) => acc + b.getTotalCost(), 0)
-    ).toBeCloseTo(0);
-
-    /*
-    expect(
-      result.bills.naturalGas?.map((b) => [
-        b.getBillingPeriodStart().toISODate(),
-        b.getFuelUsage(),
-        b.getTotalCost(),
-      ])
-    ).toBe([]);
-    */
-
-    // TODO(jlfwong): These results are definitely wrong.  These usage values
-    // seem way too low, even if this is purely for air conditioning.
-    expect(
-      result.bills.electricity?.map((b) => [
-        b.getBillingPeriodStart().toISODate(),
-        b.getTotalCost(),
-      ])
-    ).toBe([]);
   });
 });

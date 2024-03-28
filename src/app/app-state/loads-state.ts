@@ -26,9 +26,6 @@ export const loadSourcesAtom = atom<ThermalLoadSource[]>((get) => {
   return [
     new OccupantsLoadSource(2),
 
-    // TODO(jlfwong): these are a bit weird to have separately because they have
-    // to share geometry & modifiers. Would perhaps be alleviated by having a
-    // function to return standard loads for a building?
     new SolarGainLoadSource({ geometry: buildingGeometry, solarModifier: 1 }),
 
     new ConductionConvectionLoadSource({

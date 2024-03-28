@@ -10,7 +10,6 @@ describe("GasFurnace", () => {
       });
 
       const response = furnace.getHeatingPerformanceInfo({
-        btusPerHourNeeded: 40000,
         insideAirTempF: 70,
         outsideAirTempF: 5,
       });
@@ -28,7 +27,6 @@ describe("GasFurnace", () => {
       });
 
       const response = furnace.getHeatingPerformanceInfo({
-        btusPerHourNeeded: 40000,
         insideAirTempF: 70,
         outsideAirTempF: 5,
       });
@@ -46,7 +44,6 @@ describe("GasFurnace", () => {
       });
 
       const response = furnace.getHeatingPerformanceInfo({
-        btusPerHourNeeded: 100000,
         insideAirTempF: 70,
         outsideAirTempF: 5,
       });
@@ -64,7 +61,6 @@ describe("GasFurnace", () => {
       });
 
       const response = furnace.getHeatingPerformanceInfo({
-        btusPerHourNeeded: 100000,
         insideAirTempF: 70,
         outsideAirTempF: 5,
       });

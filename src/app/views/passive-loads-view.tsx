@@ -55,10 +55,7 @@ export const PassiveLoadsView: React.FC<{
 
   // Define the scales
   const xScale = scaleUtc({
-    domain: [
-      Math.min(...data.map((d) => d.date)),
-      Math.max(...data.map((d) => d.date)),
-    ],
+    domain: [data[0].date, data[data.length - 1].date],
     range: [0, width],
   }).nice();
 

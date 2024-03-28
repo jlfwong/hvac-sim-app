@@ -59,7 +59,8 @@ describe("AirSourceHeatPump", () => {
       describe("exact match deltaT", () => {
         test("max capacity", () => {
           const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-            btusPerHourNeeded: -47400,
+            power: { type: "btus", btusPerHourNeeded: -47400 },
+            mode: "cooling",
             insideAirTempF: 80,
             outsideAirTempF: 95,
           });
@@ -71,7 +72,8 @@ describe("AirSourceHeatPump", () => {
 
         test("min capacity", () => {
           const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-            btusPerHourNeeded: -13000,
+            power: { type: "btus", btusPerHourNeeded: -13000 },
+            mode: "cooling",
             insideAirTempF: 80,
             outsideAirTempF: 95,
           });
@@ -83,7 +85,8 @@ describe("AirSourceHeatPump", () => {
 
         test("middle capacity", () => {
           const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-            btusPerHourNeeded: -(47400 + 13000) / 2,
+            power: { type: "btus", btusPerHourNeeded: -(47400 + 13000) / 2 },
+            mode: "cooling",
             insideAirTempF: 80,
             outsideAirTempF: 95,
           });
@@ -97,7 +100,8 @@ describe("AirSourceHeatPump", () => {
 
         test("below min capacity", () => {
           const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-            btusPerHourNeeded: -10000,
+            power: { type: "btus", btusPerHourNeeded: -10000 },
+            mode: "cooling",
             insideAirTempF: 80,
             outsideAirTempF: 95,
           });
@@ -112,7 +116,8 @@ describe("AirSourceHeatPump", () => {
 
         test("above max capacity", () => {
           const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-            btusPerHourNeeded: -90000,
+            power: { type: "btus", btusPerHourNeeded: -90000 },
+            mode: "cooling",
             insideAirTempF: 80,
             outsideAirTempF: 95,
           });
@@ -127,7 +132,8 @@ describe("AirSourceHeatPump", () => {
 
       test("interpolated deltaT", () => {
         const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-          btusPerHourNeeded: -90000,
+          power: { type: "btus", btusPerHourNeeded: -90000 },
+          mode: "cooling",
           insideAirTempF: 80,
           outsideAirTempF: 90,
         });
@@ -138,7 +144,8 @@ describe("AirSourceHeatPump", () => {
 
       test("deltaT under all measured rating values", () => {
         const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-          btusPerHourNeeded: -90000,
+          power: { type: "btus", btusPerHourNeeded: -90000 },
+          mode: "cooling",
           insideAirTempF: 80,
           outsideAirTempF: 81,
         });
@@ -149,7 +156,8 @@ describe("AirSourceHeatPump", () => {
 
       test("deltaT above all measured rating values", () => {
         const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-          btusPerHourNeeded: -90000,
+          power: { type: "btus", btusPerHourNeeded: -90000 },
+          mode: "cooling",
           insideAirTempF: 80,
           outsideAirTempF: 100,
         });
@@ -168,7 +176,8 @@ describe("AirSourceHeatPump", () => {
         });
 
         const rating = deratedHeatPump.getEstimatedPerformanceRating({
-          btusPerHourNeeded: -90000,
+          power: { type: "btus", btusPerHourNeeded: -90000 },
+          mode: "cooling",
           insideAirTempF: 80,
           outsideAirTempF: 95,
         });
@@ -184,7 +193,8 @@ describe("AirSourceHeatPump", () => {
       describe("exact match deltaT", () => {
         test("max capacity", () => {
           const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-            btusPerHourNeeded: 36876,
+            power: { type: "btus", btusPerHourNeeded: 36876 },
+            mode: "heating",
             insideAirTempF: 70,
             outsideAirTempF: 5,
           });
@@ -196,7 +206,8 @@ describe("AirSourceHeatPump", () => {
 
         test("min capacity", () => {
           const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-            btusPerHourNeeded: 12500,
+            power: { type: "btus", btusPerHourNeeded: 12500 },
+            mode: "heating",
             insideAirTempF: 70,
             outsideAirTempF: 5,
           });
@@ -213,7 +224,8 @@ describe("AirSourceHeatPump", () => {
         // TODO(jlfwong): This is the result to match behavior with heat pumps
         // hooray, but this isn't intuitively correct to me.
         const rating = panasonicHeatPump.getEstimatedPerformanceRating({
-          btusPerHourNeeded: 40000,
+          power: { type: "btus", btusPerHourNeeded: 40000 },
+          mode: "heating",
           insideAirTempF: 70,
           outsideAirTempF: -30,
         });
