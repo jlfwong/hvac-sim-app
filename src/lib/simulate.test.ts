@@ -154,6 +154,6 @@ describe("simulateBuildingHVAC", () => {
     expect(
       result.bills.filter((b) => b.getFuelType() == "natural gas").length
     ).toBe(12);
-    expect(result.timeSteps.length).toBe(364 * 24 * 6);
+    expect(result.timeSteps.length).toBe(364 * 24 * 3);
   });
 });

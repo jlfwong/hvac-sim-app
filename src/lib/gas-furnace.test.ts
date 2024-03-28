@@ -14,9 +14,9 @@ describe("GasFurnace", () => {
         outsideAirTempF: 5,
       });
 
-      expect(response.btusPerHour).toBeCloseTo(40000, 0);
+      expect(response.btusPerHour).toBeCloseTo(80000, 0);
       expect(Object.keys(response.fuelUsage)).toEqual(["naturalGasCcfPerHour"]);
-      expect(response.fuelUsage.naturalGasCcfPerHour).toBeCloseTo(0.4, 2);
+      expect(response.fuelUsage.naturalGasCcfPerHour).toBeCloseTo(0.8, 2);
     });
 
     test("afue 80", () => {
@@ -31,9 +31,9 @@ describe("GasFurnace", () => {
         outsideAirTempF: 5,
       });
 
-      expect(response.btusPerHour).toBeCloseTo(40000, 0);
+      expect(response.btusPerHour).toBeCloseTo(80000, 0);
       expect(Object.keys(response.fuelUsage)).toEqual(["naturalGasCcfPerHour"]);
-      expect(response.fuelUsage.naturalGasCcfPerHour).toBeCloseTo(0.48, 2);
+      expect(response.fuelUsage.naturalGasCcfPerHour).toBeCloseTo(0.96, 2);
     });
 
     test("over max capacity", () => {
