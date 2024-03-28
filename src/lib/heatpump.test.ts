@@ -106,10 +106,9 @@ describe("AirSourceHeatPump", () => {
             outsideAirTempF: 95,
           });
 
-          // COP should match COP at min capacity, but btusPerHour should be as
-          // requested
+          // Can't run below minimum capacity. Run at that capcaity.
           expect(rating).toEqual({
-            btusPerHour: -10000,
+            btusPerHour: -13000,
             coefficientOfPerformance: 3.7,
           });
         });
@@ -258,9 +257,9 @@ describe("AirSourceHeatPump", () => {
         outsideAirTempF: 90,
       });
 
-      expect(response.btusPerHour).toBeCloseTo(-30000, 0);
+      expect(response.btusPerHour).toBeCloseTo(-47400, 0);
       expect(Object.keys(response.fuelUsage)).toEqual(["electricityKw"]);
-      expect(response.fuelUsage.electricityKw).toBeCloseTo(3.6, 1);
+      expect(response.fuelUsage.electricityKw).toBeCloseTo(7.3, 1);
     });
   });
 });
