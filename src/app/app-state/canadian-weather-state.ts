@@ -41,6 +41,7 @@ export const locationInfoAtom = atom<LocationInfo | null>((get) => {
   const caPostalCodesJson = get(caPostalCodesJsonAtom);
 
   if (
+    postalCode == null ||
     !caPostalCodesJson ||
     !/^[A-Za-z][0-9][A-Za-z] ?[0-9][A-Za-z][0-9]$/.exec(postalCode)
   ) {

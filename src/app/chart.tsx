@@ -1,14 +1,10 @@
-import { Flex, Heading } from "@chakra-ui/react";
+import { Flex, Text } from "@chakra-ui/react";
 import React from "react";
 
 export const ChartHeader: React.FC<{
   children?: React.ReactNode | React.ReactNode[];
 }> = (props) => {
-  return (
-    <Heading fontSize={20} fontWeight={"normal"}>
-      {props.children}
-    </Heading>
-  );
+  return <Text>{props.children}</Text>;
 };
 
 export const ChartGroup: React.FC<{
@@ -20,6 +16,7 @@ export const ChartGroup: React.FC<{
       direction="column"
       fontFamily={"sans-serif"}
       textAlign={"center"}
+      width="full"
     >
       {props.children}
     </Flex>

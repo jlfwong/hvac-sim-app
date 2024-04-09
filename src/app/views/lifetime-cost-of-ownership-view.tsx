@@ -56,14 +56,17 @@ export const LifetimeCostOfOwnershipView: React.FC<{}> = (props) => {
     return DateTime.utc(DateTime.utc().year + n).toJSDate();
   }
 
-  const heatPumpSeries: [Date, number][] = [[year(0), heatpumpInstallCost]];
+  const heatPumpSeries: [Date, number][] = [
+    [year(0), 0],
+    [year(0), heatpumpInstallCost],
+  ];
   const statusQuoSeries: [Date, number][] = [
+    [year(0), 0],
     [year(0), statusQuoFurnaceInstallCost + airConditionerInstallCost],
   ];
 
-  // TODO(jlfwong): Update this to use the monthly billing numbers
-  let hp = heatPumpSeries[0][1];
-  let sq = statusQuoSeries[0][1];
+  let hp = heatPumpSeries[1][1];
+  let sq = statusQuoSeries[1][1];
   const startYear = DateTime.utc().year;
 
   const sortedHPBills = [...bestHeatPumpSimulationResult.bills].sort(
@@ -95,16 +98,18 @@ export const LifetimeCostOfOwnershipView: React.FC<{}> = (props) => {
   }
 
   const margin = { top: 10, right: 30, bottom: 40, left: 60 },
-    width = 860 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 430 - margin.left - margin.right,
+    height = 200 - margin.top - margin.bottom;
 
   const x = scaleUtc<number>({
     domain: [
-      heatPumpSeries[0][0],
-      heatPumpSeries[heatPumpSeries.length - 1][0],
+      year(-1),
+      DateTime.fromJSDate(heatPumpSeries[heatPumpSeries.length - 1][0])
+        .plus({ years: 1 })
+        .toJSDate(),
     ],
     range: [0, width],
-  });
+  }).nice();
 
   const names = [
     bestHeatPumpSimulationResult.name,
@@ -126,12 +131,12 @@ export const LifetimeCostOfOwnershipView: React.FC<{}> = (props) => {
 
   return (
     <ChartGroup>
-      <ChartHeader>
-        Total Cost Over Time (Install Costs + Utility Bills)
-      </ChartHeader>
+      <ChartHeader>Total Cost Over Time</ChartHeader>
       <svg
-        width={width + margin.left + margin.right}
-        height={height + margin.top + margin.bottom}
+        viewBox={`0 0 ${width + margin.left + margin.right} ${
+          height + margin.top + margin.bottom
+        }`}
+        style={{ width: "100%", height: "auto" }}
       >
         <Group left={margin.left} top={margin.top}>
           <GridRows scale={y} width={width} />
@@ -152,7 +157,11 @@ export const LifetimeCostOfOwnershipView: React.FC<{}> = (props) => {
             curve={curveStepAfter}
           />
           <AxisBottom top={height} scale={x} />
-          <AxisLeft scale={y} tickFormat={(t) => `\$${t.toLocaleString()}`} />
+          <AxisLeft
+            numTicks={4}
+            scale={y}
+            tickFormat={(t) => `\$${t.toLocaleString()}`}
+          />
         </Group>
       </svg>
       <div style={{ marginLeft: margin.left }}>

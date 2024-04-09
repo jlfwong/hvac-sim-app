@@ -17,7 +17,7 @@ export const EmissionsView: React.FC<{}> = (props) => {
   if (!simulations) return null;
 
   const margin = { top: 10, right: 30, bottom: 40, left: 150 },
-    width = 860 - margin.left - margin.right,
+    width = 430 - margin.left - margin.right,
     height = 120 - margin.top - margin.bottom;
 
   const tCO2e = (s: HVACSimulationResultWithEmissions) =>
@@ -43,8 +43,10 @@ export const EmissionsView: React.FC<{}> = (props) => {
     <ChartGroup>
       <ChartHeader>Annual Emissions from Heating and Cooling</ChartHeader>
       <svg
-        width={width + margin.left + margin.right}
-        height={height + margin.top + margin.bottom}
+        viewBox={`0 0 ${width + margin.left + margin.right} ${
+          height + margin.top + margin.bottom
+        }`}
+        style={{ width: "100%", height: "auto" }}
       >
         <Group left={margin.left} top={margin.top}>
           {simulations.map((s) => {
@@ -59,7 +61,12 @@ export const EmissionsView: React.FC<{}> = (props) => {
               />
             );
           })}
-          <AxisBottom top={height} scale={x} tickFormat={(t) => `${t} tons`} />
+          <AxisBottom
+            top={height}
+            scale={x}
+            numTicks={4}
+            tickFormat={(t) => `${t} ton` + (t != 1 ? "s" : "")}
+          />
           <AxisLeft scale={y} />
         </Group>
       </svg>

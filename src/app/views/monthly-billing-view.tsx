@@ -10,21 +10,42 @@ import { LegendOrdinal } from "@visx/legend";
 import { scaleBand, scaleLinear, scaleOrdinal } from "@visx/scale";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { GridRows } from "@visx/grid";
-import { HVACSimulationResult } from "../../lib/simulate";
 import { DateTime } from "luxon";
 import { EnergyBill } from "../../lib/billing";
 import { ChartGroup, ChartHeader } from "../chart";
+import { useAtomValue } from "jotai";
+import { simulationsAtom } from "../app-state/simulations-state";
 
-export const BillingView: React.FC<{
-  simulations: HVACSimulationResult[];
-}> = (props) => {
+export const BillingView: React.FC = () => {
+  const simulations = useAtomValue(simulationsAtom);
+
+  const {
+    tooltipData,
+    tooltipLeft,
+    tooltipTop,
+    tooltipOpen,
+    showTooltip,
+    hideTooltip,
+  } = useTooltip<{ name: string; bills: EnergyBill[] }>();
+
+  // If you don't want to use a Portal, simply replace `TooltipInPortal` below with
+  // `Tooltip` or `TooltipWithBounds` and remove `containerRef`
+  const { containerRef, TooltipInPortal } = useTooltipInPortal({
+    // use TooltipWithBounds
+    detectBounds: true,
+    // when tooltip containers are scrolled, this will correctly update the Tooltip position
+    scroll: true,
+  });
+
+  if (!simulations) return null;
+
   const margin = { top: 10, right: 20, bottom: 40, left: 60 },
-    width = 860 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 430 - margin.left - margin.right,
+    height = 200 - margin.top - margin.bottom;
 
   const monthKey = (date: DateTime) => date.toFormat("yyyy-LL");
 
-  let dateRange = props.simulations
+  let dateRange = simulations
     .flatMap((res) => res.bills.flatMap((b) => b.getBillingPeriodStart()))
     .reduce(
       (acc, date) => {
@@ -46,20 +67,18 @@ export const BillingView: React.FC<{
     }
   }
 
-  const allBills: { [key: string]: EnergyBill[] }[] = props.simulations.map(
-    (sim) => {
-      let map: { [key: string]: EnergyBill[] } = {};
-      sim.bills.forEach((bill) => {
-        const key = monthKey(bill.getBillingPeriodStart());
-        if (!map[key]) {
-          map[key] = [bill];
-        } else {
-          map[key].push(bill);
-        }
-      });
-      return map;
-    }
-  );
+  const allBills: { [key: string]: EnergyBill[] }[] = simulations.map((sim) => {
+    let map: { [key: string]: EnergyBill[] } = {};
+    sim.bills.forEach((bill) => {
+      const key = monthKey(bill.getBillingPeriodStart());
+      if (!map[key]) {
+        map[key] = [bill];
+      } else {
+        map[key].push(bill);
+      }
+    });
+    return map;
+  });
 
   const xMajor = scaleBand<string>({
     domain: xAxisDomain,
@@ -69,7 +88,7 @@ export const BillingView: React.FC<{
   });
 
   const xMinor = scaleBand<string>({
-    domain: props.simulations.map((_, i) => i.toString()),
+    domain: simulations.map((_, i) => i.toString()),
     paddingInner: 0.1,
     range: [0, xMajor.bandwidth()],
   });
@@ -89,26 +108,8 @@ export const BillingView: React.FC<{
   }).nice();
 
   const color = scaleOrdinal<string, string>()
-    .domain(props.simulations.map((s) => s.name))
+    .domain(simulations.map((s) => s.name))
     .range(schemeSet1);
-
-  const {
-    tooltipData,
-    tooltipLeft,
-    tooltipTop,
-    tooltipOpen,
-    showTooltip,
-    hideTooltip,
-  } = useTooltip<{ name: string; bills: EnergyBill[] }>();
-
-  // If you don't want to use a Portal, simply replace `TooltipInPortal` below with
-  // `Tooltip` or `TooltipWithBounds` and remove `containerRef`
-  const { containerRef, TooltipInPortal } = useTooltipInPortal({
-    // use TooltipWithBounds
-    detectBounds: true,
-    // when tooltip containers are scrolled, this will correctly update the Tooltip position
-    scroll: true,
-  });
 
   const handleMouseOver = (
     event: React.MouseEvent,
@@ -123,7 +124,7 @@ export const BillingView: React.FC<{
       tooltipLeft: coords.x,
       tooltipTop: coords.y,
       tooltipData: {
-        name: props.simulations[simIdx].name,
+        name: simulations[simIdx].name,
         bills: allBills[simIdx][monthKey],
       },
     });
@@ -133,15 +134,17 @@ export const BillingView: React.FC<{
     return DateTime.fromObject({
       year: parseInt(value.split("-")[0]),
       month: parseInt(value.split("-")[1]),
-    }).toFormat("LLLL");
+    }).toFormat("LLL");
   };
 
   return (
     <ChartGroup>
       <ChartHeader>Monthly Utility Bills for Heating and Cooling</ChartHeader>
       <svg
-        width={width + margin.left + margin.right}
-        height={height + margin.top + margin.bottom}
+        viewBox={`0 0 ${width + margin.left + margin.right} ${
+          height + margin.top + margin.bottom
+        }`}
+        style={{ width: "100%", height: "auto" }}
         ref={containerRef}
       >
         {color.range().map((value) => {
@@ -174,7 +177,7 @@ export const BillingView: React.FC<{
                     const rectX = xMajor(month)! + xMinor(idx.toString())!;
                     runningTotalCost += bill.getTotalCost();
                     const rectY = y(runningTotalCost);
-                    const fillColor = color(props.simulations[idx].name);
+                    const fillColor = color(simulations[idx].name);
 
                     return (
                       <Bar
@@ -196,7 +199,7 @@ export const BillingView: React.FC<{
             scale={xMajor}
             tickFormat={monthTickFormat}
           />
-          <AxisLeft scale={y} tickFormat={(v) => `\$${v}`} />
+          <AxisLeft numTicks={4} scale={y} tickFormat={(v) => `\$${v}`} />
         </Group>
       </svg>
       <div style={{ marginLeft: margin.left }}>

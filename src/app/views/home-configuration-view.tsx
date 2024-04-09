@@ -141,7 +141,7 @@ export const HomeConfigurationView: React.FC<{}> = (props) => {
             </Flex>
             <Input
               id="postal-code-input"
-              value={postalCode}
+              value={postalCode ?? ""}
               backgroundColor={"white"}
               onChange={(ev) => {
                 setPostalCode(ev.target.value);

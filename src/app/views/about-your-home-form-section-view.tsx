@@ -1,0 +1,68 @@
+import { Flex } from "@chakra-ui/react";
+import React from "react";
+import { useAtom } from "jotai";
+import {
+  floorSpaceSqFtAtom,
+  hasOtherGasAppliancesAtom,
+  postalCodeAtom,
+  statusQuoFurnaceFuelAtom,
+} from "../app-state/config-state";
+import { FormInput, FormSelect } from "./forms";
+import { NumericFormInputView } from "./forms";
+import { FormSectionView } from "./forms";
+
+export const AboutYourHomeFormSectionView: React.FC = () => {
+  const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
+  const [floorSpaceSqFt, setFloorSpaceSqFt] = useAtom(floorSpaceSqFtAtom);
+  const [statusQuoFurnaceFuel, setStatusQuoFurnaceFuel] = useAtom(
+    statusQuoFurnaceFuelAtom
+  );
+  const [hasOtherGasAppliances, setHasOtherGasAppliances] = useAtom(
+    hasOtherGasAppliancesAtom
+  );
+
+  return (
+    <FormSectionView title="About your home">
+      <Flex direction={{ oneColumn: "column", twoColumn: "row" }} gap={"10px"}>
+        <FormInput
+          label="Postal code"
+          placeholder="K2A 2Y3"
+          value={postalCode ?? ""}
+          onChange={(ev) => setPostalCode(ev.currentTarget.value)}
+        />
+        <NumericFormInputView
+          label="Square footage"
+          placeholder="2500"
+          minValue={100}
+          maxValue={100000}
+          value={floorSpaceSqFt}
+          setValue={setFloorSpaceSqFt}
+        />
+      </Flex>
+      <FormSelect
+        label="My furnace (or boiler) uses"
+        value={statusQuoFurnaceFuel}
+        onChange={(ev) => {
+          const value = ev.currentTarget.value;
+          if (value === "gas" || value === "electric") {
+            setStatusQuoFurnaceFuel(value);
+          }
+        }}
+      >
+        <option value="gas">Natural Gas</option>
+        <option value="electric">Electricity</option>
+      </FormSelect>
+      <FormSelect
+        label="Other gas appliances (stove, water heater, etc.)"
+        value={hasOtherGasAppliances.toString()}
+        onChange={(ev) => {
+          const value = ev.currentTarget.value;
+          setHasOtherGasAppliances(value === "true");
+        }}
+      >
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </FormSelect>
+    </FormSectionView>
+  );
+};

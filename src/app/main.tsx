@@ -170,7 +170,7 @@ export const Main: React.FC<{}> = (props) => {
                 gas and electricity prices from 2023 to estimate costs.
               </p>
             </Paragraphs>
-            <BillingView simulations={simulations} />
+            <BillingView />
             <Paragraphs>
               <p>
                 Once we have the total energy usage for the year, we can

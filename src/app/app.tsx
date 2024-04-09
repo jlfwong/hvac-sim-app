@@ -2,11 +2,24 @@ import { createRoot } from "react-dom/client";
 import React from "react";
 import { Main } from "./main";
 import { ChakraProvider } from "@chakra-ui/react";
+import { CalculatorAppView } from "./views/calculator-app-view";
+
+import { extendTheme } from "@chakra-ui/react";
+
+const theme = extendTheme({
+  styles: {
+    global: {
+      html: {
+        fontSize: "12px",
+      },
+    },
+  },
+});
 
 const App: React.FC<{}> = (props) => {
   return (
-    <ChakraProvider>
-      <Main />
+    <ChakraProvider theme={theme}>
+      <CalculatorAppView />
     </ChakraProvider>
   );
 };
