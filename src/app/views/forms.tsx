@@ -1,6 +1,6 @@
 import { FormControl, FormLabel, Input, Select } from "@chakra-ui/react";
 import { Box, Heading, Stack } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { forwardRef, useState } from "react";
 import React, { useState } from "react";
 
 interface FormSectionViewProps {
@@ -25,14 +25,15 @@ interface FormInputProps {
   placeholder?: string;
 }
 
-export const FormInput: React.FC<
+export const FormInput = forwardRef<
+  HTMLInputElement,
   FormInputProps & React.InputHTMLAttributes<HTMLInputElement>
-> = ({ label, ...props }) => (
+>(({ label, ...props }, ref) => (
   <FormControl>
     <FormLabel mb={"3px"}>{label}</FormLabel>
-    <Input {...props} />
+    <Input {...props} ref={ref} />
   </FormControl>
-);
+));
 interface FormSelectProps {
   label: string;
   children: React.ReactNode;
@@ -93,8 +94,8 @@ export const NumericFormInputView: React.FC<NumericFormInputViewProps> = (
         // intentional.
         //
         // https://github.com/chakra-ui/chakra-ui/pull/2741
-        */
         _focusVisible={isInvalid ? { borderColor: "inherit" } : {}}
+        */
         onChange={(ev) => {
           const value = ev.target.value;
           setInternalValue(value);

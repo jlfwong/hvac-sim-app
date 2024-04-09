@@ -1,5 +1,5 @@
 import { Flex } from "@chakra-ui/react";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useAtom } from "jotai";
 import {
   floorSpaceSqFtAtom,
@@ -21,6 +21,15 @@ export const AboutYourHomeFormSectionView: React.FC = () => {
     hasOtherGasAppliancesAtom
   );
 
+  const postalCodeInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    // If postal code is un-set, automatically focus the input on mount
+    if (postalCode == null || postalCode.length === 0) {
+      postalCodeInputRef.current?.focus();
+    }
+  }, []);
+
   return (
     <FormSectionView title="About your home">
       <Flex direction={{ oneColumn: "column", twoColumn: "row" }} gap={"10px"}>
@@ -29,6 +38,7 @@ export const AboutYourHomeFormSectionView: React.FC = () => {
           placeholder="K2A 2Y3"
           value={postalCode ?? ""}
           onChange={(ev) => setPostalCode(ev.currentTarget.value)}
+          ref={postalCodeInputRef}
         />
         <NumericFormInputView
           label="Square footage"
