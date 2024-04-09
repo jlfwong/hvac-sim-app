@@ -10,7 +10,7 @@ import { AboutYourHomeFormSectionView } from "./about-your-home-form-section-vie
 import {
   CardColumnStackView,
   CardStackView,
-  LifetimeSavingsCardView,
+  LifetimeCostsCardView,
   EmissionsReductionCardView,
   EnergyUseSavingsCardView,
   AboutThisCalculatorCardView,
@@ -32,7 +32,7 @@ export const CalculatorView: React.FC = () => {
   if (columns == null || columns < 3) {
     column2 = column1;
   }
-  column1.push(<LifetimeSavingsCardView key={"life"} />);
+  column1.push(<LifetimeCostsCardView key={"life"} />);
   column2.push(<EmissionsReductionCardView key={"emissions"} />);
   column1.push(<EnergyUseSavingsCardView key={"energy"} />);
   column2.push(<AboutThisCalculatorCardView key={"about"} />);

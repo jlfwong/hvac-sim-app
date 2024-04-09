@@ -61,13 +61,21 @@ function sigDigs(num: number, digits: number = 1) {
 function formatDollars(num: number) {
   return (num < 0 ? "-$" : "$") + sigDigs(Math.abs(num), 2);
 }
-export const LifetimeSavingsCardView: React.FC = () => {
+export const LifetimeCostsCardView: React.FC = () => {
   const systemComparison = useAtomValue(systemComparisonAtom);
   const statusQuoFurnaceFuel = useAtomValue(statusQuoFurnaceFuelAtom);
 
   if (!systemComparison) return null;
 
   const savings = systemComparison.lifetimeCostSavings;
+
+  let heading = formatDollars(Math.abs(savings));
+  if (savings < 0) {
+    heading += " more";
+  } else {
+    heading += " less";
+  }
+  heading += " over 15 years";
 
   let message = "Installing a heat pump could";
   if (savings < 0) {
@@ -86,8 +94,8 @@ export const LifetimeSavingsCardView: React.FC = () => {
   message += " This takes into account both up-front costs and utility bills.";
 
   return (
-    <InfoCardView title={"Lifetime Savings"}>
-      <Heading>{formatDollars(savings)} over 15 years</Heading>
+    <InfoCardView title={"Lifetime Costs"}>
+      <Heading>{heading}</Heading>
       <Text>{message}</Text>
       <LifetimeCostOfOwnershipView />
     </InfoCardView>
@@ -100,22 +108,26 @@ export const EmissionsReductionCardView: React.FC = () => {
 
   if (!systemComparison) return null;
 
+  const savings = systemComparison.annualEmissionsSavingGramsCo2e;
+
+  let heading: React.ReactNode[] = [sigDigs(Math.abs(savings) / 1e6, 2)];
+  heading.push(" tCO", <sub>2</sub>, "e");
+  heading.push(savings < 0 ? " more" : " less");
+  heading.push(" per year");
+
   let message: React.ReactNode;
 
-  if (systemComparison.annualEmissionsSavingGramsCo2e < 0) {
+  if (savings < 0) {
     message = (
       <Text>
-        It looks like a heat pump might actually <em>increase</em> emissions by{" "}
-        {sigDigs(-systemComparison.annualEmissionsSavingGramsCo2e / 1000000, 2)}{" "}
-        tons per year. This tends to happen in areas where electrical power
-        generation has exceptionally high emissions.
+        It looks like a heat pump might increase emissions by{" "}
+        {sigDigs(-savings / 1e6, 2)} tons per year. This tends to happen in
+        areas where electrical power generation has exceptionally high
+        emissions.
       </Text>
     );
   } else {
-    const flightCount = sigDigs(
-      systemComparison.annualEmissionsSavingGramsCo2e /
-        emissionsGramsCO2eRoundTripFlight
-    );
+    const flightCount = sigDigs(savings / emissionsGramsCO2eRoundTripFlight);
 
     message = (
       <Text>
@@ -127,11 +139,8 @@ export const EmissionsReductionCardView: React.FC = () => {
     );
   }
   return (
-    <InfoCardView title={"Emissions Reduction"}>
-      <Heading>
-        {sigDigs(systemComparison.annualEmissionsSavingGramsCo2e / 1000000, 2)}{" "}
-        tons CO<sub>2</sub>e/year
-      </Heading>
+    <InfoCardView title={"Greenhouse Gas Emissions"}>
+      <Heading>{heading}</Heading>
       {message}
       <EmissionsView />
     </InfoCardView>
@@ -150,11 +159,17 @@ export const EnergyUseSavingsCardView: React.FC = () => {
 
   const costSavings = systemComparison.annualOpexCostSavings;
 
-  let message = "";
+  let heading = formatDollars(Math.abs(costSavings));
+  if (costSavings < 0) {
+    heading += " more";
+  } else {
+    heading += " less";
+  }
+  heading += " per year";
 
   return (
-    <InfoCardView title={"Energy Use Cost Savings"}>
-      <Heading>{formatDollars(costSavings)}/year</Heading>
+    <InfoCardView title={"Energy Costs"}>
+      <Heading>{heading}</Heading>
       <Text>
         Based on weather data from {locationInfo.placeName} and utility prices
         of ${naturalGasPricePerCubicMetre}/m<sup>3</sup> of natural gas and $
