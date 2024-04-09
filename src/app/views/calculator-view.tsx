@@ -15,6 +15,7 @@ import {
   EnergyUseSavingsCardView,
   AboutThisCalculatorCardView,
 } from "./cards";
+import { EquipmentPurchaseAndInstallFormSectionView } from "./equipment-purchase-and-install-form-section-view";
 
 export const CalculatorView: React.FC = () => {
   const columns = useBreakpointValue(
@@ -37,12 +38,16 @@ export const CalculatorView: React.FC = () => {
   column1.push(<EnergyUseSavingsCardView key={"energy"} />);
   column2.push(<AboutThisCalculatorCardView key={"about"} />);
 
+  let formSections: React.ReactNode[] = [<AboutYourHomeFormSectionView />];
+
+  formSections.push(<EquipmentPurchaseAndInstallFormSectionView />);
+
   if (columns === 3) {
     return (
       <Flex direction="row" w="full">
         <Flex direction="column" h="full" w={"400px"} p="20px" gap="20px">
           <Heading textAlign={"center"}>Heat Pump Calculator 🇨🇦</Heading>
-          <AboutYourHomeFormSectionView />
+          {formSections}
         </Flex>
         <CardColumnStackView>
           <CardStackView>{column1}</CardStackView>
@@ -55,7 +60,7 @@ export const CalculatorView: React.FC = () => {
       <Flex direction="row" w="full">
         <Flex direction="column" h="full" w={"300px"} p="20px" gap="20px">
           <Heading textAlign={"center"}>Heat Pump Calculator 🇨🇦</Heading>
-          <AboutYourHomeFormSectionView />
+          {formSections}
         </Flex>
         <CardColumnStackView>
           <CardStackView>{column1}</CardStackView>
@@ -66,7 +71,7 @@ export const CalculatorView: React.FC = () => {
     return (
       <VStack gap="20px" w="full">
         <Heading textAlign={"center"}>Heat Pump Calculator 🇨🇦</Heading>
-        <AboutYourHomeFormSectionView />
+        {formSections}
         {column1}
       </VStack>
     );

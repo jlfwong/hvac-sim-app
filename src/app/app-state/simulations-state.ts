@@ -21,7 +21,10 @@ import {
   gasFurnaceSystemAtom,
   heatPumpWithElectricBackupSystemsAtom,
 } from "./hvac-systems-state";
-import { optimizeForAtom, statusQuoFurnaceFuelAtom } from "./config-state";
+import {
+  heatpumpBackupFuelAtom,
+  statusQuoFurnaceFuelAtom,
+} from "./config-state";
 import type { HVACSystem } from "../../lib/types";
 
 export interface HVACSimulationResultWithEmissions
@@ -118,6 +121,7 @@ export const heatPumpSimulationResultsAtom = atom<
   const heatPumpWithElectricBackupSystems = get(
     heatPumpWithElectricBackupSystemsAtom
   );
+  const heatpumpBackupFuel = get(heatpumpBackupFuelAtom);
 
   const simulator = get(simulatorAtom);
 
@@ -129,10 +133,22 @@ export const heatPumpSimulationResultsAtom = atom<
     return null;
   }
 
-  return heatPumpWithGasBackupSystems
-    .slice(0, 3)
-    .concat(heatPumpWithElectricBackupSystems.slice(0, 3))
-    .map(simulator);
+  let systems: HVACSystem[];
+  switch (heatpumpBackupFuel) {
+    case "electric": {
+      systems = heatPumpWithElectricBackupSystems;
+      break;
+    }
+    case "gas": {
+      systems = heatPumpWithGasBackupSystems;
+      break;
+    }
+    default: {
+      assertNever(heatpumpBackupFuel);
+    }
+  }
+
+  return systems.slice(0, 3).map(simulator);
 });
 
 export const statusQuoSimulationResultAtom =
@@ -149,10 +165,13 @@ export const statusQuoSimulationResultAtom =
     return simulator(statusQuoSystem);
   });
 
+// TODO(jlfwong): If we want this to be user-controllable again,
+// switch this back to an atom
+let optimizeFor: "cost" | "emissions" = "cost";
+
 export const bestHeatPumpSimulationResultAtom =
   atom<HVACSimulationResultWithEmissions | null>((get) => {
     const heatPumpResults = get(heatPumpSimulationResultsAtom);
-    const optimizeFor = get(optimizeForAtom);
 
     if (!heatPumpResults) return null;
 

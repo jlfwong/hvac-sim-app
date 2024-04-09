@@ -5,6 +5,10 @@ import {
   Select,
   type InputProps,
   type SelectProps,
+  Flex,
+  InputGroup,
+  InputLeftAddon,
+  InputRightAddon,
 } from "@chakra-ui/react";
 import { Box, Heading, Stack } from "@chakra-ui/react";
 import React, { forwardRef, useState } from "react";
@@ -31,6 +35,14 @@ interface FormInputProps {
   placeholder?: string;
 }
 
+export const FormRow: React.FC<{ children: React.ReactNode }> = (props) => {
+  return (
+    <Flex direction={{ base: "column", med: "row" }} gap={"10px"}>
+      {props.children}
+    </Flex>
+  );
+};
+
 export const FormInput = forwardRef<
   HTMLInputElement,
   FormInputProps & InputProps
@@ -55,9 +67,12 @@ export const FormSelect: React.FC<FormSelectProps & SelectProps> = ({
     <Select {...props}>{children}</Select>
   </FormControl>
 );
+
 interface NumericFormInputViewProps {
   label: string;
   placeholder?: string;
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
   value: number | null;
   setValue: (value: number) => void;
   minValue: number;
@@ -65,9 +80,9 @@ interface NumericFormInputViewProps {
   step?: number;
 }
 
-export const NumericFormInputView: React.FC<NumericFormInputViewProps> = (
-  props
-) => {
+export const NumericFormInputView: React.FC<
+  NumericFormInputViewProps & InputProps
+> = (props) => {
   const [internalValue, setInternalValue] = useState(
     props.value?.toString() ?? null
   );
@@ -89,14 +104,19 @@ export const NumericFormInputView: React.FC<NumericFormInputViewProps> = (
   return (
     <FormControl isInvalid={isInvalid}>
       <FormLabel mb={"3px"}>{props.label}</FormLabel>
-      <Input
-        type="number"
-        value={internalValue ?? undefined}
-        placeholder={props.placeholder}
-        min={props.minValue}
-        max={props.maxValue}
-        step={props.step ?? 1}
-        /*
+      <InputGroup>
+        {props.prefix != null && (
+          <InputLeftAddon>{props.prefix}</InputLeftAddon>
+        )}
+        <Input
+          {...props}
+          type="number"
+          value={internalValue ?? undefined}
+          placeholder={props.placeholder}
+          min={props.minValue}
+          max={props.maxValue}
+          step={props.step ?? 1}
+          /*
         // Unfortunately, there's no styling for both invalid & focused, and focus
         // takes precedences. IMO this is a design oversight, though perhaps it's
         // intentional.
@@ -104,20 +124,24 @@ export const NumericFormInputView: React.FC<NumericFormInputViewProps> = (
         // https://github.com/chakra-ui/chakra-ui/pull/2741
         _focusVisible={isInvalid ? { borderColor: "inherit" } : {}}
         */
-        onChange={(ev) => {
-          const value = ev.target.value;
-          setInternalValue(value);
-          const numericValue = parseInt(value, 10);
-          if (isValid(numericValue)) {
-            props.setValue(numericValue);
-          }
-        }}
-        onBlur={() => {
-          if (props.value != null) {
-            setInternalValue(props.value.toString());
-          }
-        }}
-      />
+          onChange={(ev) => {
+            const value = ev.target.value;
+            setInternalValue(value);
+            const numericValue = parseInt(value, 10);
+            if (isValid(numericValue)) {
+              props.setValue(numericValue);
+            }
+          }}
+          onBlur={() => {
+            if (props.value != null) {
+              setInternalValue(props.value.toString());
+            }
+          }}
+        />
+        {props.suffix != null && (
+          <InputRightAddon>{props.suffix}</InputRightAddon>
+        )}
+      </InputGroup>
     </FormControl>
   );
 };

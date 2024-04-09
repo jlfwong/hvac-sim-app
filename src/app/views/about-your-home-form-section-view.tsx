@@ -7,7 +7,7 @@ import {
   postalCodeAtom,
   statusQuoFurnaceFuelAtom,
 } from "../app-state/config-state";
-import { FormInput, FormSelect } from "./forms";
+import { FormInput, FormRow, FormSelect } from "./forms";
 import { NumericFormInputView } from "./forms";
 import { FormSectionView } from "./forms";
 
@@ -32,7 +32,7 @@ export const AboutYourHomeFormSectionView: React.FC = () => {
 
   return (
     <FormSectionView title="About your home">
-      <Flex direction={{ oneColumn: "column", twoColumn: "row" }} gap={"10px"}>
+      <FormRow>
         <FormInput
           label="Postal code"
           placeholder="K2A 2Y3"
@@ -47,8 +47,14 @@ export const AboutYourHomeFormSectionView: React.FC = () => {
           maxValue={100000}
           value={floorSpaceSqFt}
           setValue={setFloorSpaceSqFt}
+          textAlign={"right"}
+          suffix={
+            <>
+              ft<sup>2</sup>
+            </>
+          }
         />
-      </Flex>
+      </FormRow>
       <FormSelect
         label="My furnace (or boiler) uses"
         value={statusQuoFurnaceFuel}
@@ -59,7 +65,7 @@ export const AboutYourHomeFormSectionView: React.FC = () => {
           }
         }}
       >
-        <option value="gas">Natural Gas</option>
+        <option value="gas">Gas</option>
         <option value="electric">Electricity</option>
       </FormSelect>
       <FormSelect

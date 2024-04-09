@@ -17,11 +17,11 @@ export const auxSwitchoverTempFAtom = atom((get) =>
 
 export const floorSpaceSqFtAtom = atom(2500);
 
-export const postalCodeAtom = atom<string | null>(null);
+export const postalCodeAtom = atom<string | null>("K2A 2Y3");
 
 export const statusQuoFurnaceFuelAtom = atom<"electric" | "gas">("gas");
 
-export const optimizeForAtom = atom<"cost" | "emissions">("cost");
+export const heatpumpBackupFuelAtom = atom<"electric" | "gas">("electric");
 
 export const heatpumpInstallCostAtom = atom<number>(17000);
 
@@ -33,4 +33,4 @@ export const electricFurnaceInstallCostAtom = atom<number>(6000);
 
 export const hasOtherGasAppliancesAtom = atom<boolean>(true);
 
-export const welcomeFormHasBeenSubmitAtom = atom<boolean>(false);
+export const welcomeFormHasBeenSubmitAtom = atom<boolean>(true);
