@@ -1,6 +1,5 @@
 import { createRoot } from "react-dom/client";
 import React from "react";
-import { Main } from "./main";
 import { ChakraProvider } from "@chakra-ui/react";
 import { CalculatorAppView } from "./views/calculator-app-view";
 

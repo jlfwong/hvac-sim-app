@@ -1,7 +1,13 @@
-import { FormControl, FormLabel, Input, Select } from "@chakra-ui/react";
+import {
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  type InputProps,
+  type SelectProps,
+} from "@chakra-ui/react";
 import { Box, Heading, Stack } from "@chakra-ui/react";
 import React, { forwardRef, useState } from "react";
-import React, { useState } from "react";
 
 interface FormSectionViewProps {
   title: string;
@@ -27,7 +33,7 @@ interface FormInputProps {
 
 export const FormInput = forwardRef<
   HTMLInputElement,
-  FormInputProps & React.InputHTMLAttributes<HTMLInputElement>
+  FormInputProps & InputProps
 >(({ label, ...props }, ref) => (
   <FormControl>
     <FormLabel mb={"3px"}>{label}</FormLabel>
@@ -39,9 +45,11 @@ interface FormSelectProps {
   children: React.ReactNode;
 }
 
-export const FormSelect: React.FC<
-  FormSelectProps & React.SelectHTMLAttributes<HTMLSelectElement>
-> = ({ label, children, ...props }) => (
+export const FormSelect: React.FC<FormSelectProps & SelectProps> = ({
+  label,
+  children,
+  ...props
+}) => (
   <FormControl>
     <FormLabel mb={"3px"}>{label}</FormLabel>
     <Select {...props}>{children}</Select>
