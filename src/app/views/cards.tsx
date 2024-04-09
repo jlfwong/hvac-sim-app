@@ -1,8 +1,12 @@
 import React from "react";
-import { Text, HStack, Heading, VStack } from "@chakra-ui/react";
+import { Text, HStack, Heading, VStack, Link } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { systemComparisonAtom } from "../app-state/system-comparison";
-import { statusQuoFurnaceFuelAtom } from "../app-state/config-state";
+import {
+  coolingSetPointCAtom,
+  heatingSetPointCAtom,
+  statusQuoFurnaceFuelAtom,
+} from "../app-state/config-state";
 import { LifetimeCostOfOwnershipView } from "./lifetime-cost-of-ownership-view";
 import { EmissionsView } from "./emissions-view";
 import { BillingView } from "./monthly-billing-view";
@@ -11,6 +15,8 @@ import {
   electricityPricePerKwhAtom,
   naturalGasPricePerCubicMetreAtom,
 } from "../app-state/canadian-utilities-state";
+import { bestHeatPumpSimulationResultAtom } from "../app-state/simulations-state";
+import { TemperaturesView } from "./temperatures-view";
 
 interface InfoCardViewProps {
   title: string;
@@ -159,6 +165,48 @@ export const EnergyUseSavingsCardView: React.FC = () => {
         If the monthly estimates look wrong for your house, try adjusting the
         insulation quality and ensure that the calculator's thermostat settings
         match yours.
+      </Text>
+    </InfoCardView>
+  );
+};
+
+export const AboutThisCalculatorCardView: React.FC = () => {
+  const bestHeatPumpSimulationResult = useAtomValue(
+    bestHeatPumpSimulationResultAtom
+  );
+  const heatingSetPointC = useAtomValue(heatingSetPointCAtom);
+  const coolingSetPointC = useAtomValue(coolingSetPointCAtom);
+
+  if (!bestHeatPumpSimulationResult) return null;
+
+  return (
+    <InfoCardView title={"About This Calculator"}>
+      <Text>
+        This calculator uses real historical weather data, and province-specific
+        electricity and natural gas prices to simulate monthly utility bills and
+        greenhouse gas emissions.
+      </Text>
+      <TemperaturesView
+        heatingSetPointC={heatingSetPointC}
+        coolingSetPointC={coolingSetPointC}
+        simulationResult={bestHeatPumpSimulationResult}
+      />
+      <Text>
+        For more details,{" "}
+        <Link
+          href="https://github.com/jlfwong/hvac-sim-app?tab=readme-ov-file#how-does-it-work"
+          textDecoration={"underline"}
+        >
+          read about the simulation method
+        </Link>{" "}
+        used by this calculator. This calculator is{" "}
+        <Link
+          href="https://github.com/jlfwong/hvac-sim-app"
+          textDecoration={"underline"}
+        >
+          open source
+        </Link>
+        .
       </Text>
     </InfoCardView>
   );

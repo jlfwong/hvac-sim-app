@@ -13,6 +13,7 @@ import {
   LifetimeSavingsCardView,
   EmissionsReductionCardView,
   EnergyUseSavingsCardView,
+  AboutThisCalculatorCardView,
 } from "./cards";
 
 export const CalculatorView: React.FC = () => {
@@ -34,6 +35,7 @@ export const CalculatorView: React.FC = () => {
   column1.push(<LifetimeSavingsCardView key={"life"} />);
   column2.push(<EmissionsReductionCardView key={"emissions"} />);
   column1.push(<EnergyUseSavingsCardView key={"energy"} />);
+  column2.push(<AboutThisCalculatorCardView key={"about"} />);
 
   if (columns === 3) {
     return (
