@@ -60,7 +60,7 @@ export const NumericFormInputView: React.FC<NumericFormInputViewProps> = (
   props
 ) => {
   const [internalValue, setInternalValue] = useState(
-    props.value != null ? props.value.toString() : null
+    props.value?.toString() ?? null
   );
 
   function isValid(numeric: number) {
@@ -82,6 +82,7 @@ export const NumericFormInputView: React.FC<NumericFormInputViewProps> = (
       <FormLabel mb={"3px"}>{props.label}</FormLabel>
       <Input
         type="number"
+        value={internalValue ?? undefined}
         placeholder={props.placeholder}
         min={props.minValue}
         max={props.maxValue}
