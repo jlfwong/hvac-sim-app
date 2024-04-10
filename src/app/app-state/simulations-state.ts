@@ -128,19 +128,20 @@ export const heatPumpSimulationResultsAtom = atom<
   );
   const heatpumpBackupFuel = get(heatpumpBackupFuelAtom);
   const hasOtherGasAppliances = get(hasOtherGasAppliancesAtom);
+  let fixedGasCostPerMonth = get(naturalGasFixedPricePerMonthAtom);
 
   const simulator = get(simulatorAtom);
 
   if (
     !simulator ||
     !heatPumpWithGasBackupSystems ||
-    !heatPumpWithElectricBackupSystems
+    !heatPumpWithElectricBackupSystems ||
+    fixedGasCostPerMonth == null
   ) {
     return null;
   }
 
   let systems: HVACSystem[];
-  let fixedGasCostPerMonth = get(naturalGasFixedPricePerMonthAtom);
   switch (heatpumpBackupFuel) {
     case "electric": {
       systems = heatPumpWithElectricBackupSystems;
@@ -162,7 +163,7 @@ export const heatPumpSimulationResultsAtom = atom<
   return systems.slice(0, 3).map((hvacSystem) =>
     simulator({
       hvacSystem,
-      fixedGasCostPerMonth,
+      fixedGasCostPerMonth: fixedGasCostPerMonth!,
     })
   );
 });

@@ -62,6 +62,17 @@ export const locationInfoAtom = atom<LocationInfo | null>((get) => {
   return info;
 });
 
+export const simplePlaceNameAtom = atom<string | null>((get) => {
+  const locationInfo = get(locationInfoAtom);
+  if (locationInfo == null) {
+    return null;
+  }
+
+  // Replace parentheticals to present a simpler place name TOOD(jlfwong):
+  // Consider doing this change in the postal codes JSON.
+  return locationInfo.placeName.replace(/\([^)]*\)/g, "");
+});
+
 export const weatherInfoAtom = asyncAtomOrNull<WeatherInfo>(
   async (get, { signal }) => {
     const locationInfo = get(locationInfoAtom);

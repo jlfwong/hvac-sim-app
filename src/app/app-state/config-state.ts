@@ -17,7 +17,7 @@ export const auxSwitchoverTempFAtom = atom((get) =>
 
 export const floorSpaceSqFtAtom = atom(2500);
 
-export const postalCodeAtom = atom<string | null>("K2A 2Y3");
+export const postalCodeAtom = atom<string | null>(null);
 
 export const statusQuoFurnaceFuelAtom = atom<"electric" | "gas">("gas");
 
@@ -33,4 +33,4 @@ export const electricFurnaceInstallCostAtom = atom<number>(6000);
 
 export const hasOtherGasAppliancesAtom = atom<boolean>(true);
 
-export const welcomeFormHasBeenSubmitAtom = atom<boolean>(true);
+export const welcomeFormHasBeenSubmitAtom = atom<boolean>(false);

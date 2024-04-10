@@ -12,7 +12,11 @@ import {
 import { LifetimeCostOfOwnershipView } from "./lifetime-cost-of-ownership-view";
 import { EmissionsView } from "./emissions-view";
 import { BillingView } from "./monthly-billing-view";
-import { locationInfoAtom } from "../app-state/canadian-weather-state";
+import {
+  locationInfoAtom,
+  simplePlaceName,
+  simplePlaceNameAtom,
+} from "../app-state/canadian-weather-state";
 import {
   electricityPricePerKwhAtom,
   naturalGasFixedPricePerMonthAtom,
@@ -154,13 +158,13 @@ export const EmissionsReductionCardView: React.FC = () => {
 
 export const UtilityBillsCardView: React.FC = () => {
   const systemComparison = useAtomValue(systemComparisonAtom);
-  const locationInfo = useAtomValue(locationInfoAtom);
+  const simplePlaceName = useAtomValue(simplePlaceNameAtom);
   const naturalGasPricePerCubicMetre = useAtomValue(
     naturalGasPricePerCubicMetreAtom
   );
   const electricityPricePerKwh = useAtomValue(electricityPricePerKwhAtom);
 
-  if (!systemComparison || !locationInfo) return null;
+  if (!systemComparison || !simplePlaceName) return null;
 
   const costSavings = systemComparison.annualOpexCostSavings;
 
@@ -176,8 +180,8 @@ export const UtilityBillsCardView: React.FC = () => {
     <InfoCardView title={"Utility Bills"}>
       <Heading>{heading}</Heading>
       <Text>
-        Based on weather data from {locationInfo.placeName} and utility prices
-        of ${electricityPricePerKwh}/kWh for electricity and $
+        Based on weather data from {simplePlaceName} and utility prices of $
+        {electricityPricePerKwh}/kWh for electricity and $
         {naturalGasPricePerCubicMetre}/m<sup>3</sup> for natural gas.
       </Text>
       <BillingView />

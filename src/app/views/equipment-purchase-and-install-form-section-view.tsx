@@ -17,7 +17,7 @@ import { NumericFormInputView } from "./forms";
 import { FormSectionView } from "./forms";
 
 const DividerWithLabel: React.FC<{ label: string }> = (props) => {
-  const color = "gray.200";
+  const color = "gray.300";
   const padding = "10px";
 
   return (
@@ -102,7 +102,7 @@ export const EquipmentPurchaseAndInstallFormSectionView: React.FC = () => {
           <option value="electric">Electric</option>
         </FormSelect>
       </FormRow>
-      <DividerWithLabel label={"OR"} />
+      <DividerWithLabel label={"Compare to"} />
       <FormRow>
         <NumericFormInputView
           label={`New ${statusQuoFurnaceFuel} furnace`}
