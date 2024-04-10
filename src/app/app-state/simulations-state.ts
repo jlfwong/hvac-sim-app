@@ -178,11 +178,12 @@ export const statusQuoSimulationResultAtom =
         ? get(gasFurnaceSystemAtom)
         : get(electricFurnaceSystemAtom);
 
+    let fixedGasCostPerMonth = get(naturalGasFixedPricePerMonthAtom);
     const simulator = get(simulatorAtom);
 
-    if (!simulator || !statusQuoSystem) return null;
+    if (!simulator || !statusQuoSystem || fixedGasCostPerMonth == null)
+      return null;
 
-    let fixedGasCostPerMonth = get(naturalGasFixedPricePerMonthAtom);
     if (fuel != "gas" && !hasOtherGasAppliances) {
       fixedGasCostPerMonth = 0;
     }

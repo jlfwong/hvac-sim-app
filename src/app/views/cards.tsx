@@ -12,11 +12,7 @@ import {
 import { LifetimeCostOfOwnershipView } from "./lifetime-cost-of-ownership-view";
 import { EmissionsView } from "./emissions-view";
 import { BillingView } from "./monthly-billing-view";
-import {
-  locationInfoAtom,
-  simplePlaceName,
-  simplePlaceNameAtom,
-} from "../app-state/canadian-weather-state";
+import { simplePlaceNameAtom } from "../app-state/canadian-weather-state";
 import {
   electricityPricePerKwhAtom,
   naturalGasFixedPricePerMonthAtom,
@@ -197,6 +193,8 @@ export const GasServiceFixedCostsCardView: React.FC = () => {
 
   const heatpumpBackupFuel = useAtomValue(heatpumpBackupFuelAtom);
   const hasOtherGasAppliances = useAtomValue(hasOtherGasAppliancesAtom);
+
+  if (naturalGasFixedCostPerMonth == null) return null;
 
   const reasonsPreventingCancellation: string[] = [];
 

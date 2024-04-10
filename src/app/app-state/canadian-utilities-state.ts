@@ -134,8 +134,6 @@ const electricityPricePerKwhByProvince: { [key: string]: number } = {
   PE: 0.1778,
   NL: 0.1368,
 
-  // TODO(jlfwong): Values for territories
-
   // https://www.ntpc.com/customer-service/residential-service/residential-electrical-rates
   NT: 0.31,
 
