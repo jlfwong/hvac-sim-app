@@ -110,10 +110,12 @@ export const EmissionsReductionCardView: React.FC = () => {
 
   const savings = systemComparison.annualEmissionsSavingGramsCo2e;
 
-  let heading: React.ReactNode[] = [sigDigs(Math.abs(savings) / 1e6, 2)];
-  heading.push(" tCO", <sub>2</sub>, "e");
-  heading.push(savings < 0 ? " more" : " less");
-  heading.push(" per year");
+  let heading: React.ReactNode = (
+    <>
+      {sigDigs(Math.abs(savings) / 1e6, 2)} tCO<sub>2</sub>e
+      {savings < 0 ? " more" : " less"} per year
+    </>
+  );
 
   let message: React.ReactNode;
 

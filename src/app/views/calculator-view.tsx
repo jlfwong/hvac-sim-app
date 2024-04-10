@@ -16,6 +16,7 @@ import {
   AboutThisCalculatorCardView,
 } from "./cards";
 import { EquipmentPurchaseAndInstallFormSectionView } from "./equipment-purchase-and-install-form-section-view";
+import { UtilityPricesFormSectionView } from "./utility-prices-form-section-view";
 
 export const CalculatorView: React.FC = () => {
   const columns = useBreakpointValue(
@@ -38,9 +39,16 @@ export const CalculatorView: React.FC = () => {
   column1.push(<EnergyUseSavingsCardView key={"energy"} />);
   column2.push(<AboutThisCalculatorCardView key={"about"} />);
 
-  let formSections: React.ReactNode[] = [<AboutYourHomeFormSectionView />];
+  let formSections: React.ReactNode[] = [
+    <AboutYourHomeFormSectionView key={"aboutyourhome"} />,
+  ];
 
-  formSections.push(<EquipmentPurchaseAndInstallFormSectionView />);
+  if (columns == null || columns > 1) {
+    formSections.push(
+      <EquipmentPurchaseAndInstallFormSectionView key={"equipment"} />,
+      <UtilityPricesFormSectionView key={"utilityprices"} />
+    );
+  }
 
   if (columns === 3) {
     return (

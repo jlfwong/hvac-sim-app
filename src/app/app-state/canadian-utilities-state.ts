@@ -1,5 +1,6 @@
-import { atom } from "jotai";
+import { atom, type Atom } from "jotai";
 import { locationInfoAtom } from "./canadian-weather-state";
+import { overridableDerivedAtom } from "./utils";
 
 /*
 Average residential natural gas prices by provinces, 2023
@@ -22,7 +23,9 @@ const naturalGasPricePerCubicMetreByProvince: { [key: string]: number } = {
   // TODO(jlfwong): There's no data for PEI, YK, NL, or NU
 };
 
-export const naturalGasPricePerCubicMetreAtom = atom<number | null>((get) => {
+export const naturalGasPricePerCubicMetreAtom = overridableDerivedAtom<
+  number | null
+>((get) => {
   const locationInfo = get(locationInfoAtom);
   if (locationInfo == null) {
     return null;
@@ -68,19 +71,21 @@ const electricityPricePerKwhByProvince: { [key: string]: number } = {
   MB: 0.1024,
 };
 
-export const electricityPricePerKwhAtom = atom<number | null>((get) => {
-  const locationInfo = get(locationInfoAtom);
-  if (locationInfo == null) {
-    return null;
-  }
+export const electricityPricePerKwhAtom = overridableDerivedAtom<number | null>(
+  (get) => {
+    const locationInfo = get(locationInfoAtom);
+    if (locationInfo == null) {
+      return null;
+    }
 
-  const pricePerKwh =
-    electricityPricePerKwhByProvince[locationInfo.provinceCode];
-  if (!pricePerKwh) {
-    throw new Error(
-      `No electricity pricing data for province ${locationInfo.provinceCode}`
-    );
-  }
+    const pricePerKwh =
+      electricityPricePerKwhByProvince[locationInfo.provinceCode];
+    if (!pricePerKwh) {
+      throw new Error(
+        `No electricity pricing data for province ${locationInfo.provinceCode}`
+      );
+    }
 
-  return pricePerKwh;
-});
+    return pricePerKwh;
+  }
+);

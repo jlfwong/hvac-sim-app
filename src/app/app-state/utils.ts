@@ -18,3 +18,40 @@ export function asyncAtomOrNull<T>(
 ): Atom<T | null> {
   return unwrap(atom(read), () => null);
 }
+
+
+// Creates a derived atom which can have its value overwritten.  If the derived
+// value changes, its value will dominate the previous override value.
+//
+// This is last "writer" wins, where a change in derived values constitutes a
+// "write".
+export function overridableDerivedAtom<T>(read: (get: Getter) => T): Atom<T> {
+  const timestampedDerivedAtom = atom((get) => {
+    const value = read(get);
+    return { value, timestamp: performance.now() };
+  });
+
+  const overrideAtom = atom<{ value: T } | null>(null);
+
+  const timestampedWriteableAtom = atom((get) => {
+    const override = get(overrideAtom);
+    if (override == null) return null;
+    return { value: override.value, timestamp: performance.now() };
+  });
+
+  return atom<T, [T], void>(
+    (get) => {
+      const a = get(timestampedDerivedAtom);
+      const b = get(timestampedWriteableAtom);
+
+      if (b == null || b.timestamp < a.timestamp) {
+        return a.value;
+      } else {
+        return b.value;
+      }
+    },
+    (get, set, value: T) => {
+      set(overrideAtom, { value });
+    }
+  );
+}

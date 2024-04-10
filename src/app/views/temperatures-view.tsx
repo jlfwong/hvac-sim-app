@@ -87,7 +87,7 @@ export const TemperaturesView: React.FC<{
 
   return (
     <ChartGroup>
-      <ChartHeader>Inside v.s. Outside Air Temperature</ChartHeader>
+      <ChartHeader>Outside & Simulated Inside Temperatures</ChartHeader>
       <svg
         viewBox={`0 0 ${width + margin.left + margin.right} ${
           height + margin.top + margin.bottom

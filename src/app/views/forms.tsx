@@ -37,7 +37,11 @@ interface FormInputProps {
 
 export const FormRow: React.FC<{ children: React.ReactNode }> = (props) => {
   return (
-    <Flex direction={{ base: "column", med: "row" }} gap={"10px"}>
+    <Flex
+      direction={{ base: "column", med: "row" }}
+      alignItems="end"
+      gap={"10px"}
+    >
       {props.children}
     </Flex>
   );
@@ -70,7 +74,6 @@ export const FormSelect: React.FC<FormSelectProps & SelectProps> = ({
 
 interface NumericFormInputViewProps {
   label: string;
-  placeholder?: string;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
   value: number | null;
@@ -82,24 +85,18 @@ interface NumericFormInputViewProps {
 
 export const NumericFormInputView: React.FC<
   NumericFormInputViewProps & InputProps
-> = (props) => {
-  const [internalValue, setInternalValue] = useState(
-    props.value?.toString() ?? null
-  );
+> = ({ value, minValue, maxValue, setValue, ...props }) => {
+  const [internalValue, setInternalValue] = useState(value?.toString() ?? null);
 
   function isValid(numeric: number) {
-    if (
-      isNaN(numeric) ||
-      numeric < props.minValue ||
-      numeric > props.maxValue
-    ) {
+    if (isNaN(numeric) || numeric < minValue || numeric > maxValue) {
       return false;
     }
     return true;
   }
 
   const isInvalid =
-    internalValue != null && !isValid(parseInt(internalValue, 10));
+    internalValue != null && !isValid(parseFloat(internalValue, 10));
 
   return (
     <FormControl isInvalid={isInvalid}>
@@ -112,9 +109,8 @@ export const NumericFormInputView: React.FC<
           {...props}
           type="number"
           value={internalValue ?? undefined}
-          placeholder={props.placeholder}
-          min={props.minValue}
-          max={props.maxValue}
+          min={minValue}
+          max={maxValue}
           step={props.step ?? 1}
           /*
         // Unfortunately, there's no styling for both invalid & focused, and focus
@@ -127,14 +123,14 @@ export const NumericFormInputView: React.FC<
           onChange={(ev) => {
             const value = ev.target.value;
             setInternalValue(value);
-            const numericValue = parseInt(value, 10);
+            const numericValue = parseFloat(value);
             if (isValid(numericValue)) {
-              props.setValue(numericValue);
+              setValue(numericValue);
             }
           }}
           onBlur={() => {
-            if (props.value != null) {
-              setInternalValue(props.value.toString());
+            if (value != null) {
+              setInternalValue(value.toString());
             }
           }}
         />

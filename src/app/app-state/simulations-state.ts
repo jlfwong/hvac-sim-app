@@ -49,13 +49,13 @@ const simulatorAtom = atom<HVACSimulator | null>((get) => {
   const gramsCO2ePerKwh = get(gramsCO2ePerKwhAtom);
 
   if (
-    !loadSources ||
-    !locationInfo ||
-    !weatherInfo ||
-    !buildingGeometry ||
-    !naturalGasPricePerCubicMetre ||
-    !electricityPricePerKwh ||
-    !gramsCO2ePerKwh
+    loadSources == null ||
+    locationInfo == null ||
+    weatherInfo == null ||
+    buildingGeometry == null ||
+    naturalGasPricePerCubicMetre == null ||
+    electricityPricePerKwh == null ||
+    gramsCO2ePerKwh == null
   ) {
     return null;
   }
