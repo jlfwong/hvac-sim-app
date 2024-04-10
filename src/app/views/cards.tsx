@@ -1,10 +1,12 @@
 import React from "react";
-import { Text, HStack, Heading, VStack, Link } from "@chakra-ui/react";
+import { Text, HStack, Heading, VStack, Link, Box } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { systemComparisonAtom } from "../app-state/system-comparison";
 import {
   coolingSetPointCAtom,
+  hasOtherGasAppliancesAtom,
   heatingSetPointCAtom,
+  heatpumpBackupFuelAtom,
   statusQuoFurnaceFuelAtom,
 } from "../app-state/config-state";
 import { LifetimeCostOfOwnershipView } from "./lifetime-cost-of-ownership-view";
@@ -13,6 +15,7 @@ import { BillingView } from "./monthly-billing-view";
 import { locationInfoAtom } from "../app-state/canadian-weather-state";
 import {
   electricityPricePerKwhAtom,
+  naturalGasFixedPricePerMonthAtom,
   naturalGasPricePerCubicMetreAtom,
 } from "../app-state/canadian-utilities-state";
 import { bestHeatPumpSimulationResultAtom } from "../app-state/simulations-state";
@@ -149,7 +152,7 @@ export const EmissionsReductionCardView: React.FC = () => {
   );
 };
 
-export const EnergyUseSavingsCardView: React.FC = () => {
+export const UtilityBillsCardView: React.FC = () => {
   const systemComparison = useAtomValue(systemComparisonAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
   const naturalGasPricePerCubicMetre = useAtomValue(
@@ -170,19 +173,73 @@ export const EnergyUseSavingsCardView: React.FC = () => {
   heading += " per year";
 
   return (
-    <InfoCardView title={"Energy Costs"}>
+    <InfoCardView title={"Utility Bills"}>
       <Heading>{heading}</Heading>
       <Text>
         Based on weather data from {locationInfo.placeName} and utility prices
-        of ${naturalGasPricePerCubicMetre}/m<sup>3</sup> of natural gas and $
-        {electricityPricePerKwh}/kWh of electricity.
+        of ${electricityPricePerKwh}/kWh for electricity and $
+        {naturalGasPricePerCubicMetre}/m<sup>3</sup> for natural gas.
       </Text>
       <BillingView />
+    </InfoCardView>
+  );
+};
+
+export const GasServiceFixedCostsCardView: React.FC = () => {
+  // TODO(jlfwong): Fix loading patterns so this card doesn't show up on its own
+  const naturalGasFixedCostPerMonth = useAtomValue(
+    naturalGasFixedPricePerMonthAtom
+  );
+
+  const heatpumpBackupFuel = useAtomValue(heatpumpBackupFuelAtom);
+  const hasOtherGasAppliances = useAtomValue(hasOtherGasAppliancesAtom);
+
+  const reasonsPreventingCancellation: string[] = [];
+
+  if (heatpumpBackupFuel === "gas") {
+    reasonsPreventingCancellation.push(
+      "You've selected a heatpump using a gas furnace as its backup heat source"
+    );
+  }
+  if (hasOtherGasAppliances) {
+    reasonsPreventingCancellation.push("Your house has other gas appliances");
+  }
+
+  return (
+    <InfoCardView title={"Annual Gas Service Fee"}>
+      <Heading>
+        {formatDollars(naturalGasFixedCostPerMonth * 12)} per year
+      </Heading>
       <Text>
-        If the monthly estimates look wrong for your house, try adjusting the
-        insulation quality and ensure that the calculator's thermostat settings
-        match yours.
+        This is how much you could save per year if you cancel your gas service
+        entirely. Gas utilities in your area charge a fixed fee of around{" "}
+        {formatDollars(naturalGasFixedCostPerMonth)}/month on top of usage
+        charges.
       </Text>
+      {reasonsPreventingCancellation.length > 0 ? (
+        <>
+          <Text>
+            The utility bills for the heat pump shown in this calculator still
+            contain this charge because…
+          </Text>
+          <Box as="ul" ml="2em">
+            {reasonsPreventingCancellation.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </Box>
+          <Text>
+            If you replace all gas appliances and fully electrify your home,
+            then you'd be able to cancel your gas service and benefit from these
+            savings.
+          </Text>
+        </>
+      ) : (
+        <Text>
+          Since you've chosen a fully electric heat pump, and your home has no
+          other gas appliances, the utility bills for the heat pump shown in
+          this calculator reflect the savings from cancelling this service.
+        </Text>
+      )}
     </InfoCardView>
   );
 };

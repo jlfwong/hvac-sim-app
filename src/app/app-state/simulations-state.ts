@@ -11,6 +11,7 @@ import {
 import { CUBIC_METER_PER_CCF } from "../../lib/units";
 import {
   electricityPricePerKwhAtom,
+  naturalGasFixedPricePerMonthAtom,
   naturalGasPricePerCubicMetreAtom,
 } from "./canadian-utilities-state";
 import { emissionsForSimulationGramsCO2e } from "../../lib/emissions";
@@ -22,6 +23,7 @@ import {
   heatPumpWithElectricBackupSystemsAtom,
 } from "./hvac-systems-state";
 import {
+  hasOtherGasAppliancesAtom,
   heatpumpBackupFuelAtom,
   statusQuoFurnaceFuelAtom,
 } from "./config-state";
@@ -37,7 +39,10 @@ export interface HVACSimulationComparison {
   statusQuo: HVACSimulationResultWithEmissions;
 }
 
-type HVACSimulator = (system: HVACSystem) => HVACSimulationResultWithEmissions;
+type HVACSimulator = (options: {
+  hvacSystem: HVACSystem;
+  fixedGasCostPerMonth: number;
+}) => HVACSimulationResultWithEmissions;
 
 const simulatorAtom = atom<HVACSimulator | null>((get) => {
   const loadSources = get(loadSourcesAtom);
@@ -79,20 +84,20 @@ const simulatorAtom = atom<HVACSimulator | null>((get) => {
     dtOptions
   ).endOf("day");
 
-  const utilityPlans = {
-    electrical: () =>
-      new SimpleElectricalUtilityPlan({
-        fixedCostPerMonth: 0,
-        costPerKwh: electricityPricePerKwh,
-      }),
-    naturalGas: () =>
-      new SimpleNaturalGasUtilityPlan({
-        fixedCostPerMonth: 0,
-        costPerCcf: naturalGasPricePerCubicMetre * CUBIC_METER_PER_CCF,
-      }),
-  };
+  return ({ hvacSystem, fixedGasCostPerMonth }) => {
+    const utilityPlans = {
+      electrical: () =>
+        new SimpleElectricalUtilityPlan({
+          fixedCostPerMonth: 0,
+          costPerKwh: electricityPricePerKwh,
+        }),
+      naturalGas: () =>
+        new SimpleNaturalGasUtilityPlan({
+          fixedCostPerMonth: fixedGasCostPerMonth,
+          costPerCcf: naturalGasPricePerCubicMetre * CUBIC_METER_PER_CCF,
+        }),
+    };
 
-  return function (hvacSystem: HVACSystem): HVACSimulationResultWithEmissions {
     const result = simulateBuildingHVAC({
       localStartTime,
       localEndTime,
@@ -122,6 +127,7 @@ export const heatPumpSimulationResultsAtom = atom<
     heatPumpWithElectricBackupSystemsAtom
   );
   const heatpumpBackupFuel = get(heatpumpBackupFuelAtom);
+  const hasOtherGasAppliances = get(hasOtherGasAppliancesAtom);
 
   const simulator = get(simulatorAtom);
 
@@ -134,9 +140,14 @@ export const heatPumpSimulationResultsAtom = atom<
   }
 
   let systems: HVACSystem[];
+  let fixedGasCostPerMonth = get(naturalGasFixedPricePerMonthAtom);
   switch (heatpumpBackupFuel) {
     case "electric": {
       systems = heatPumpWithElectricBackupSystems;
+      if (!hasOtherGasAppliances) {
+        // Can cancel service
+        fixedGasCostPerMonth = 0;
+      }
       break;
     }
     case "gas": {
@@ -148,13 +159,21 @@ export const heatPumpSimulationResultsAtom = atom<
     }
   }
 
-  return systems.slice(0, 3).map(simulator);
+  return systems.slice(0, 3).map((hvacSystem) =>
+    simulator({
+      hvacSystem,
+      fixedGasCostPerMonth,
+    })
+  );
 });
 
 export const statusQuoSimulationResultAtom =
   atom<HVACSimulationResultWithEmissions | null>((get) => {
+    const fuel = get(statusQuoFurnaceFuelAtom);
+    const hasOtherGasAppliances = get(hasOtherGasAppliancesAtom);
+
     const statusQuoSystem =
-      get(statusQuoFurnaceFuelAtom) == "gas"
+      fuel == "gas"
         ? get(gasFurnaceSystemAtom)
         : get(electricFurnaceSystemAtom);
 
@@ -162,7 +181,12 @@ export const statusQuoSimulationResultAtom =
 
     if (!simulator || !statusQuoSystem) return null;
 
-    return simulator(statusQuoSystem);
+    let fixedGasCostPerMonth = get(naturalGasFixedPricePerMonthAtom);
+    if (fuel != "gas" && !hasOtherGasAppliances) {
+      fixedGasCostPerMonth = 0;
+    }
+
+    return simulator({ hvacSystem: statusQuoSystem, fixedGasCostPerMonth });
   });
 
 // TODO(jlfwong): If we want this to be user-controllable again,

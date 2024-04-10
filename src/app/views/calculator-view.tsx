@@ -12,14 +12,19 @@ import {
   CardStackView,
   LifetimeCostsCardView,
   EmissionsReductionCardView,
-  EnergyUseSavingsCardView,
+  UtilityBillsCardView,
   AboutThisCalculatorCardView,
+  GasServiceFixedCostsCardView,
 } from "./cards";
 import { EquipmentPurchaseAndInstallFormSectionView } from "./equipment-purchase-and-install-form-section-view";
 import { UtilityPricesFormSectionView } from "./utility-prices-form-section-view";
 import { ThermostatFormSectionView } from "./thermostat-form-section-view";
+import { statusQuoFurnaceFuelAtom } from "../app-state/config-state";
+import { useAtomValue } from "jotai";
 
 export const CalculatorView: React.FC = () => {
+  const statusQuoFurnaceFuel = useAtomValue(statusQuoFurnaceFuelAtom);
+
   const columns = useBreakpointValue(
     {
       base: 1,
@@ -37,7 +42,11 @@ export const CalculatorView: React.FC = () => {
   }
   column1.push(<LifetimeCostsCardView key={"life"} />);
   column2.push(<EmissionsReductionCardView key={"emissions"} />);
-  column1.push(<EnergyUseSavingsCardView key={"energy"} />);
+  column1.push(<UtilityBillsCardView key={"utility-bills"} />);
+
+  if (statusQuoFurnaceFuel === "gas") {
+    column2.push(<GasServiceFixedCostsCardView key={"gas-service"} />);
+  }
   column2.push(<AboutThisCalculatorCardView key={"about"} />);
 
   let formSections: React.ReactNode[] = [

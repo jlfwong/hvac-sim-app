@@ -1,4 +1,4 @@
-import { Flex } from "@chakra-ui/react";
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import React, { useEffect, useRef } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import {
@@ -15,6 +15,28 @@ import {
 import { FormRow, FormSelect } from "./forms";
 import { NumericFormInputView } from "./forms";
 import { FormSectionView } from "./forms";
+
+const DividerWithLabel: React.FC<{ label: string }> = (props) => {
+  const color = "gray.200";
+  const padding = "10px";
+
+  return (
+    <HStack
+      alignItems={"center"}
+      paddingLeft={padding}
+      paddingRight={padding}
+      marginTop={"-5px"}
+      marginBottom={"-5px"}
+      gap={padding}
+    >
+      <Box height="0" flex="1" borderBottomWidth={1} borderColor={color} />
+      <Text textColor={color} size={"sm"}>
+        {props.label}
+      </Text>
+      <Box height="0" flex="1" borderBottomWidth={1} borderColor={color} />
+    </HStack>
+  );
+};
 
 export const EquipmentPurchaseAndInstallFormSectionView: React.FC = () => {
   const [heatpumpInstallCost, setHeatpumpInstallCost] = useAtom(
@@ -80,6 +102,7 @@ export const EquipmentPurchaseAndInstallFormSectionView: React.FC = () => {
           <option value="electric">Electric</option>
         </FormSelect>
       </FormRow>
+      <DividerWithLabel label={"OR"} />
       <FormRow>
         <NumericFormInputView
           label={`New ${statusQuoFurnaceFuel} furnace`}

@@ -17,7 +17,7 @@ export const ThermostatFormSectionView: React.FC = () => {
   const heatpumpBackupFuel = useAtomValue(heatpumpBackupFuelAtom);
 
   return (
-    <FormSectionView title="Thermostat Settings">
+    <FormSectionView title="Thermostat settings">
       <FormRow>
         <NumericFormInputView
           label="Heat to…"

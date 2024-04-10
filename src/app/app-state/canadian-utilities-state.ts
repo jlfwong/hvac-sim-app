@@ -41,6 +41,10 @@ export const naturalGasPricePerCubicMetreAtom = overridableDerivedAtom<
   return pricePerM3;
 });
 
+// TODO(jlfwong): Source numbers that vary by province
+// See "Heat Pumps Pay Off - Techncial Memo (2024)"
+export const naturalGasFixedPricePerMonthAtom = atom<number>(20);
+
 /*
 Sources
 - [comparison-electricity-prices](https://www.hydroquebec.com/data/documents-donnees/pdf/comparison-electricity-prices.pdf)
