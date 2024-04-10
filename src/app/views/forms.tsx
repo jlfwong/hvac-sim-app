@@ -97,7 +97,7 @@ export const NumericFormInputView: React.FC<
   }
 
   const isInvalid =
-    internalValue != null && !isValid(parseFloat(internalValue, 10));
+    internalValue != null && !isValid(parseFloat(internalValue));
 
   return (
     <FormControl isInvalid={isInvalid} isDisabled={isDisabled}>
