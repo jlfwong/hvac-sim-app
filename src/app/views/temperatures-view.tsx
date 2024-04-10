@@ -11,9 +11,9 @@ import { LegendOrdinal } from "@visx/legend";
 import { DateTime } from "luxon";
 
 function formatDate(date: Date | number | { valueOf(): number }): string {
-  const dt = DateTime.fromMillis(+date);
+  const dt = DateTime.fromMillis(+date).toUTC();
   const shortMonth = dt.toFormat("LLL");
-  if (shortMonth === "Dec") {
+  if (shortMonth === "Jan") {
     return dt.toFormat("yyyy");
   } else {
     return shortMonth;
@@ -87,7 +87,9 @@ export const TemperaturesView: React.FC<{
 
   return (
     <ChartGroup>
-      <ChartHeader>Outside & Simulated Inside Temperatures</ChartHeader>
+      <ChartHeader>
+        Historical Outside & Simulated Inside Temperatures
+      </ChartHeader>
       <svg
         viewBox={`0 0 ${width + margin.left + margin.right} ${
           height + margin.top + margin.bottom
