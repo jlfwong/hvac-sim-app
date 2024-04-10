@@ -80,12 +80,13 @@ interface NumericFormInputViewProps {
   setValue: (value: number) => void;
   minValue: number;
   maxValue: number;
+  isDisabled?: boolean;
   step?: number;
 }
 
 export const NumericFormInputView: React.FC<
   NumericFormInputViewProps & InputProps
-> = ({ value, minValue, maxValue, setValue, ...props }) => {
+> = ({ value, minValue, maxValue, setValue, isDisabled, ...props }) => {
   const [internalValue, setInternalValue] = useState(value?.toString() ?? null);
 
   function isValid(numeric: number) {
@@ -99,7 +100,7 @@ export const NumericFormInputView: React.FC<
     internalValue != null && !isValid(parseFloat(internalValue, 10));
 
   return (
-    <FormControl isInvalid={isInvalid}>
+    <FormControl isInvalid={isInvalid} isDisabled={isDisabled}>
       <FormLabel mb={"3px"}>{props.label}</FormLabel>
       <InputGroup>
         {props.prefix != null && (

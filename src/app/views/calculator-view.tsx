@@ -17,6 +17,7 @@ import {
 } from "./cards";
 import { EquipmentPurchaseAndInstallFormSectionView } from "./equipment-purchase-and-install-form-section-view";
 import { UtilityPricesFormSectionView } from "./utility-prices-form-section-view";
+import { ThermostatFormSectionView } from "./thermostat-form-section-view";
 
 export const CalculatorView: React.FC = () => {
   const columns = useBreakpointValue(
@@ -46,7 +47,8 @@ export const CalculatorView: React.FC = () => {
   if (columns == null || columns > 1) {
     formSections.push(
       <EquipmentPurchaseAndInstallFormSectionView key={"equipment"} />,
-      <UtilityPricesFormSectionView key={"utilityprices"} />
+      <UtilityPricesFormSectionView key={"utilityprices"} />,
+      <ThermostatFormSectionView key={"thermostat"} />
     );
   }
 
@@ -66,7 +68,7 @@ export const CalculatorView: React.FC = () => {
   } else if (columns === 2) {
     return (
       <Flex direction="row" w="full">
-        <Flex direction="column" h="full" w={"300px"} p="20px" gap="20px">
+        <Flex direction="column" h="full" w={"400px"} p="20px" gap="20px">
           <Heading textAlign={"center"}>Heat Pump Calculator 🇨🇦</Heading>
           {formSections}
         </Flex>
