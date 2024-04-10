@@ -1,5 +1,14 @@
 import React from "react";
-import { Text, HStack, Heading, VStack, Link, Box } from "@chakra-ui/react";
+import {
+  Text,
+  HStack,
+  Heading,
+  VStack,
+  Link,
+  Box,
+  keyframes,
+  type StackProps,
+} from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { systemComparisonAtom } from "../app-state/system-comparison";
 import {
@@ -25,7 +34,12 @@ interface InfoCardViewProps {
   title: string;
   children: React.ReactNode;
 }
-const InfoCardView: React.FC<InfoCardViewProps> = (props) => {
+
+const InfoCardView: React.FC<InfoCardViewProps & StackProps> = ({
+  title,
+  children,
+  ...props
+}) => {
   return (
     <VStack
       w="full"
@@ -34,21 +48,32 @@ const InfoCardView: React.FC<InfoCardViewProps> = (props) => {
       p="20px"
       gap={"5px"}
       align="start"
+      {...props}
     >
-      <Text textTransform="uppercase">{props.title}</Text>
-      {props.children}
+      <Text textTransform="uppercase">{title}</Text>
+      {children}
     </VStack>
   );
 };
+
+export const LoadingCardView: React.FC<{ height: number }> = (props) => {
+  return (
+    <InfoCardView title="">
+      <Box w="full" height={`${props.height}px`} />
+    </InfoCardView>
+  );
+};
+
 export const CardColumnStackView: React.FC<{ children: React.ReactNode }> = (
   props
 ) => {
   return (
-    <HStack flex="1" p="20px" bg="gray.50" gap="20px" align="start">
+    <HStack flex="1" p="20px" bg="#E7E7E7" gap="20px" align="start">
       {props.children}
     </HStack>
   );
 };
+
 export const CardStackView: React.FC<{ children: React.ReactNode }> = (
   props
 ) => {
@@ -58,12 +83,15 @@ export const CardStackView: React.FC<{ children: React.ReactNode }> = (
     </VStack>
   );
 };
+
 function sigDigs(num: number, digits: number = 1) {
   return num.toLocaleString("en-CA", { maximumSignificantDigits: digits });
 }
+
 function formatDollars(num: number) {
   return (num < 0 ? "-$" : "$") + sigDigs(Math.abs(num), 2);
 }
+
 export const LifetimeCostsCardView: React.FC = () => {
   const systemComparison = useAtomValue(systemComparisonAtom);
   const statusQuoFurnaceFuel = useAtomValue(statusQuoFurnaceFuelAtom);
@@ -104,8 +132,10 @@ export const LifetimeCostsCardView: React.FC = () => {
     </InfoCardView>
   );
 };
+
 // Round trip flight emissions estimated using Google Flights
 const emissionsGramsCO2eRoundTripFlight = 275000 + 275000;
+
 export const EmissionsReductionCardView: React.FC = () => {
   const systemComparison = useAtomValue(systemComparisonAtom);
 

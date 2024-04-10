@@ -15,15 +15,20 @@ import {
   UtilityBillsCardView,
   AboutThisCalculatorCardView,
   GasServiceFixedCostsCardView,
+  LoadingCardView,
 } from "./cards";
 import { EquipmentPurchaseAndInstallFormSectionView } from "./equipment-purchase-and-install-form-section-view";
 import { UtilityPricesFormSectionView } from "./utility-prices-form-section-view";
 import { ThermostatFormSectionView } from "./thermostat-form-section-view";
 import { statusQuoFurnaceFuelAtom } from "../app-state/config-state";
 import { useAtomValue } from "jotai";
+import { systemComparisonAtom } from "../app-state/system-comparison";
 
 export const CalculatorView: React.FC = () => {
   const statusQuoFurnaceFuel = useAtomValue(statusQuoFurnaceFuelAtom);
+  const systemComparison = useAtomValue(systemComparisonAtom);
+
+  const isLoading = systemComparison == null;
 
   const columns = useBreakpointValue(
     {
@@ -37,17 +42,24 @@ export const CalculatorView: React.FC = () => {
   let column1: React.ReactNode[] = [];
   let column2: React.ReactNode[] = [];
 
-  if (columns == null || columns < 3) {
-    column2 = column1;
-  }
-  column1.push(<LifetimeCostsCardView key={"life"} />);
-  column2.push(<EmissionsReductionCardView key={"emissions"} />);
-  column1.push(<UtilityBillsCardView key={"utility-bills"} />);
+  if (isLoading) {
+    column1.push(<LoadingCardView height={400} />);
+    column2.push(<LoadingCardView height={300} />);
+    column1.push(<LoadingCardView height={300} />);
+    column2.push(<LoadingCardView height={200} />);
+  } else {
+    if (columns == null || columns < 3) {
+      column2 = column1;
+    }
+    column1.push(<LifetimeCostsCardView key={"life"} />);
+    column2.push(<EmissionsReductionCardView key={"emissions"} />);
+    column1.push(<UtilityBillsCardView key={"utility-bills"} />);
 
-  if (statusQuoFurnaceFuel === "gas") {
-    column2.push(<GasServiceFixedCostsCardView key={"gas-service"} />);
+    if (statusQuoFurnaceFuel === "gas") {
+      column2.push(<GasServiceFixedCostsCardView key={"gas-service"} />);
+    }
+    column2.push(<AboutThisCalculatorCardView key={"about"} />);
   }
-  column2.push(<AboutThisCalculatorCardView key={"about"} />);
 
   let formSections: React.ReactNode[] = [
     <AboutYourHomeFormSectionView key={"aboutyourhome"} />,
