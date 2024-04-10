@@ -131,7 +131,7 @@ export const LifetimeCostOfOwnershipView: React.FC<{}> = (props) => {
 
   return (
     <ChartGroup>
-      <ChartHeader>Total Cost Over Time</ChartHeader>
+      <ChartHeader>Total Cost over Time</ChartHeader>
       <svg
         viewBox={`0 0 ${width + margin.left + margin.right} ${
           height + margin.top + margin.bottom
