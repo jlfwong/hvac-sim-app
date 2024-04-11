@@ -8,23 +8,32 @@ import { HVACSimulationResult } from "../../lib/simulate";
 import { fahrenheitToCelcius } from "../../lib/units";
 import { ChartGroup, ChartHeader } from "../chart";
 import { LegendOrdinal } from "@visx/legend";
+import { DateTime } from "luxon";
+
+function formatDate(date: Date | number | { valueOf(): number }): string {
+  const dt = DateTime.fromMillis(+date).toUTC();
+  const shortMonth = dt.toFormat("LLL");
+  if (shortMonth === "Jan") {
+    return dt.toFormat("yyyy");
+  } else {
+    return shortMonth;
+  }
+}
 
 export const TemperaturesView: React.FC<{
   heatingSetPointC: number;
   coolingSetPointC: number;
   simulationResult: HVACSimulationResult;
 }> = (props) => {
-  // TODO(jlfwong): Bucket these temperatures into high/low per day for a more
-  // intuitive display When zooming in, increase the granularity of the buckets.
-  // Also draw the heating set point & cooling set point.
+  // TODO(jlfwong): Zooming support.
   //
   // Instead of changing the buckets, could also still display the line, just
   // fainter.
 
   // Set the dimensions and margins of the graph
   const margin = { top: 10, right: 30, bottom: 30, left: 60 },
-    width = 860 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 430 - margin.left - margin.right,
+    height = 200 - margin.top - margin.bottom;
 
   // Data transformation
   const tzOffsetMinutes = props.simulationResult.timeSteps[0].localTime.offset;
@@ -78,10 +87,14 @@ export const TemperaturesView: React.FC<{
 
   return (
     <ChartGroup>
-      <ChartHeader>Inside v.s. Outside Air Temperature</ChartHeader>
+      <ChartHeader>
+        Historical Outside & Simulated Inside Temperatures
+      </ChartHeader>
       <svg
-        width={width + margin.left + margin.right}
-        height={height + margin.top + margin.bottom}
+        viewBox={`0 0 ${width + margin.left + margin.right} ${
+          height + margin.top + margin.bottom
+        }`}
+        style={{ width: "100%", height: "auto" }}
       >
         <Group left={margin.left} top={margin.top}>
           <GridRows scale={yScale} width={width} />
@@ -108,9 +121,10 @@ export const TemperaturesView: React.FC<{
             stroke={color("inside")}
             strokeWidth={1}
           />
-          <AxisBottom scale={xScale} top={height} />
+          <AxisBottom scale={xScale} top={height} tickFormat={formatDate} />
           <AxisLeft
             scale={yScale}
+            numTicks={5}
             tickFormat={(temp) => `${(+temp).toFixed(0)}°C`}
           />
         </Group>
@@ -124,7 +138,7 @@ export const TemperaturesView: React.FC<{
                 return "Target inside air temperature range";
               }
               case "inside": {
-                return `Inside air temperature (${props.simulationResult.name})`;
+                return `Simulated inside air temperature`;
               }
               case "outside": {
                 return "Outside air temperature";
