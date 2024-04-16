@@ -28,12 +28,8 @@ export const BillingView: React.FC = () => {
     hideTooltip,
   } = useTooltip<{ name: string; bills: EnergyBill[] }>();
 
-  // If you don't want to use a Portal, simply replace `TooltipInPortal` below with
-  // `Tooltip` or `TooltipWithBounds` and remove `containerRef`
   const { containerRef, TooltipInPortal } = useTooltipInPortal({
-    // use TooltipWithBounds
     detectBounds: true,
-    // when tooltip containers are scrolled, this will correctly update the Tooltip position
     scroll: true,
   });
 
