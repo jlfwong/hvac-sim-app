@@ -9,6 +9,7 @@ import {
   InputGroup,
   InputLeftAddon,
   InputRightAddon,
+  type StackProps,
 } from "@chakra-ui/react";
 import { Box, Heading, Stack } from "@chakra-ui/react";
 import React, { forwardRef, useState } from "react";
@@ -16,20 +17,33 @@ import React, { forwardRef, useState } from "react";
 interface FormSectionViewProps {
   title: string;
   children: React.ReactNode;
+  stripeColor?: string;
 }
 
-export const FormSectionView: React.FC<FormSectionViewProps> = ({
-  title,
-  children,
-}) => (
-  <Stack as="section" spacing={"10px"}>
-    <Box>
-      <Heading size="small">{title}</Heading>
-      <hr />
-    </Box>
-    {children}
-  </Stack>
-);
+export const FormSectionView: React.FC<FormSectionViewProps> = (props) => {
+  let stackProps: StackProps = {
+    spacing: "10px",
+    paddingTop: "10px",
+  };
+
+  if (props.stripeColor != null) {
+    stackProps.borderLeftColor = props.stripeColor;
+    stackProps.borderLeftWidth = "5px";
+    stackProps.paddingLeft = "10px";
+    stackProps.paddingTop = "5px";
+  }
+
+  return (
+    <Stack as="section" gap={0}>
+      <Box>
+        <Heading size="small">{props.title}</Heading>
+        <hr />
+      </Box>
+      <Stack {...stackProps}>{props.children}</Stack>
+    </Stack>
+  );
+};
+
 interface FormInputProps {
   label: string;
   placeholder?: string;

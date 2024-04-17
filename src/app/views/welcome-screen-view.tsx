@@ -14,9 +14,15 @@ import {
   postalCodeAtom,
   welcomeFormHasBeenSubmitAtom,
 } from "../app-state/config-state";
-import { AboutYourHomeFormSectionView } from "./about-your-home-form-section-view";
 import { locationInfoAtom } from "../app-state/canadian-weather-state";
 import { buildingGeometryAtom } from "../app-state/loads-state";
+import { FormSectionView, FormRow } from "./forms";
+import {
+  PostalCodeInput,
+  FloorSpaceInput,
+  HomeHeatingTypeSelect,
+  OtherGasAppliancesSelect,
+} from "./inputs";
 
 const WelcomeFormView: React.FC = () => {
   const setWelcomeFormHasBeenSubmit = useSetAtom(welcomeFormHasBeenSubmitAtom);
@@ -26,7 +32,14 @@ const WelcomeFormView: React.FC = () => {
   return (
     <Box maxW="1280px" p={"20px"} borderRadius="md">
       <Stack spacing={"20px"}>
-        <AboutYourHomeFormSectionView />
+        <FormSectionView title="About your home">
+          <FormRow>
+            <PostalCodeInput />
+            <FloorSpaceInput />
+          </FormRow>
+          <HomeHeatingTypeSelect label="My home is heated with" />
+          <OtherGasAppliancesSelect />
+        </FormSectionView>
         <Button
           colorScheme="blue"
           w="full"

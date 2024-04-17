@@ -23,6 +23,12 @@ import { ThermostatFormSectionView } from "./thermostat-form-section-view";
 import { statusQuoFurnaceFuelAtom } from "../app-state/config-state";
 import { useAtomValue } from "jotai";
 import { systemComparisonAtom } from "../app-state/system-comparison";
+import { FormSectionView, FormRow } from "./forms";
+import {
+  PostalCodeInput,
+  FloorSpaceInput,
+  OtherGasAppliancesSelect,
+} from "./inputs";
 
 export const CalculatorView: React.FC = () => {
   const statusQuoFurnaceFuel = useAtomValue(statusQuoFurnaceFuelAtom);
@@ -62,7 +68,13 @@ export const CalculatorView: React.FC = () => {
   }
 
   let formSections: React.ReactNode[] = [
-    <AboutYourHomeFormSectionView key={"aboutyourhome"} />,
+    <FormSectionView title="About your home" key={"about-your-home"}>
+      <FormRow>
+        <PostalCodeInput />
+        <FloorSpaceInput />
+      </FormRow>
+      <OtherGasAppliancesSelect />
+    </FormSectionView>,
   ];
 
   if (columns == null || columns > 1) {

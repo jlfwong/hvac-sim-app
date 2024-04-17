@@ -3,7 +3,6 @@ import { Group } from "@visx/group";
 import { Bar } from "@visx/shape";
 import { PatternLines } from "@visx/pattern";
 import { useTooltip, useTooltipInPortal } from "@visx/tooltip";
-import { schemeSet1 } from "d3-scale-chromatic";
 import { localPoint } from "@visx/event";
 import { LegendOrdinal } from "@visx/legend";
 
@@ -15,6 +14,7 @@ import { EnergyBill } from "../../lib/billing";
 import { ChartGroup, ChartHeader } from "../chart";
 import { useAtomValue } from "jotai";
 import { simulationsAtom } from "../app-state/simulations-state";
+import { Colors } from "./colors";
 
 export const BillingView: React.FC = () => {
   const simulations = useAtomValue(simulationsAtom);
@@ -105,7 +105,7 @@ export const BillingView: React.FC = () => {
 
   const color = scaleOrdinal<string, string>()
     .domain(simulations.map((s) => s.name))
-    .range(schemeSet1);
+    .range([Colors.heatpump, Colors.statusQuo]);
 
   const handleMouseOver = (
     event: React.MouseEvent,

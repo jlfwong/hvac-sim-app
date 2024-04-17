@@ -3,11 +3,11 @@ import { simulationsAtom } from "../app-state/simulations-state";
 import React from "react";
 import { ChartGroup, ChartHeader } from "../chart";
 import { scaleBand, scaleLinear, scaleOrdinal } from "@visx/scale";
-import { schemeSet1 } from "d3-scale-chromatic";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { Bar } from "@visx/shape";
 import { Group } from "@visx/group";
 import type { HVACSimulationResult } from "../../lib/simulate";
+import { Colors } from "./colors";
 
 export const AnnualBillingView: React.FC<{}> = (props) => {
   const simulations = useAtomValue(simulationsAtom);
@@ -34,7 +34,7 @@ export const AnnualBillingView: React.FC<{}> = (props) => {
 
   const color = scaleOrdinal<string, string>()
     .domain(simulations.map((s) => s.name))
-    .range(schemeSet1);
+    .range([Colors.heatpump, Colors.statusQuo]);
 
   return (
     <ChartGroup>

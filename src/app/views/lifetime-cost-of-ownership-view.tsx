@@ -7,7 +7,6 @@ import {
 import React, { useMemo, useState } from "react";
 import { ChartGroup, ChartHeader } from "../chart";
 import { scaleBand, scaleLinear, scaleOrdinal, scaleUtc } from "@visx/scale";
-import { schemeSet1 } from "d3-scale-chromatic";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { Bar, Circle, Line, LinePath } from "@visx/shape";
 import { curveStepAfter, curveStepBefore } from "@visx/curve";
@@ -29,6 +28,7 @@ import { GridRows } from "@visx/grid";
 import { useTooltip, useTooltipInPortal } from "@visx/tooltip";
 import { bisector } from "@visx/vendor/d3-array";
 import { localPoint } from "@visx/event";
+import { Colors } from "./colors";
 
 const bisectSeries = bisector<[Date, number], Date>((d) => d[0]).right;
 
@@ -163,7 +163,9 @@ export const LifetimeCostOfOwnershipView: React.FC<{}> = (props) => {
     range: [height, 0],
   }).nice();
 
-  const color = scaleOrdinal<string, string>().domain(names).range(schemeSet1);
+  const color = scaleOrdinal<string, string>()
+    .domain(names)
+    .range([Colors.heatpump, Colors.statusQuo]);
   const hpColor = color(bestHeatPumpSimulationResult.name);
   const sqColor = color(statusQuoSimulationResult.name);
 
