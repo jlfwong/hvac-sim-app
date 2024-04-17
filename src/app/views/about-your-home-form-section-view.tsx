@@ -56,7 +56,7 @@ export const AboutYourHomeFormSectionView: React.FC = () => {
         />
       </FormRow>
       <FormSelect
-        label="My furnace (or boiler) uses"
+        label="My home is heated with"
         value={statusQuoFurnaceFuel}
         onChange={(ev) => {
           const value = ev.currentTarget.value;

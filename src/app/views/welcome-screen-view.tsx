@@ -10,6 +10,7 @@ import {
 import React from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
+  floorSpaceSqFtAtom,
   postalCodeAtom,
   welcomeFormHasBeenSubmitAtom,
 } from "../app-state/config-state";
@@ -46,10 +47,12 @@ const LocationLink: React.FC<{
   placeName: string;
 }> = (props) => {
   const setPostalCode = useSetAtom(postalCodeAtom);
+  const setFloorSpaceSqFt = useSetAtom(floorSpaceSqFtAtom);
   const setWelcomeFormHasBeenSubmit = useSetAtom(welcomeFormHasBeenSubmitAtom);
 
   const onClick: React.EventHandler<React.MouseEvent> = (ev) => {
     setPostalCode(props.postalCode);
+    setFloorSpaceSqFt(2000);
     setWelcomeFormHasBeenSubmit(true);
     ev.preventDefault();
   };
