@@ -11,10 +11,6 @@ import {
 export const ThermostatFormSectionView: React.FC = () => {
   const [heatingSetPointC, setHeatingSetPointC] = useAtom(heatingSetPointCAtom);
   const [coolingSetPointC, setCoolingSetPointC] = useAtom(coolingSetPointCAtom);
-  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useAtom(
-    auxSwitchoverTempCAtom
-  );
-  const heatpumpBackupFuel = useAtomValue(heatpumpBackupFuelAtom);
 
   return (
     <FormSectionView title="Thermostat settings">
@@ -36,17 +32,6 @@ export const ThermostatFormSectionView: React.FC = () => {
           step={1}
           value={coolingSetPointC}
           setValue={setCoolingSetPointC}
-          textAlign={"right"}
-          suffix="°C"
-        />
-        <NumericFormInputView
-          label="Use gas backup…"
-          isDisabled={heatpumpBackupFuel != "gas"}
-          minValue={-50}
-          maxValue={30}
-          step={1}
-          value={auxSwitchoverTempC}
-          setValue={setAuxSwitchoverTempC}
           textAlign={"right"}
           suffix="°C"
         />

@@ -7,9 +7,12 @@ import {
   FurnaceInstallCostInput,
   AirConditionerInstallCostInput,
   HomeHeatingTypeSelect,
+  AuxSwitchoverTempInput,
 } from "./inputs";
 import React from "react";
 import { Colors } from "./colors";
+import { useAtomValue } from "jotai";
+import { heatpumpBackupFuelAtom } from "../app-state/config-state";
 
 const DividerWithLabel: React.FC<{ label: string }> = (props) => {
   const color = "gray.300";
@@ -34,12 +37,15 @@ const DividerWithLabel: React.FC<{ label: string }> = (props) => {
 };
 
 export const EquipmentPurchaseAndInstallFormSectionView: React.FC = () => {
+  const heatpumpBackupFuel = useAtomValue(heatpumpBackupFuelAtom);
+
   return (
     <>
       <FormSectionView title="Heat pump details" stripeColor={Colors.heatpump}>
+        <HeatPumpInstallCostInput />
         <FormRow>
-          <HeatPumpInstallCostInput />
           <HeatPumpBackupFuelSelect />
+          {heatpumpBackupFuel == "gas" && <AuxSwitchoverTempInput />}
         </FormRow>
       </FormSectionView>
       <FormSectionView

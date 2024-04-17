@@ -9,6 +9,7 @@ import {
   floorSpaceSqFtAtom,
   hasOtherGasAppliancesAtom,
   postalCodeAtom,
+  auxSwitchoverTempCAtom,
 } from "../app-state/config-state";
 import { NumericFormInputView, FormSelect, FormInput } from "./forms";
 import React, { useEffect, useRef } from "react";
@@ -184,5 +185,26 @@ export const OtherGasAppliancesSelect: React.FC = () => {
       <option value="true">Yes</option>
       <option value="false">No</option>
     </FormSelect>
+  );
+};
+
+export const AuxSwitchoverTempInput: React.FC = () => {
+  const heatpumpBackupFuel = useAtomValue(heatpumpBackupFuelAtom);
+  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useAtom(
+    auxSwitchoverTempCAtom
+  );
+
+  return (
+    <NumericFormInputView
+      label="Use backup…"
+      minValue={-50}
+      maxValue={30}
+      step={1}
+      value={auxSwitchoverTempC}
+      setValue={setAuxSwitchoverTempC}
+      prefix="Below"
+      textAlign={"right"}
+      suffix="°C"
+    />
   );
 };
