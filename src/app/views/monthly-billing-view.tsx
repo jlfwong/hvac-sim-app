@@ -15,6 +15,87 @@ import { ChartGroup, ChartHeader } from "../chart";
 import { useAtomValue } from "jotai";
 import { simulationsAtom } from "../app-state/simulations-state";
 import { Colors } from "./colors";
+import { CUBIC_METER_PER_CCF } from "../../lib/units";
+import { Stack, Text } from "@chakra-ui/react";
+
+interface BillViewProps {
+  bill: EnergyBill;
+}
+
+function capitalizeWord(word: string): string {
+  return word.replace(/^./, (x) => x.toUpperCase());
+}
+
+function formatUsage(bill: EnergyBill): React.ReactNode {
+  let usage = bill.getFuelUsage();
+  let unit: React.ReactNode = bill.getFuelUnit();
+
+  if (unit === "ccf") {
+    usage = usage * CUBIC_METER_PER_CCF;
+    unit = (
+      <>
+        m<sup>3</sup>
+      </>
+    );
+  }
+
+  const formattedUsage = usage.toLocaleString("en-CA", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  });
+
+  return (
+    <>
+      {formattedUsage} {unit}
+    </>
+  );
+}
+
+const BillView: React.FC<BillViewProps> = ({ bill }) => {
+  return (
+    <>
+      <Stack key={bill.getFuelType()} gap={0}>
+        <Text>
+          <u>{capitalizeWord(bill.getFuelType())} bill</u>
+        </Text>
+        <Text>
+          <strong>Usage</strong>: {formatUsage(bill)}
+        </Text>
+        <Text>
+          <strong>Total</strong>: ${bill.getTotalCost().toFixed(2)}
+        </Text>
+      </Stack>
+    </>
+  );
+};
+
+interface MonthlyBillingTooltipViewProps {
+  name: string;
+  bills: EnergyBill[];
+}
+
+const MonthlyBillingTooltipView: React.FC<MonthlyBillingTooltipViewProps> = (
+  props
+) => {
+  const filteredBills = props.bills.filter((b) => b.getTotalCost() != 0);
+  const grandTotal = props.bills.reduce((acc, b) => acc + b.getTotalCost(), 0);
+
+  return (
+    <Stack gap={"10px"}>
+      <Text>{props.name}</Text>
+
+      {filteredBills.map((bill, i) => (
+        <BillView bill={bill} key={i} />
+      ))}
+
+      {filteredBills.length > 1 && (
+        <Text>
+          <strong>Grand total</strong>: ${grandTotal.toFixed(2)}
+        </Text>
+      )}
+    </Stack>
+  );
+};
 
 export const BillingView: React.FC = () => {
   const simulations = useAtomValue(simulationsAtom);
@@ -26,7 +107,7 @@ export const BillingView: React.FC = () => {
     tooltipOpen,
     showTooltip,
     hideTooltip,
-  } = useTooltip<{ name: string; bills: EnergyBill[] }>();
+  } = useTooltip<MonthlyBillingTooltipViewProps>();
 
   const { containerRef, TooltipInPortal } = useTooltipInPortal({
     detectBounds: true,
@@ -209,20 +290,7 @@ export const BillingView: React.FC = () => {
           top={tooltipTop}
           left={tooltipLeft}
         >
-          {tooltipData.name}
-          {tooltipData.bills.map((bill) => {
-            if (bill.getTotalCost() === 0) return null;
-            return (
-              <>
-                <div key={bill.getFuelType()} style={{ marginTop: 10 }}>
-                  <u>{bill.getFuelType()} bill</u> <br />
-                  <strong>Usage</strong>: {bill.getFuelUsage().toFixed(2)}{" "}
-                  {bill.getFuelUnit()} <br />
-                  <strong>Total</strong>: ${bill.getTotalCost().toFixed(2)}
-                </div>
-              </>
-            );
-          })}
+          <MonthlyBillingTooltipView {...tooltipData} />
         </TooltipInPortal>
       )}
     </ChartGroup>
