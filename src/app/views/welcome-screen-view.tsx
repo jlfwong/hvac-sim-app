@@ -15,10 +15,12 @@ import {
 } from "../app-state/config-state";
 import { AboutYourHomeFormSectionView } from "./about-your-home-form-section-view";
 import { locationInfoAtom } from "../app-state/canadian-weather-state";
+import { buildingGeometryAtom } from "../app-state/loads-state";
 
 const WelcomeFormView: React.FC = () => {
   const setWelcomeFormHasBeenSubmit = useSetAtom(welcomeFormHasBeenSubmitAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
+  const buildingGeometry = useAtomValue(buildingGeometryAtom);
 
   return (
     <Box maxW="1280px" p={"20px"} borderRadius="md">
@@ -28,7 +30,7 @@ const WelcomeFormView: React.FC = () => {
           colorScheme="blue"
           w="full"
           mt="4"
-          isDisabled={locationInfo == null}
+          isDisabled={locationInfo == null || buildingGeometry == null}
           onClick={() => {
             setWelcomeFormHasBeenSubmit(true);
           }}

@@ -72,7 +72,8 @@ export const FormSelect: React.FC<FormSelectProps & SelectProps> = ({
   </FormControl>
 );
 
-interface NumericFormInputViewProps {
+interface NumericFormInputViewProps
+  extends Omit<InputProps, "value" | "prefix"> {
   label: string;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
@@ -84,9 +85,15 @@ interface NumericFormInputViewProps {
   step?: number;
 }
 
-export const NumericFormInputView: React.FC<
-  NumericFormInputViewProps & InputProps
-> = ({ value, minValue, maxValue, setValue, isDisabled, ...props }) => {
+export const NumericFormInputView: React.FC<NumericFormInputViewProps> = ({
+  value,
+  minValue,
+  maxValue,
+  setValue,
+  isDisabled,
+  prefix,
+  ...props
+}) => {
   const [internalValue, setInternalValue] = useState(value?.toString() ?? null);
 
   function isValid(numeric: number) {
@@ -103,9 +110,7 @@ export const NumericFormInputView: React.FC<
     <FormControl isInvalid={isInvalid} isDisabled={isDisabled}>
       <FormLabel mb={"3px"}>{props.label}</FormLabel>
       <InputGroup>
-        {props.prefix != null && (
-          <InputLeftAddon>{props.prefix}</InputLeftAddon>
-        )}
+        {prefix != null && <InputLeftAddon>{prefix}</InputLeftAddon>}
         <Input
           {...props}
           type="number"

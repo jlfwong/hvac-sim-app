@@ -15,7 +15,7 @@ export const auxSwitchoverTempFAtom = atom((get) =>
   celciusToFahrenheit(get(auxSwitchoverTempCAtom))
 );
 
-export const floorSpaceSqFtAtom = atom(2500);
+export const floorSpaceSqFtAtom = atom<number | null>(null);
 
 export const postalCodeAtom = atom<string | null>(null);
 

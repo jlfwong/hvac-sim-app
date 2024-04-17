@@ -4,7 +4,6 @@ import { useAtom, useAtomValue } from "jotai";
 import {
   airConditionerInstallCostAtom,
   electricFurnaceInstallCostAtom,
-  floorSpaceSqFtAtom,
   gasFurnaceInstallCostAtom,
   hasOtherGasAppliancesAtom,
   heatpumpBackupFuelAtom,

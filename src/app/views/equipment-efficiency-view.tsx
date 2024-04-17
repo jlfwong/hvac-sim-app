@@ -69,7 +69,8 @@ export const EquipmentEfficiencyView: React.FC<{}> = () => {
     !electricityPricePerKwh ||
     !naturalGasPricePerCubicMetre ||
     !weatherInfo ||
-    !auxSwitchoverTempC
+    !auxSwitchoverTempC ||
+    loadSources == null
   ) {
     return null;
   }

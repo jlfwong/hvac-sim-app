@@ -130,7 +130,7 @@ export const selectedHeatpumpsAtom = atom<HeatpumpSelectionResult[] | null>(
     const loadSources = get(loadSourcesAtom);
     const candidates = get(topRatedHeatPumpCandidatesAtom);
 
-    if (!weatherInfo || !candidates) {
+    if (weatherInfo == null || candidates == null || loadSources == null) {
       return null;
     }
 
