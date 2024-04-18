@@ -9,7 +9,12 @@ export const CalculatorAppView: React.FC<{}> = () => {
   const welcomeFormHasBeenSubmit = useAtomValue(welcomeFormHasBeenSubmitAtom);
 
   return (
-    <Container maxW="1600px" minH="100vh" display="flex" padding={0}>
+    <Container
+      maxW="1600px"
+      minH="100vh"
+      display="flex"
+      padding={{ base: "10px", md: 0 }}
+    >
       {welcomeFormHasBeenSubmit ? <CalculatorView /> : <WelcomeScreenView />}
     </Container>
   );

@@ -30,7 +30,7 @@ const WelcomeFormView: React.FC = () => {
   const buildingGeometry = useAtomValue(buildingGeometryAtom);
 
   return (
-    <Box maxW="1280px" p={"20px"} borderRadius="md">
+    <Box maxW="1280px" p={{ base: 0, md: "20px" }} borderRadius="md">
       <Stack spacing={"20px"}>
         <FormSectionView title="About your home">
           <FormRow>
