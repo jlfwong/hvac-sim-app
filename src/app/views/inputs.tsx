@@ -55,9 +55,10 @@ export const HeatPumpBackupFuelSelect: React.FC = () => {
       tooltip={
         <Stack>
           <p>
-            Canada's cold climate will require your heat pump has a backup heat
-            source. This is either an electric heating coil or a gas furnace
-            that's used in conjunction with the heat pump when it's very cold.
+            Canada's cold climate means your heat pump will typically need a
+            backup heat source. This is either an electric heating coil or a gas
+            furnace that's used in conjunction with the heat pump when it's very
+            cold.
           </p>
           <p>
             For electric backups, smart thermostats will automatically turn on
