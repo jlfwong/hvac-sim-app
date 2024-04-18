@@ -6,10 +6,10 @@ import {
 import React from "react";
 import { ChartGroup, ChartHeader } from "../chart";
 import { scaleBand, scaleLinear, scaleOrdinal } from "@visx/scale";
-import { schemeSet1 } from "d3-scale-chromatic";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { Bar } from "@visx/shape";
 import { Group } from "@visx/group";
+import { Colors } from "./colors";
 
 export const EmissionsView: React.FC<{}> = (props) => {
   const simulations = useAtomValue(simulationsAtom);
@@ -37,7 +37,7 @@ export const EmissionsView: React.FC<{}> = (props) => {
 
   const color = scaleOrdinal<string, string>()
     .domain(simulations.map((s) => s.name))
-    .range(schemeSet1);
+    .range([Colors.heatpump, Colors.statusQuo]);
 
   return (
     <ChartGroup>

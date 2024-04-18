@@ -10,25 +10,56 @@ import {
 import React from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
+  floorSpaceSqFtAtom,
   postalCodeAtom,
   welcomeFormHasBeenSubmitAtom,
 } from "../app-state/config-state";
-import { AboutYourHomeFormSectionView } from "./about-your-home-form-section-view";
 import { locationInfoAtom } from "../app-state/canadian-weather-state";
+import { buildingGeometryAtom } from "../app-state/loads-state";
+import { FormSectionView, FormRow } from "./forms";
+import {
+  PostalCodeInput,
+  FloorSpaceInput,
+  HomeHeatingTypeSelect,
+  OtherGasAppliancesSelect,
+} from "./inputs";
 
 const WelcomeFormView: React.FC = () => {
   const setWelcomeFormHasBeenSubmit = useSetAtom(welcomeFormHasBeenSubmitAtom);
   const locationInfo = useAtomValue(locationInfoAtom);
+  const buildingGeometry = useAtomValue(buildingGeometryAtom);
 
   return (
     <Box maxW="1280px" p={"20px"} borderRadius="md">
       <Stack spacing={"20px"}>
-        <AboutYourHomeFormSectionView />
+        <FormSectionView title="About your home">
+          <FormRow>
+            <PostalCodeInput />
+            <FloorSpaceInput />
+          </FormRow>
+          <HomeHeatingTypeSelect
+            label="My home is heated with"
+            tooltip={
+              <Stack>
+                <p>
+                  We'll compare the costs for a heatpump against the costs for
+                  replacing the equipment you already have with something
+                  similar.
+                </p>
+                <p>
+                  If you have a gas furnace, choose "gas". If you baseboard
+                  heaters or an electric furnace, choose "electricity".
+                </p>
+              </Stack>
+            }
+          />
+          <OtherGasAppliancesSelect />
+        </FormSectionView>
         <Button
           colorScheme="blue"
           w="full"
           mt="4"
-          isDisabled={locationInfo == null}
+          isDisabled={locationInfo == null || buildingGeometry == null}
           onClick={() => {
             setWelcomeFormHasBeenSubmit(true);
           }}
@@ -44,10 +75,12 @@ const LocationLink: React.FC<{
   placeName: string;
 }> = (props) => {
   const setPostalCode = useSetAtom(postalCodeAtom);
+  const setFloorSpaceSqFt = useSetAtom(floorSpaceSqFtAtom);
   const setWelcomeFormHasBeenSubmit = useSetAtom(welcomeFormHasBeenSubmitAtom);
 
   const onClick: React.EventHandler<React.MouseEvent> = (ev) => {
     setPostalCode(props.postalCode);
+    setFloorSpaceSqFt(2000);
     setWelcomeFormHasBeenSubmit(true);
     ev.preventDefault();
   };

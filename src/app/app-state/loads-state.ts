@@ -10,9 +10,13 @@ import {
   InfiltrationLoadSource,
 } from "../../lib/thermal-loads";
 
-export const buildingGeometryAtom = atom<BuildingGeometry>((get) => {
+export const buildingGeometryAtom = atom<BuildingGeometry | null>((get) => {
+  const floorSpaceSqFt = get(floorSpaceSqFtAtom);
+
+  if (floorSpaceSqFt == null) return null;
+
   return new BuildingGeometry({
-    floorSpaceSqFt: get(floorSpaceSqFtAtom),
+    floorSpaceSqFt: floorSpaceSqFt,
     ceilingHeightFt: 9,
     numAboveGroundStories: 2,
     lengthToWidthRatio: 3,
@@ -20,8 +24,10 @@ export const buildingGeometryAtom = atom<BuildingGeometry>((get) => {
   });
 });
 
-export const loadSourcesAtom = atom<ThermalLoadSource[]>((get) => {
+export const loadSourcesAtom = atom<ThermalLoadSource[] | null>((get) => {
   const buildingGeometry = get(buildingGeometryAtom);
+
+  if (buildingGeometry == null) return null;
 
   return [
     new OccupantsLoadSource(2),
