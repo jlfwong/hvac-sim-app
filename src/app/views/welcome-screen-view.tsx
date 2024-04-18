@@ -37,7 +37,22 @@ const WelcomeFormView: React.FC = () => {
             <PostalCodeInput />
             <FloorSpaceInput />
           </FormRow>
-          <HomeHeatingTypeSelect label="My home is heated with" />
+          <HomeHeatingTypeSelect
+            label="My home is heated with"
+            tooltip={
+              <Stack>
+                <p>
+                  We'll compare the costs for a heatpump against the costs for
+                  replacing the equipment you already have with something
+                  similar.
+                </p>
+                <p>
+                  If you have a gas furnace, choose "gas". If you baseboard
+                  heaters or an electric furnace, choose "electricity".
+                </p>
+              </Stack>
+            }
+          />
           <OtherGasAppliancesSelect />
         </FormSectionView>
         <Button

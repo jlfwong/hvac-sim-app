@@ -6,7 +6,6 @@ import {
   VStack,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { AboutYourHomeFormSectionView } from "./about-your-home-form-section-view";
 import {
   CardColumnStackView,
   CardStackView,

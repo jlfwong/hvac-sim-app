@@ -53,7 +53,16 @@ export const EquipmentPurchaseAndInstallFormSectionView: React.FC = () => {
         stripeColor={Colors.statusQuo}
       >
         <FormRow>
-          <HomeHeatingTypeSelect label={"Heating equipment"} />
+          <HomeHeatingTypeSelect
+            label={"Heating equipment"}
+            tooltip={
+              <p>
+                To compare a heatpump against a gas furnace, choose "gas". To
+                compare against baseboard heaters or an electric furnace, choose
+                "electricity".
+              </p>
+            }
+          />
           <FurnaceInstallCostInput />
         </FormRow>
         <AirConditionerInstallCostInput />
