@@ -49,7 +49,7 @@ export const EquipmentPurchaseAndInstallFormSectionView: React.FC = () => {
         </FormRow>
       </FormSectionView>
       <FormSectionView
-        title="Compare costs and emissions with"
+        title="Compare costs and emissions with…"
         stripeColor={Colors.statusQuo}
       >
         <FormRow>
