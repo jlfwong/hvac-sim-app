@@ -14,6 +14,7 @@ import {
   type FormLabelProps,
   HStack,
   Text,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { Box, Heading, Stack } from "@chakra-ui/react";
 import React, { forwardRef, useState } from "react";
@@ -39,7 +40,7 @@ export const FormSectionView: React.FC<FormSectionViewProps> = (props) => {
   }
 
   return (
-    <Stack as="section" gap={0}>
+    <Stack as="section" gap={0} w="full">
       <Box>
         <Heading size="small">{props.title}</Heading>
         <hr />
@@ -80,14 +81,15 @@ interface FormInputProps {
   tooltip?: React.ReactNode;
 }
 
-export const FormInput = forwardRef<HTMLInputElement, FormInputProps & InputProps>(
-  ({ label, tooltip, ...props }, ref) => (
-    <FormControl>
-      <FormLabelWithTooltipOption label={label} tooltip={tooltip} />
-      <Input {...props} ref={ref} />
-    </FormControl>
-  )
-);
+export const FormInput = forwardRef<
+  HTMLInputElement,
+  FormInputProps & InputProps
+>(({ label, tooltip, ...props }, ref) => (
+  <FormControl>
+    <FormLabelWithTooltipOption label={label} tooltip={tooltip} />
+    <Input {...props} ref={ref} />
+  </FormControl>
+));
 interface FormSelectProps {
   label: string;
   tooltip?: React.ReactNode;
@@ -189,15 +191,38 @@ interface InfoTooltipViewProps {
 }
 
 export const InfoTooltipView: React.FC<InfoTooltipViewProps> = (props) => {
+  const { isOpen, onOpen, onClose, onToggle } = useDisclosure();
+
+  const isTouchDevice = window.matchMedia(
+    "(hover: none) and (pointer: coarse)"
+  ).matches;
+
   return (
-    <Tooltip
-      hasArrow
-      label={props.message}
-      placement="top"
-      bg="gray.50"
-      color="black"
-    >
-      <QuestionOutlineIcon color={"gray.500"} />
-    </Tooltip>
+    <>
+      <Tooltip
+        hasArrow
+        label={props.message}
+        placement="top"
+        bg="gray.50"
+        color="black"
+        isOpen={isOpen}
+      >
+        <QuestionOutlineIcon
+          color={"gray.500"}
+          onMouseEnter={onOpen}
+          onMouseLeave={onClose}
+          onClick={(ev) => {
+            if (isTouchDevice) {
+              onToggle();
+
+              // Stop propagation to prevent labels from focusing their associated
+            // input elements
+              ev.preventDefault();
+              ev.stopPropagation();
+            }
+          }}
+        />
+      </Tooltip>
+    </>
   );
 };

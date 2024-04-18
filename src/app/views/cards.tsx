@@ -45,7 +45,7 @@ const InfoCardView: React.FC<InfoCardViewProps & StackProps> = ({
       w="full"
       bg="white"
       borderRadius={"10px"}
-      p="20px"
+      p={{ base: "5px", md: "20px" }}
       gap={"5px"}
       align="start"
       {...props}
