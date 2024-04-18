@@ -39,7 +39,7 @@ export const FormSectionView: React.FC<FormSectionViewProps> = (props) => {
   }
 
   return (
-    <Stack as="section" gap={0}>
+    <Stack as="section" gap={0} w="full">
       <Box>
         <Heading size="small">{props.title}</Heading>
         <hr />

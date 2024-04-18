@@ -74,11 +74,11 @@ export const CalculatorView: React.FC = () => {
       </FormRow>
       <OtherGasAppliancesSelect />
     </FormSectionView>,
+    <EquipmentPurchaseAndInstallFormSectionView key={"equipment"} />,
   ];
 
   if (columns == null || columns > 1) {
     formSections.push(
-      <EquipmentPurchaseAndInstallFormSectionView key={"equipment"} />,
       <UtilityPricesFormSectionView key={"utilityprices"} />,
       <ThermostatFormSectionView key={"thermostat"} />
     );
