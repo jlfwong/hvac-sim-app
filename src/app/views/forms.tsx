@@ -216,7 +216,7 @@ export const InfoTooltipView: React.FC<InfoTooltipViewProps> = (props) => {
               onToggle();
 
               // Stop propagation to prevent labels from focusing their associated
-            // input elements
+              // input elements
               ev.preventDefault();
               ev.stopPropagation();
             }

@@ -70,6 +70,7 @@ const WelcomeFormView: React.FC = () => {
     </Box>
   );
 };
+
 const LocationLink: React.FC<{
   postalCode: string;
   placeName: string;
@@ -91,6 +92,7 @@ const LocationLink: React.FC<{
     </Box>
   );
 };
+
 const WelcomeMessage: React.FC<{}> = () => {
   return (
     <Center h="full">
@@ -165,6 +167,7 @@ const WelcomeMessage: React.FC<{}> = () => {
     </Center>
   );
 };
+
 export const WelcomeScreenView: React.FC<{}> = () => {
   return (
     <Center h="100vh" w="full">
