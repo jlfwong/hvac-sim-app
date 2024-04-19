@@ -13,7 +13,7 @@ await esbuild.build({
     sentryEsbuildPlugin({
       authToken: process.env.SENTRY_AUTH_TOKEN,
       org: "jamie-wong",
-      project: "javascript-react",
+      project: "hvac-sim-app",
     }),
   ],
 });
