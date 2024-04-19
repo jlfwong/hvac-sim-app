@@ -173,7 +173,7 @@ export const WelcomeScreenView: React.FC<{}> = () => {
     <Center h="100vh" w="full">
       <Flex direction={{ base: "column", md: "row" }} gap={"40px"}>
         <Stack>
-          <Heading textAlign={"center"}>XXX Heat Pump Calculator 🇨🇦</Heading>
+          <Heading textAlign={"center"}>Heat Pump Calculator 🇨🇦</Heading>
           <WelcomeFormView />
         </Stack>
         <WelcomeMessage />
