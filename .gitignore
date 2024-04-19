@@ -1,2 +1,5 @@
 node_modules
 dist/*
+
+# Sentry Config File
+.env.sentry-build-plugin

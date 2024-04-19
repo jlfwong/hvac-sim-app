@@ -6,9 +6,8 @@
   "scripts": {
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "serve": "esbuild src/app/app.tsx --watch --bundle --servedir=static --outdir=static/js",
-    "build": "esbuild src/app/app.tsx --bundle --minify --outdir=dist/js",
-    "deploy": "deploy.sh"
+    "serve": "node scripts/esbuild.dev.mjs",
+    "build": "node scripts/esbuild.prod.mjs"
   },
   "jest": {
     "transform": {
@@ -32,6 +31,7 @@
     "@chakra-ui/react": "2.8.2",
     "@emotion/react": "11.11.4",
     "@emotion/styled": "11.11.0",
+    "@sentry/react": "7.111.0",
     "@types/d3-scale-chromatic": "3.0.3",
     "@types/jest": "^29.5.11",
     "@types/luxon": "3.4.2",
@@ -54,6 +54,7 @@
     "ts-jest": "29.1.2"
   },
   "dependencies": {
+    "@sentry/esbuild-plugin": "^2.16.1",
     "@types/react": "18.2.55",
     "@types/react-dom": "18.2.19",
     "esbuild": "0.20.0",
