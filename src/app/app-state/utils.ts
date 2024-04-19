@@ -1,4 +1,4 @@
-import { Atom, atom } from "jotai";
+import { Atom, atom, type WritableAtom } from "jotai";
 import { unwrap } from "jotai/utils";
 
 type Getter = <Value>(atom: Atom<Value>) => Value;
@@ -19,13 +19,14 @@ export function asyncAtomOrNull<T>(
   return unwrap(atom(read), () => null);
 }
 
-
 // Creates a derived atom which can have its value overwritten.  If the derived
 // value changes, its value will dominate the previous override value.
 //
 // This is last "writer" wins, where a change in derived values constitutes a
 // "write".
-export function overridableDerivedAtom<T>(read: (get: Getter) => T): Atom<T> {
+export function overridableDerivedAtom<T>(
+  read: (get: Getter) => T
+): WritableAtom<T, [T], void> {
   const timestampedDerivedAtom = atom((get) => {
     const value = read(get);
     return { value, timestamp: performance.now() };
