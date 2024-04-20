@@ -1,47 +1,17 @@
-import {
-  useAtom,
-  type Atom,
-  type PrimitiveAtom,
-  type WritableAtom,
-} from "jotai";
-import { useMemo } from "react";
+import { useAtom, type Atom, type WritableAtom } from "jotai";
+import { useRef } from "react";
+import posthog from "posthog-js";
 
-export function trackEvent(name: string, args: { [key: string]: any }): void {
-  // TODO(jlfwong): Dev & prod difference
-  console.log("trackEvent", name, args);
+export function trackEvent(
+  name: string,
+  args: { [key: string]: any } = {}
+): void {
+  if (process.env.NODE_ENV === "production") {
+    posthog.capture(name, args);
+  } else {
+    console.log("trackEvent", name, args);
+  }
 }
-
-function debounce<T extends any[]>(
-  func: (...args: T) => void,
-  wait: number
-): { delayed: (...args: T) => void; now: (...args: T) => void } {
-  let timeoutId: number | null = null;
-
-  return {
-    delayed(...args: T): void {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-
-      timeoutId = window.setTimeout(() => {
-        func(...args);
-      }, wait);
-    },
-
-    now(...args: T): void {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-      func(...args);
-    },
-  };
-}
-
-export const debouncedTracker = (name: string, delayInMs: number = 1000) => {
-  return debounce((args: { [key: string]: any }) => {
-    trackEvent(name, args);
-  }, delayInMs);
-};
 
 export function useAtomAndTrack<
   AtomType extends WritableAtom<any, [any], void>,
@@ -49,17 +19,13 @@ export function useAtomAndTrack<
 >(atom: AtomType, name: string): [Awaited<T>, (t: T) => void, () => void] {
   const [atomValue, setAtomValue] = useAtom(atom);
 
-  const eventName = `${name}__changed`;
-  const tracker = useMemo(() => debouncedTracker(eventName), [name]);
+  const lastValueRef = useRef(atomValue);
 
-  const trackNow = () => {
-    tracker.now({ value: atomValue });
-  };
-
-  function setValue(value: T) {
-    tracker.delayed({ value });
-    setAtomValue(value);
+  function track() {
+    if (lastValueRef.current == atomValue) return;
+    trackEvent(`${name}__changed`, { value: atomValue });
+    lastValueRef.current = atomValue;
   }
 
-  return [atomValue, setValue, trackNow];
+  return [atomValue, setAtomValue, track];
 }

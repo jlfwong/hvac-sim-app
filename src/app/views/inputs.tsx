@@ -21,8 +21,10 @@ import {
 } from "../app-state/canadian-utilities-state";
 
 export const HeatPumpInstallCostInput: React.FC = () => {
-  const [heatpumpInstallCost, setHeatpumpInstallCost, trackNow] =
-    useAtomAndTrack(heatpumpInstallCostAtom, "heatpumpInstallCost");
+  const [heatpumpInstallCost, setHeatpumpInstallCost, track] = useAtomAndTrack(
+    heatpumpInstallCostAtom,
+    "heatpumpInstallCost"
+  );
   return (
     <NumericFormInputView
       label="New heat pump w/ backup"
@@ -45,13 +47,13 @@ export const HeatPumpInstallCostInput: React.FC = () => {
       minValue={0}
       step={1000}
       maxValue={100000}
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };
 
 export const HeatPumpBackupFuelSelect: React.FC = () => {
-  const [heatpumpBackupFuel, setHeatpumpBackupFuel, trackNow] = useAtomAndTrack(
+  const [heatpumpBackupFuel, setHeatpumpBackupFuel, track] = useAtomAndTrack(
     heatpumpBackupFuelAtom,
     "heatpumpBackupFuel"
   );
@@ -81,7 +83,7 @@ export const HeatPumpBackupFuelSelect: React.FC = () => {
       onChange={(ev) =>
         setHeatpumpBackupFuel(ev.currentTarget.value as "gas" | "electric")
       }
-      onBlur={trackNow}
+      onBlur={track}
     >
       <option value="gas">Gas</option>
       <option value="electric">Electric</option>
@@ -90,7 +92,7 @@ export const HeatPumpBackupFuelSelect: React.FC = () => {
 };
 
 export const AirConditionerInstallCostInput: React.FC = () => {
-  const [airConditionerInstallCost, setAirConditionerInstallCost, trackNow] =
+  const [airConditionerInstallCost, setAirConditionerInstallCost, track] =
     useAtomAndTrack(airConditionerInstallCostAtom, "airConditionerInstallCost");
   return (
     <NumericFormInputView
@@ -110,14 +112,14 @@ export const AirConditionerInstallCostInput: React.FC = () => {
       minValue={0}
       step={1000}
       maxValue={100000}
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };
 
 export const FurnaceInstallCostInput: React.FC = () => {
   const statusQuoFurnaceFuel = useAtomValue(statusQuoFurnaceFuelAtom);
-  const [gasFurnaceInstallCost, setGasFurnaceInstallCost, trackNow] =
+  const [gasFurnaceInstallCost, setGasFurnaceInstallCost, track] =
     useAtomAndTrack(gasFurnaceInstallCostAtom, "gasFurnaceInstallCost");
   const [electricFurnaceInstallCost, setElectricFurnaceInstallCost] =
     useAtomAndTrack(
@@ -151,13 +153,13 @@ export const FurnaceInstallCostInput: React.FC = () => {
       minValue={0}
       step={1000}
       maxValue={100000}
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };
 
 export const PostalCodeInput: React.FC = () => {
-  const [postalCode, setPostalCode, trackNow] = useAtomAndTrack(
+  const [postalCode, setPostalCode, track] = useAtomAndTrack(
     postalCodeAtom,
     "postalCode"
   );
@@ -180,13 +182,13 @@ export const PostalCodeInput: React.FC = () => {
       }
       onChange={(ev) => setPostalCode(ev.currentTarget.value)}
       ref={postalCodeInputRef}
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };
 
 export const FloorSpaceInput: React.FC = () => {
-  const [floorSpaceSqFt, setFloorSpaceSqFt, trackNow] = useAtomAndTrack(
+  const [floorSpaceSqFt, setFloorSpaceSqFt, track] = useAtomAndTrack(
     floorSpaceSqFtAtom,
     "floorSpaceSqFt"
   );
@@ -212,7 +214,7 @@ export const FloorSpaceInput: React.FC = () => {
           ft<sup>2</sup>
         </>
       }
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };
@@ -221,7 +223,7 @@ export const HomeHeatingTypeSelect: React.FC<{
   label: string;
   tooltip: React.ReactNode;
 }> = (props) => {
-  const [statusQuoFurnaceFuel, setStatusQuoFurnaceFuel, trackNow] =
+  const [statusQuoFurnaceFuel, setStatusQuoFurnaceFuel, track] =
     useAtomAndTrack(statusQuoFurnaceFuelAtom, "statusQuoFurnaceFuel");
 
   return (
@@ -229,7 +231,7 @@ export const HomeHeatingTypeSelect: React.FC<{
       label={props.label}
       tooltip={props.tooltip}
       value={statusQuoFurnaceFuel}
-      onBlur={trackNow}
+      onBlur={track}
       onChange={(ev) => {
         const value = ev.currentTarget.value;
         if (value === "gas" || value === "electric") {
@@ -244,7 +246,7 @@ export const HomeHeatingTypeSelect: React.FC<{
 };
 
 export const OtherGasAppliancesSelect: React.FC = () => {
-  const [hasOtherGasAppliances, setHasOtherGasAppliances, trackNow] =
+  const [hasOtherGasAppliances, setHasOtherGasAppliances, track] =
     useAtomAndTrack(hasOtherGasAppliancesAtom, "hasOtherGasAppliances");
 
   return (
@@ -273,7 +275,7 @@ export const OtherGasAppliancesSelect: React.FC = () => {
         const value = ev.currentTarget.value;
         setHasOtherGasAppliances(value === "true");
       }}
-      onBlur={trackNow}
+      onBlur={track}
     >
       <option value="true">Yes</option>
       <option value="false">No</option>
@@ -282,7 +284,7 @@ export const OtherGasAppliancesSelect: React.FC = () => {
 };
 
 export const AuxSwitchoverTempInput: React.FC = () => {
-  const [auxSwitchoverTempC, setAuxSwitchoverTempC, trackNow] = useAtomAndTrack(
+  const [auxSwitchoverTempC, setAuxSwitchoverTempC, track] = useAtomAndTrack(
     auxSwitchoverTempCAtom,
     "auxSwitchoverTempC"
   );
@@ -310,13 +312,13 @@ export const AuxSwitchoverTempInput: React.FC = () => {
       prefix="Below"
       textAlign={"right"}
       suffix="°C"
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };
 
 export const ElectricityPriceInput: React.FC = () => {
-  const [electricityPricePerKwh, setElectricityPricePerKwh, trackNow] =
+  const [electricityPricePerKwh, setElectricityPricePerKwh, track] =
     useAtomAndTrack(electricityPricePerKwhAtom, "electricityPricePerKwh");
 
   return (
@@ -341,20 +343,17 @@ export const ElectricityPriceInput: React.FC = () => {
       setValue={setElectricityPricePerKwh}
       textAlign={"right"}
       suffix="$/kWh"
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };
 
 export const NaturalGasPriceInput: React.FC = () => {
-  const [
-    naturalGasPricePerCubicMetre,
-    setNaturalGasPricePerCubicMetre,
-    trackNow,
-  ] = useAtomAndTrack(
-    naturalGasPricePerCubicMetreAtom,
-    "naturalGasPerCubicMetre"
-  );
+  const [naturalGasPricePerCubicMetre, setNaturalGasPricePerCubicMetre, track] =
+    useAtomAndTrack(
+      naturalGasPricePerCubicMetreAtom,
+      "naturalGasPerCubicMetre"
+    );
 
   return (
     <NumericFormInputView
@@ -377,7 +376,7 @@ export const NaturalGasPriceInput: React.FC = () => {
           $/m<sup>3</sup>
         </>
       }
-      onBlur={trackNow}
+      onBlur={track}
     />
   );
 };

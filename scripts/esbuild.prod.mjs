@@ -3,6 +3,9 @@ import { sentryEsbuildPlugin } from "@sentry/esbuild-plugin"
 
 await esbuild.build({
   entryPoints: ['src/app/app.tsx'],
+  define: {
+    "process.env.NODE_ENV": 'production',
+  },
   sourcemap: true,
   minify: true,
   bundle: true,
