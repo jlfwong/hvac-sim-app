@@ -14,10 +14,16 @@ import {
 import { NumericFormInputView, FormSelect, FormInput } from "./forms";
 import React, { useEffect, useRef } from "react";
 import { Stack } from "@chakra-ui/react";
+import { useAtomAndTrack } from "../analytics";
+import {
+  electricityPricePerKwhAtom,
+  naturalGasPricePerCubicMetreAtom,
+} from "../app-state/canadian-utilities-state";
 
 export const HeatPumpInstallCostInput: React.FC = () => {
-  const [heatpumpInstallCost, setHeatpumpInstallCost] = useAtom(
-    heatpumpInstallCostAtom
+  const [heatpumpInstallCost, setHeatpumpInstallCost, track] = useAtomAndTrack(
+    heatpumpInstallCostAtom,
+    "heatpumpInstallCost"
   );
   return (
     <NumericFormInputView
@@ -41,13 +47,15 @@ export const HeatPumpInstallCostInput: React.FC = () => {
       minValue={0}
       step={1000}
       maxValue={100000}
+      onBlur={track}
     />
   );
 };
 
 export const HeatPumpBackupFuelSelect: React.FC = () => {
-  const [heatpumpBackupFuel, setHeatpumpBackupFuel] = useAtom(
-    heatpumpBackupFuelAtom
+  const [heatpumpBackupFuel, setHeatpumpBackupFuel, track] = useAtomAndTrack(
+    heatpumpBackupFuelAtom,
+    "heatpumpBackupFuel"
   );
   return (
     <FormSelect
@@ -75,6 +83,7 @@ export const HeatPumpBackupFuelSelect: React.FC = () => {
       onChange={(ev) =>
         setHeatpumpBackupFuel(ev.currentTarget.value as "gas" | "electric")
       }
+      onBlur={track}
     >
       <option value="gas">Gas</option>
       <option value="electric">Electric</option>
@@ -83,9 +92,8 @@ export const HeatPumpBackupFuelSelect: React.FC = () => {
 };
 
 export const AirConditionerInstallCostInput: React.FC = () => {
-  const [airConditionerInstallCost, setAirConditionerInstallCost] = useAtom(
-    airConditionerInstallCostAtom
-  );
+  const [airConditionerInstallCost, setAirConditionerInstallCost, track] =
+    useAtomAndTrack(airConditionerInstallCostAtom, "airConditionerInstallCost");
   return (
     <NumericFormInputView
       label="New air conditioner"
@@ -104,18 +112,20 @@ export const AirConditionerInstallCostInput: React.FC = () => {
       minValue={0}
       step={1000}
       maxValue={100000}
+      onBlur={track}
     />
   );
 };
 
 export const FurnaceInstallCostInput: React.FC = () => {
   const statusQuoFurnaceFuel = useAtomValue(statusQuoFurnaceFuelAtom);
-  const [gasFurnaceInstallCost, setGasFurnaceInstallCost] = useAtom(
-    gasFurnaceInstallCostAtom
-  );
-  const [electricFurnaceInstallCost, setElectricFurnaceInstallCost] = useAtom(
-    electricFurnaceInstallCostAtom
-  );
+  const [gasFurnaceInstallCost, setGasFurnaceInstallCost, track] =
+    useAtomAndTrack(gasFurnaceInstallCostAtom, "gasFurnaceInstallCost");
+  const [electricFurnaceInstallCost, setElectricFurnaceInstallCost] =
+    useAtomAndTrack(
+      electricFurnaceInstallCostAtom,
+      "electricFurnaceInstallCost"
+    );
 
   let furnaceCost: number;
   let setFurnaceCost: (cost: number) => void;
@@ -143,12 +153,16 @@ export const FurnaceInstallCostInput: React.FC = () => {
       minValue={0}
       step={1000}
       maxValue={100000}
+      onBlur={track}
     />
   );
 };
 
 export const PostalCodeInput: React.FC = () => {
-  const [postalCode, setPostalCode] = useAtom(postalCodeAtom);
+  const [postalCode, setPostalCode, track] = useAtomAndTrack(
+    postalCodeAtom,
+    "postalCode"
+  );
   const postalCodeInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -168,12 +182,16 @@ export const PostalCodeInput: React.FC = () => {
       }
       onChange={(ev) => setPostalCode(ev.currentTarget.value)}
       ref={postalCodeInputRef}
+      onBlur={track}
     />
   );
 };
 
 export const FloorSpaceInput: React.FC = () => {
-  const [floorSpaceSqFt, setFloorSpaceSqFt] = useAtom(floorSpaceSqFtAtom);
+  const [floorSpaceSqFt, setFloorSpaceSqFt, track] = useAtomAndTrack(
+    floorSpaceSqFtAtom,
+    "floorSpaceSqFt"
+  );
 
   return (
     <NumericFormInputView
@@ -196,6 +214,7 @@ export const FloorSpaceInput: React.FC = () => {
           ft<sup>2</sup>
         </>
       }
+      onBlur={track}
     />
   );
 };
@@ -204,15 +223,15 @@ export const HomeHeatingTypeSelect: React.FC<{
   label: string;
   tooltip: React.ReactNode;
 }> = (props) => {
-  const [statusQuoFurnaceFuel, setStatusQuoFurnaceFuel] = useAtom(
-    statusQuoFurnaceFuelAtom
-  );
+  const [statusQuoFurnaceFuel, setStatusQuoFurnaceFuel, track] =
+    useAtomAndTrack(statusQuoFurnaceFuelAtom, "statusQuoFurnaceFuel");
 
   return (
     <FormSelect
       label={props.label}
       tooltip={props.tooltip}
       value={statusQuoFurnaceFuel}
+      onBlur={track}
       onChange={(ev) => {
         const value = ev.currentTarget.value;
         if (value === "gas" || value === "electric") {
@@ -227,9 +246,8 @@ export const HomeHeatingTypeSelect: React.FC<{
 };
 
 export const OtherGasAppliancesSelect: React.FC = () => {
-  const [hasOtherGasAppliances, setHasOtherGasAppliances] = useAtom(
-    hasOtherGasAppliancesAtom
-  );
+  const [hasOtherGasAppliances, setHasOtherGasAppliances, track] =
+    useAtomAndTrack(hasOtherGasAppliancesAtom, "hasOtherGasAppliances");
 
   return (
     <FormSelect
@@ -257,6 +275,7 @@ export const OtherGasAppliancesSelect: React.FC = () => {
         const value = ev.currentTarget.value;
         setHasOtherGasAppliances(value === "true");
       }}
+      onBlur={track}
     >
       <option value="true">Yes</option>
       <option value="false">No</option>
@@ -265,8 +284,9 @@ export const OtherGasAppliancesSelect: React.FC = () => {
 };
 
 export const AuxSwitchoverTempInput: React.FC = () => {
-  const [auxSwitchoverTempC, setAuxSwitchoverTempC] = useAtom(
-    auxSwitchoverTempCAtom
+  const [auxSwitchoverTempC, setAuxSwitchoverTempC, track] = useAtomAndTrack(
+    auxSwitchoverTempCAtom,
+    "auxSwitchoverTempC"
   );
 
   return (
@@ -292,6 +312,71 @@ export const AuxSwitchoverTempInput: React.FC = () => {
       prefix="Below"
       textAlign={"right"}
       suffix="°C"
+      onBlur={track}
+    />
+  );
+};
+
+export const ElectricityPriceInput: React.FC = () => {
+  const [electricityPricePerKwh, setElectricityPricePerKwh, track] =
+    useAtomAndTrack(electricityPricePerKwhAtom, "electricityPricePerKwh");
+
+  return (
+    <NumericFormInputView
+      label="Electricity"
+      tooltip={
+        <Stack>
+          <p>
+            This assumes a single variable cost, without time-of-use pricing.
+            The values here are based on provincial averages for 2023.
+          </p>
+          <p>
+            Try changing this value to see how sensitive the lifetime costs are
+            to utility rates.
+          </p>
+        </Stack>
+      }
+      minValue={0}
+      maxValue={100}
+      step={0.01}
+      value={electricityPricePerKwh}
+      setValue={setElectricityPricePerKwh}
+      textAlign={"right"}
+      suffix="$/kWh"
+      onBlur={track}
+    />
+  );
+};
+
+export const NaturalGasPriceInput: React.FC = () => {
+  const [naturalGasPricePerCubicMetre, setNaturalGasPricePerCubicMetre, track] =
+    useAtomAndTrack(
+      naturalGasPricePerCubicMetreAtom,
+      "naturalGasPerCubicMetre"
+    );
+
+  return (
+    <NumericFormInputView
+      label="Natural Gas"
+      tooltip={
+        <p>
+          This includes all variable costs (transport, delivery, carbon tax,
+          etc.), but does not include the fixed monthly "Customer Charge". The
+          values here are based on provincial averages for 2023.
+        </p>
+      }
+      minValue={0}
+      maxValue={100}
+      step={0.01}
+      value={naturalGasPricePerCubicMetre}
+      setValue={setNaturalGasPricePerCubicMetre}
+      textAlign={"right"}
+      suffix={
+        <>
+          $/m<sup>3</sup>
+        </>
+      }
+      onBlur={track}
     />
   );
 };

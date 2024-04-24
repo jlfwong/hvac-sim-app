@@ -23,6 +23,7 @@ import {
   HomeHeatingTypeSelect,
   OtherGasAppliancesSelect,
 } from "./inputs";
+import { trackEvent } from "../analytics";
 
 const WelcomeFormView: React.FC = () => {
   const setWelcomeFormHasBeenSubmit = useSetAtom(welcomeFormHasBeenSubmitAtom);
@@ -61,6 +62,7 @@ const WelcomeFormView: React.FC = () => {
           mt="4"
           isDisabled={locationInfo == null || buildingGeometry == null}
           onClick={() => {
+            trackEvent("welcomeForm__submit");
             setWelcomeFormHasBeenSubmit(true);
           }}
         >

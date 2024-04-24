@@ -172,9 +172,12 @@ export const NumericFormInputView: React.FC<NumericFormInputViewProps> = ({
               setValue(numericValue);
             }
           }}
-          onBlur={() => {
+          onBlur={(ev) => {
             if (value != null) {
               setInternalValue(value.toString());
+            }
+            if (props.onBlur != null) {
+              props.onBlur(ev);
             }
           }}
         />
