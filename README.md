@@ -1,6 +1,6 @@
 # HVAC Simulator
 
-This is the source supporting https://hvac-sim-app.onrender.com/. It contains
+This is the source supporting https://shouldiheatpump.ca/. It contains
 the code to simulate HVAC systems for homes to evaluate their utility costs and
 greenhouse gas emissions.
 
