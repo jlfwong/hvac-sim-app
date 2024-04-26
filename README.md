@@ -1,11 +1,10 @@
 # HVAC Simulator
+This repository contains code to simulate HVAC systems (e.g. heat pumps) for homes to evaluate their utility costs and
+greenhouse gas emissions using real historical weather data.
 
-This is the source supporting https://shouldiheatpump.ca/. It contains
-the code to simulate HVAC systems for homes to evaluate their utility costs and
-greenhouse gas emissions.
+You can try it out on https://shouldiheatpump.ca/
 
-This allows the creation of tools to evaluate heat pumps v.s. other heating and
-cooling solutions using real historical weather data.
+<img width="1334" alt="image" src="https://github.com/jlfwong/hvac-sim-app/assets/150329/b1acc7cb-14d1-4e41-b689-d5bdb8a83795">
 
 The idea and implementation were inspired heavily by https://heatpumpshooray.com/
 
@@ -19,26 +18,28 @@ application for a heat pump calculator.
 The HVAC simulation library simulates on a 20 minute time step over long spans
 of time (up to a year with current weather data).
 
+<img width="392" alt="image" src="https://github.com/jlfwong/hvac-sim-app/assets/150329/38cb778c-273d-4e7f-8e74-6d149bd39d74">
+
 At each time step, the simulator...
 
 1. Uses a simulated thermostat to decide whether to turn heating or cooling
    equipment on or off based on historical weather data and a simulated internal
    temperature.
 
-2. If equipment is turned on, the simulator calculates the BTU/hr power of each
-   appliance, along with its fuel usage (electricity, gas, etc.)
+2. If equipment is turned on, the simulator calculates the BTU/hr thermal power
+   of each appliance, along with its fuel usage (electricity, gas, etc.)
 
-3. Based on a model of building geometry, weather conditions, and time-of-day,
-   the passive thermal loads on the house are calculated in BTU/hr. This
+4. Based on a model of building geometry, weather conditions, and time-of-day,
+   the passive thermal loads on the house are calculated in BTU/hr. This includes
    conduction, convection, infiltration, solar gain, and occupant body
    heat.
 
-4. At the end of each time step, the BTU/hr from the HVAC equipment and the BTU/hr
+5. At the end of each time step, the BTU/hr from the HVAC equipment and the BTU/hr
    from passive thermal loads are multiplied with the duration of the timestep to
    get a net BTU change for the time step. Using an estimated thermal mass of the
    house, this is used to update the indoor air temperature for the next time step.
 
-5. At the end of each time step, energy usage is recorded into monthly bills, using
+6. At the end of each time step, energy usage is recorded into monthly bills, using
    configurable utility tariffs.
 
 At the end of the simulation, utility bills are tabulated, and emissions are
@@ -51,13 +52,13 @@ can be implemented for utility bills.
 ### The heat pump calculator web app
 
 The web app uses the above simulation library to calculate utility bills for
-Canada. To set up the simulation, we gather weather and utility cost information
-for Canada, and automatically select an air-sourced heat pump based on the
-specific situation of the simulated home.
+Canada on https://shouldiheatpump.ca/. To set up the simulation, we gather
+weather and utility cost information for Canada, and automatically select 
+an air-sourced heat pump based on the specific situation of the simulated home.
 
-Weather information is sourced from the [ECMWF ERA5 hourly dataset](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels?tab=overview).
+Weather information was sourced from the [ECMWF ERA5 hourly dataset](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels?tab=overview).
 
-2023 weather data for the majority of Canada is downloaded as a 2GB binary file,
+2023 weather data for the majority of Canada was downloaded as a 2GB binary file,
 then split into many JSON files (one per 3-letter prefix of a postal code),
 compressed, and uploaded to S3. This allows the web app to use real weather data
 without needing a server.
